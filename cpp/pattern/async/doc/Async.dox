@@ -1,0 +1,402 @@
+/*
+ * BMW Neo Framework
+ *
+ * Copyright (C) 2018-2022 BMW Car IT GmbH. All rights reserved.
+ * Contact: http://www.bmw-carit.de/
+ *
+ * Contributors:
+ *    Alexey Larikov <alexey.larikov@bmw.de>
+ *    Antons Jeļkins <antons.jelkins@bmw.de>
+ *    Manuel Nickschas <manuel.nickschas@bmw.de>
+ */
+
+/**
+
+@ingroup nf_Core
+@defgroup nf_core_Async Async Helpers
+
+@brief Types and helpers for simplifying asynchronous code.
+
+@since 4.13
+
+This collection of types and associated helper functions aim to simplify implementation of
+heavily asynchronous programs. They provide an API which allows to chain calls to functions
+or methods such that each next call is passed via the event loop. This is also helpful when
+dealing with long-running background operations, such as CommonAPI calls.
+
+This is achieved by implementing a variant of the futures and promises pattern.
+
+@section nf_async_FuturePromise Futures and Promises
+
+@e Futures and @e promises is one of the patterns used in asynchronous programming, where
+@nfref{Future} represents a @e future @e value which is an outcome of an @e asynchronous @e function
+(i.e. its return value), whereas @nfref{Promise} represents a @e promise to provide such a value.
+
+When the value becomes available, the @c Promise is said to have been @e fulfilled
+and the @c Future to have become @e ready.
+
+In contrast to @cppdoc{std::future,thread/future}, this implementation:
+- Does not provide blocking operations such as @c get() or @c wait(). Instead, @c Future can
+  have continuations attached to it.
+- Is designed to be used with event loops. This makes it of use in both concurrent (within a
+  single thread) and parallel types of asynchrony.
+- Does not support "returning" exceptions.
+
+@section nf_async_FutureApi Future-based API
+
+Asynchronous functions return a @c Future of a specific type (called the @e value @e type).
+For example, if a function returns a @c Future<Image>, this means that this is an asynchronous
+function which promises to deliver an @c Image at some point of time in the future.
+
+@code
+nf::Future<Image> downloadImage(int index);
+@endcode
+
+This usually means that such function starts a long-running operation, in this example ---
+an image download process, and then immediately returns. As it does not wait until the values
+are available, in this example the image is downloaded, it does not block the current thread
+of execution.
+
+Generally, such functions do one of these:
+- Start a worker thread to perform some task.
+- Post some task to an event loop (e.g. the main loop).
+- Wait for I/O, e.g. network, IPC etc.
+
+@section nf_async_FutureVals Handling Future Values in Continuations
+
+To access the future value, you need to use @nfref{Future::then()} to specify a continuation
+--- a function to be invoked when the @c Future becomes ready. The continuation must accept exactly
+one argument --- the @e value @e type of the @c Future. For instance, the code below shows an image
+as soon as it has been downloaded.
+
+@code
+downloadImage(42).then(context, [](const Image &image) {
+    showImage(image);
+});
+@endcode
+
+Here we use a lambda, but any callable would work. The same code can be also written as:
+
+@code
+downloadImage(42).then(context, showImage);
+@endcode
+
+The @c context is an instance of @nfref{Context}. It defines which particular event loop is
+used. All continuations are asynchronously invoked via this event loop. It also defines the
+continuation's lifetime. If the @c context object is destroyed before the continuation is
+invoked, it will not be called anymore and all associated resources (such as lambda captures)
+will be immediately destroyed.
+
+A single @c Future can have only one continuation. An attempt to attach multiple continuations
+to the same @c Future (as opposed to chaining continuations; see below) will abort the program.
+
+@subsection nf_async_Chaining Chaining Continuations
+
+An important feature of @c then() is that it returns a new @c Future object, which can have
+its own continuation. This allows to chain continuations, where the output of one becomes the
+input of the next one, as shown below.
+
+@code
+downloadImage(42)
+    .then(context, [](const Image &image) {
+        return encodeImageBase64(image);
+     })
+    .then(context, [](const std::string &base64Image) {
+        saveEncodedImage(base64Image);
+     });
+@endcode
+
+@subsection nf_async_WhenAllAny When All and When Any
+
+Use @nfref{whenAll()} if you need to wait until @b all values are ready @b and @b
+then do something. For example, this code shows an image together with some text when both
+image and text have been downloaded.
+
+@code
+nf::whenAll(downloadImage(42), downloadText(42))
+    .then(context, [](const std::tuple<Image, Text> &values) {
+        showImageWithText(values);
+    });
+@endcode
+
+Use @nfref{whenAny()} if you need to do something when @b any value is ready.
+For example, this code shows either an image or a text, depending on what is downloaded
+first.
+
+@code
+nf::whenAny(downloadImage(42), downloadText(42))
+    .then(context, [](const std::variant<Image, Text> &values) {
+        showImageOrText(values);
+    });
+@endcode
+
+All future values but the first one are ignored. Note that operations themselves are not canceled,
+they will be finished but their outcomes will be discarded. In the example above @b both image
+and text @e will be downloaded, but only one will be used.
+
+@subsection nf_async_Timeout Handling Timeouts
+
+Use @nfref{expiresIn()} if you need to add a timeout to an asynchronous operation.
+For example, the following code would show a downloaded image, if it is downloaded within
+500ms, or some fallback image otherwise.
+
+@code
+nf::expiresIn(context, 500ms, downloadImage(42))
+    .then(context, [](const std::variant<Image, async::Timeout> &values( {
+        showImageOrFallback(values);
+    });
+@endcode
+
+Note that a timed-out operation is not canceled. It @e will finish but its value @e will be
+ignored. In the example above the image will always be downloaded, but it will be discarded
+if downloading has taken more than 500ms.
+
+@section nf_async_Promises Making Promises
+
+So far we have only talked about how to @e use asynchronous APIs. Let's now talk about how
+to @e implement it. Each @c Future has an associated @c Promise. While @c Future is facing
+@e outside towards API clients, @c Promise is facing @e inside towards the implementation.
+
+A typical asynchronous function consists of three steps:
+-# Construct @nfref{Promise}.
+-# Do something asynchronous which will eventually call @nfref{Promise::fulfill()}.
+-# Return @nfref{Promise::future()}.
+
+For example, this function calculates a Fibonacci number in a @ref nf::Thread "worker thread".
+
+@code
+nf::Future<int> fibonacci(int i)
+{
+    nf::Promise<int> promise;
+    m_thread.post([promise, i] {
+        promise.fulfill(syncFibonacci(i));
+    });
+    return promise.future();
+}
+@endcode
+
+A single @c Promise can be fulfilled only once. At most one @c Future can be created from a
+single @c Promise. Any attempt to fulfill the same @c Promise more than once or to
+use it to create multiple @c Future objects will cause the program to be aborted.
+
+@subsection nf_async_MulticastPromise Multicast Promises
+
+Use @nfref{MulticastPromise} if you need to attach multiple continuations to the same
+event. It allows for creating multiple independent instances of a @c Future that will @b all become
+ready when their associated @c MulticastPromise is fulfilled. Continuations are invoked with
+the same value in the order they have been attached.
+
+In the example below two continuations modify the same @c int via a shared pointer. Note that
+both continuations are bound to the same @c context. If the contexts were different, this code
+would not be thread-safe. It is the client's responsibility to ensure that it is safe to
+access shared resources from different threads.
+
+@code
+MulticastPromise<std::shared_ptr<int>> promise;
+
+promise.future().then(context, [](auto value) { *value += 3; }); // 0 + 3 = 3
+promise.future().then(context, [](auto value) { *value *= 2; }); // 3 * 2 = 6
+
+promise.fulfill(std::make_shared<int>(0));
+@endcode
+
+@subsection nf_async_Execute Executing Functions
+
+Use @nfref{async::execute()} to asynchronously execute a task via the executor linked to
+@c context.
+
+@code{.cpp}
+nf::Context context;
+nf::async::execute(context, [] { return 41; })
+    .then(context, [](auto value) {
+        std::cout << "Value" << value + 1 << std::endl;
+    });
+@endcode
+
+@section nf_async_ThreadSafety Thread Safety
+
+This module is thread-safe as long as these invariants hold:
+- Multiple continuations are not attached to the same @c Future.
+- @c Promise is not fulfilled multiple times.
+- At most one @c Future can be created from the same @c Promise.
+
+This, for example, makes it thread-safe to call @c fulfill() or @c then() from a worker thread.
+
+@section nf_async_Performance Performance Notice
+
+You should use movable types whenever possible. Using copyable types is possible, but will
+result in multiple copies being made. Use of @nfref{MulticastPromise} requires the
+type parameter to be copyable. It is, however, still advisable to make the type movable as
+well for efficiency.
+
+@section nf_async_Examples More Detailed Examples
+
+In the following example the execution will continue when @nfref{Executor::post()} completes
+execution of the lambda function supplied via @nfref{Future::then()}. The call will be done
+via the event loop allowing other events to be handled in the meantime.
+
+@code{.cpp}
+
+  nf::Context context;
+
+  // create a Promise object
+  auto promise = nf::Promise<int>{};
+
+  nf::Executor::mainThread()->post(100ms, [promise]() {
+      // fulfill the promise object, after some time. Doing so will trigger the continuation
+      promise.fulfill(42);
+  });
+
+  promise.future()
+      // Attach lambda as a continuation. This means that the code in the lambda will be executed
+      // once the corresponding promise has been fulfilled
+      .then(context, [](int value)
+            {
+                return std::to_string(value);
+            })
+      .then(context, [](std::string value)
+            {
+                std::cout << "The value: " << value << std::endl;
+            });
+
+@endcode
+
+This can also be used in CommonAPI callbacks. For example:
+
+@code{.cpp}
+
+  class A
+  {
+  public:
+      void foo()
+      {
+          auto capiProxy = getCapiProxy();
+
+          auto promise = nf::Promise<CommonAPI::CallStatus>{};
+
+          capiProxy->doAsync([promise](const CommonAPI::CallStatus& callStatus))
+                             {
+                                 promise.fulfill(callStatus);
+                             });
+
+          promise.future()
+              .then(m_context, [this](CommonAPI::CallStatus status)
+                          {
+                              if (callStatus != CommonAPI::CallStatus::SUCCESS) {
+                                  delete this;
+                              }
+                          });
+      }
+  private:
+      nf::Context m_context;
+  };
+
+@endcode
+
+Here, execution will continue as soon as CommonAPI executes the callback and the asynchronous
+promise is fulfilled.
+
+Only one continuation can be attached to a single future. Attempting to attach multiple
+continuations to the same future (as opposed to separate futures, as used when chaining
+continuations) will abort the program via @nfref{NF_ASSERT()}. To attach multiple continuations to
+the same event, a @nfref{MulticastPromise} can be used. Multicast promises allow the creation
+of multiple independent futures that will all become ready when their associated @c MulticastPromise
+is fulfilled:
+
+@code{.cpp}
+
+  nf::Context context;
+  auto promise = nf::MulticastPromise<std::shared_ptr<int>>{};
+
+  nf::Executor::mainThread()->post(100ms,
+                                   [promise]() {
+                                       promise.fulfill(std::make_shared<int>(0));
+                                   });
+
+  promise.future().then(context, [](auto value) {
+      *value += 3;
+      std::cout << "After the first callback, value is = " << *value << std::endl;
+  });
+  promise.future().then(context, [](auto value) {
+      *value *= 2;
+      std::cout << "After the second callback, value is = " << *value << std::endl;
+  });
+
+@endcode
+
+Occasionally it can be useful to continue when any promise of a list of promises is fulfilled.
+This is achieved through the @nfref{whenAny()} composition.
+A good example use case is an async operation (or CommonAPI call) that needs to be interruptible by
+a timeout.
+
+@code{.cpp}
+
+  nf::Context context;
+  auto promise = nf::Promise<int>{};
+  auto promiseTimeout = nf::Promise<void>{};
+
+  nf::Executor::mainThread()->post(100ms,
+                                   [promiseTimeout]() {
+                                       promiseTimeout.fulfill();
+                                   });
+
+  nf::Executor::mainThread()->post([promise]()
+      {
+          // ... An async operation that calls promise.fulfill() when it's done ...
+      });
+
+  nf::whenAny(context, promise.future(), promiseTimeout.future())
+      .then(context, [](auto variant)
+            {
+                std::visit(boost::hana::overload(
+                        [](int value) { std::cout << "The value: " << value << std::endl; },
+                        [](auto) { std::cout << "Timeout occured." << std::endl; }
+                ), variant);
+            });
+
+@endcode
+
+The @nfref{whenAll()} composition allows to continue when all promises have been fulfilled.
+
+@code{.cpp}
+
+  nf::Context context;
+  auto promise1 = nf::Promise<int>{};
+  auto promise2 = nf::Promise<std::string>{};
+
+  nf::Executor::mainThread()->post(1000ms, [promise1]() { promise1.fulfill(42); });
+  nf::Executor::mainThread()->post(2000ms, [promise2]() { promise2.fulfill("Hello world!"); });
+
+  nf::whenAll(context, promise1.future(), promise2.future())
+      .then(context, [](auto tuple)
+            {
+                std::cout << "Values: " << std::to_string(std::get<0>(tuple)) << ", "
+                          << std::get<1>(tuple) << std::endl;
+            });
+
+@endcode
+
+The @nfref{expiresIn()} function allows for invalidating a future after a timeout has passed.
+
+@code{.cpp}
+
+  nf::Context context;
+  auto promise = nf::Promise<int>{};
+
+  nf::Executor::mainThread()->postTask(1000ms, [promise]() { promise.fulfill(42); });
+
+  nf::expiresIn(&context, 500ms, promise.future())
+     .then(context, [](auto variant) {
+             std::visit(boost::hana::overload(
+                            [](int value) { std::cout << "value: " << value },
+                            [](const async::Timeout&)
+                            {
+                                std::cout << "Timeout reached when waiting for function's"
+                                             " promise to fulfill.";
+                            }
+             ), variant);
+         });
+
+@endcode
+
+*/

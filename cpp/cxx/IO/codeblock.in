@@ -1,0 +1,55 @@
+1. block comment/uncomment
+- block comment
+ctr + shift + c
+- block uncomment
+ctr + shift + x
+
+2. use debug
+2.0. add debugged file to project
+create a empty project: test_project
+Add files => add the debugged file
+Click Right Test_project => properties => Build Targets => select ""Execution working dir"" as dir to folder of the debugged file
+(contain input file also)
+
+2.1. setup debugger
+Ref: http://wiki.codeblocks.org/index.php/Debugging_with_Code::Blocks
+
+Settings/Debugger/Default/
+Executable Path: C:\Program Files (x86)\CodeBlocks\MinGW\bin\gdb32.exe
+Debugger type: GDB
+
+Project/Build options/GNU GCC compiler/compiler settings/
+tick 'Produce debugging symbols -g'
+
+In code: set breakpoints
+F8 to start debugging
+F7 to next line
+View debug value: Debug/Debugging windows/Watches
+
+
+
+2.1. debug STL in c++
+Ref: http://wiki.codeblocks.org/index.php?title=Pretty_Printers
+a. test if gdb is python enabled (version should be printed)
+cmd ->
+(gdb) python print sys.version
+
+b. create Command file
+check if printers.py exist in C:/Program Files (x86)/CodeBlocks/MinGW/share/gcc-5.1.0/python/libstdcxx/v6
+
+create file "pp.tex"" in
+C:\Program Files (x86)\CodeBlocks\MinGW\bin
+with content below.
+--------
+python
+import sys
+sys.path.insert(0, 'C:/Program Files (x86)/CodeBlocks/MinGW/share/gcc-5.1.0/python/libstdcxx/v6')
+from printers import register_libstdcxx_printers
+register_libstdcxx_printers (None)
+end
+--------
+
+c. add the command to codeblocks
+Settings/Debugger/Default/Debugger initialization commands
+source C:\Program Files (x86)\CodeBlocks\MinGW\bin\pp.tex
+

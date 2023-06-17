@@ -1,0 +1,149 @@
+/*
+ * BMW Neo Framework
+ *
+ * Copyright (C) 2020-2023 BMW Car IT GmbH. All rights reserved.
+ * Contact: http://www.bmw-carit.de/
+ *
+ * Contributors:
+ *     Antons Jeļkins <antons.jelkins@bmw.de>
+ *     Florian Franzmann <Florian.Franzmann@ul.com>
+ */
+
+/**
+
+@ingroup nf_Core
+@defgroup nf_core_ExecutionFlow Execution Flow
+@brief Control of the execution flow.
+@{
+
+@section nf_exec_ExecutionModel Execution Model
+
+The Framework employs the event-loop-based execution model. In this model an application
+consists of a main thread of execution which contains most of its business logic. This
+thread runs an event loop, called the main loop, and the application posts (enqueues) tasks
+to be executed inside this loop.
+
+@code
+loop {
+    task = takeNextTask();
+    task.execute();
+}
+@endcode
+
+These tasks need to be small enough so they do not block the main loop from spinning.
+
+@anchor nf_exec_ExecutionModel_StartStop
+@par Starting and Stopping Executors
+
+The executor for the main thread of @nfref{BaseApplication} and the executor of any @nfref{Thread}
+are started automatically. For threads that are not created using the NeoFramework classes,
+the executor has to be started with @nfref{Executor::run()}.
+
+Beneath code is an example of starting and stopping the executor in a thread created
+with @cppdoc{std::thread,thread/thread}:
+@code
+std::thread thread([]() {
+    auto executor = Executor::thisThread();
+    executor->post([&executor] { executor->stop(); });
+    executor->post([] { /* do some work */ });
+    executor->run();
+});
+thread.join();
+@endcode
+
+Any executor can be stopped using the @nfref{Executor::stop()} method, also from within the current task.
+
+@note Stop request scheduling differs between @nfref{backend::AsioExecutor} and @c QtExecutor.
+      For @nfref{backend::AsioExecutor}, the stop request results in immediate stop of the event loop after
+      the currently executed task. Any tasks that are waiting in the queue, even if they have the same delay
+      as the currently executed task, will be not executed.
+      The @c QtExecutor after the stop request will execute all the tasks that are scheduled at the
+      same time as currently executed task, and then the event loop will stop.
+
+Restarting the executor will cause the event loop to resume the execution of queued tasks.
+
+@warning If using @nfref{BaseApplication}, stopping the main thread's executor will immediately
+         trigger the deinitialization of the Neo Framework, causing @nfref{BaseApplication::run()}
+         to return control to the caller without invoking all the steps needed for proper shutdown
+         of the application. Restarting the executor in this state is not supported, but typically
+         an application exits anyway after @nfref{BaseApplication::run()} returns.
+         In order to ensure clean shutdown when using the Base Application, please invoke
+         @nfref{BaseApplication::stop()} instead.
+         See @ref nf_core_BaseApp_Shutdown "Base Application: Shutdown" for more details on this.
+
+@par Exception Handling
+
+@since 4.17
+
+Tasks posted to an event loop may throw exceptions. In case such an exception
+leaves the task it will be caught by the @nfref{Executor} and passed to a customizable
+exception handler.
+
+An exception handler that returns indicates that it handled the exception
+successfully and execution can continue. The task that caused the exception will
+be removed from the event queue before execution resumes. An exception handler
+may also re-throw the exception or throw a different exception. If the @c Executor
+is run directly by client code then that client code is responsible for catching
+the exception.  In case the @c Executor is run by Neo one of two things will happen:
+
+- if the event loop is executed by a @nfref{Thread} different from the main one
+  the application is terminated.
+- if the @c Executor is running inside of a @nfref{BaseApplication}'s event loop,
+  the @c BaseApplication will perform cleanup and then re-throw the exception.
+
+The default exception handler will just re-throw the exception.
+
+@par Worker Threads
+
+An application may spawn worker threads to execute tasks which are too large for
+the main thread, e.g. long-running computations or blocking I/O calls. These
+threads may or may not have their own event loops.
+
+@par No Explicit Thread Synchronization
+
+Threads normally do not communicate directly or block each other. Instead, they interact
+by posting tasks to other threads' event loops. This means the application does not need to
+care about multi-threading aspects like thread synchronization, data races etc.
+
+@defgroup nf_core_Executors Executors
+@brief Executors, event loops and threads.
+@{
+
+@code
+#include <nf/Executor.h>
+#include <nf/IoWatch.h>
+#include <nf/Thread.h>
+#include <nf/Timer.h>
+@endcode
+
+@section nf_exec_Introduction Introduction
+
+An @ref nf::Executor "executor" is a basic building block this Framework's execution model
+is based on. It allows enqueuing an executable task, e.g. a function, a lambda or a class/struct
+with an operator() overloading, to be executed in a context of a specific thread.
+
+@}
+
+@defgroup nf_core_Sync Synchronization Primitives
+@brief Event loop based synchronization primitives.
+@{
+
+@code
+#include <nf/RwLock.h>
+@endcode
+
+@section nf_sync_Introduction Introduction
+
+Classical synchronization primitives, e.g. @cppdoc{std::mutex,thread/mutex}, provide means to
+synchronize various threads of execution, e.g. when one thread needs to block and wait for
+another thread to do something, e.g. finish calculations or release some resource.
+
+Event-loop-based synchronization primitives provide similar functionality for event-loop-based
+applications where most of the code is running in a single thread and blocking this thread
+is not an option.
+
+@}
+
+@}
+
+*/

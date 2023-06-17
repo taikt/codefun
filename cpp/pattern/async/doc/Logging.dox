@@ -1,0 +1,296 @@
+/*
+ * BMW Neo Framework
+ *
+ * Copyright (C) 2021 BMW Car IT GmbH. All rights reserved.
+ * Contact: http://www.bmw-carit.de/
+ *
+ * Contributors:
+ *     Antons Jeļkins <antons.jelkins@bmw.de>
+ *     Szymon Wojtczak <szymon.wojtczak@globallogic.com>
+ */
+
+/**
+
+@ingroup nf_Core
+@defgroup nf_core_Logging Logging and Formatting
+@brief Logging subsystem and output formatting functions.
+@{
+
+@code
+#include <nf/Logging.h>
+@endcode
+
+@section nf_log_Init Initialization and Termination
+
+@todo Document how to initialize logging.
+
+Logging will be set to non-suspended state after initialization or termination.
+
+@section nf_log_backend_manipulation Adding and Removing Log Backends
+
+The log backend can be added and removed during runtime. Adding first log backend has the same
+effect as initializing the logging. Removing last log backend has the same effect as terminating the
+logging.
+
+@warning That this operations are not thread-safe. The writing of the logs and
+log backends manipulation at the same time must be avoided.
+
+@code
+// Initialize Logging
+Logging::initialize({std::make_shared<filesystem::backend::FileLogger>(".", 10_KiB, 1_KiB)});
+// Add another logger
+Logging::add({std::make_shared<backend::DltLogger>("id", "desc")});
+// Remove the first FileLogger
+Logging::remove<filesystem::backend::FileLogger>();
+// Remove the the DltLogger and uninitialize
+Logging::remove<backend::DltLogger>(0);
+@endcode
+
+@section nf_log_backend_acess Acessing Log Backends
+
+The log backend can be accessed via @ref Logging::backend<T>() method:
+@code
+// Initialize Logging
+auto fl1 = std::make_shared<filesystem::backend::FileLogger>(".", 10_KiB, 1_KiB);
+auto fl2 = std::make_shared<filesystem::backend::FileLogger>("/other/location", 10_KiB, 1_KiB);
+auto fl3 = std::make_shared<filesystem::backend::FileLogger>("/different/place", 100_MiB, 10_MiB);
+Logging::initialize({fl1, fl2, fl3});
+// Get second file logger
+auto logBackend = Logging::backend<filesystem::backend::FileLogger>(1);
+@endcode
+
+@section nf_log_Suspend Suspending and Resuming
+
+Suspending is a feature that allows logging subsystem to withhold the output operations of
+log backends. The logging is still possible with use of logging functions.
+The log messages will be saved in a memory buffer and after resuming written to log backends.
+
+It is not possible to suspend or resume output if the logging was not initialized. If the logging
+is terminated during being suspended, all memory-saved log messages will be lost and the logging
+will be set to non-suspended state.
+
+@warning That this operations are not thread-safe. The suspending operations during log backends
+manipulation at the same time must be avoided.
+
+@code
+nf::Logging::initialize({std::make_shared<nf::backend::FileLogger>("/dir", 10_MiB, 1_MiB)});
+nf::info("This log is written to the file");
+nf::Logging::suspendOutput();
+nf::info("This log is written to the memory and after resuming it is written to the file");
+nf::Logging::resumeOutput();
+@endcode
+
+@see @ref nf::filesystem::backend::FileLogger
+
+@section nf_log_Context Log Contexts
+
+@subsection nf_log_DefineContext Defining and Importing Contexts
+
+Each log message has a context. It links the message to a specific subsystem (library, module,
+file, class, function etc.) in an application.
+
+Use @ref NF_LOG_DEFINE_CONTEXT() to define a new log context. The new context must be unique
+to this application (otherwise it would violate ODR). This context may be imported to other
+translation units with @ref NF_LOG_IMPORT_CONTEXT(). A translation unit may define or import
+multiple contexts.
+
+@code
+NF_LOG_DEFINE_CONTEXT(my_ctx1, CTX1, "First context");
+NF_LOG_DEFINE_CONTEXT(my_ctx2, CTX2, "Second context");
+NF_LOG_IMPORT_CONTEXT(my_ctx3); // my_ctx3 must be defined somewhere else
+@endcode
+
+@par Logging Functions
+
+<div class="fragment">
+void nf::<b>fatal</b> (context, format, args...) noexcept; <br>
+void nf::<b>error</b> (context, format, args...) noexcept; <br>
+void nf::<b>warn</b> (context, format, args...) noexcept; <br>
+void nf::<b>info</b> (context, format, args...) noexcept; <br>
+void nf::<b>debug</b> (context, format, args...) noexcept; <br>
+void nf::<b>verbose</b> (context, format, args...) noexcept;
+</div>
+
+Once a context is defined or imported, it can be used to log messages. The Framework provides
+generic logging functions in the @c nf namespace which accept a log context as their first argument.
+Use @ref NF_LOG_GET_CONTEXT() to retrieve a log context from its name.
+
+@code
+NF_LOG_IMPORT_CONTEXT(my_ctx);
+
+void myFunction()
+{
+    const auto &context = NF_LOG_GET_CONTEXT(my_ctx);
+    nf::info(context, "Info message logged with my_ctx log context");
+}
+@endcode
+
+@subsection nf_log_DefaultContext Default Context
+
+A common use-case is to have a single default log context for the whole component. One can set
+such log context with  @ref nf_cmake_decl_LogContext "LOG_CONTEXT" declarative CMake option,
+@ref nf_define_default_log_context() CMake function, or by specifying @c NF_LOG_CONTEXT compile
+definition. The default log context (if set) is automatically imported whenever @c <nf/Logging.h>
+is included.
+
+@note Setting the default context does not necessarily define it. You still might need to do it
+      explicitly in one of the component sources with @ref NF_LOG_DEFINE_CONTEXT(). Use @ref
+      nf_cmake_decl_LogContext "LOG_CONTEXT" with two or three arguments to automatically
+      define the context.
+
+@par Logging Functions
+
+<div class="fragment">
+void nf::<b>fatal</b> (format, args...) noexcept; <br>
+void nf::<b>error</b> (format, args...) noexcept; <br>
+void nf::<b>warn</b> (format, args...) noexcept; <br>
+void nf::<b>info</b> (format, args...) noexcept; <br>
+void nf::<b>debug</b> (format, args...) noexcept; <br>
+void nf::<b>verbose</b> (format, args...) noexcept;
+</div>
+
+If the default log context is set, the Framework will provide overloads of logging functions in
+the @c nf namespace without an explicit context argument. These functions will use the default
+log context.
+
+@code
+void myFunction()
+{
+    nf::info("Info message logged with the default log context");
+}
+@endcode
+
+@subsection nf_log_ScopeContext Scope Context
+
+Use @ref NF_LOG_USE_CONTEXT() to set a default context for any specific scope, including the
+global scope. It must be one of the contexts defined or imported in this translation unit.
+There can be multiple scope contexts in a translation unit, taken they are defined in different
+scopes (like variables with the same name).
+
+Use @ref NF_LOG_DEFINE_USE_CONTEXT() or @ref NF_LOG_IMPORT_USE_CONTEXT() to define or import
+a context and @e activate in one command. This works only for the global scope.
+
+@par Logging Functions
+
+<div class="fragment">
+void <b>fatal</b> (format, args...) noexcept; <br>
+void <b>error</b> (format, args...) noexcept; <br>
+void <b>warn</b> (format, args...) noexcept; <br>
+void <b>info</b> (format, args...) noexcept; <br>
+void <b>debug</b> (format, args...) noexcept; <br>
+void <b>verbose</b> (format, args...) noexcept;
+</div>
+
+Each time a scope context is activated, the Framework will provide logging functions in the
+same scope and context as where @ref NF_LOG_USE_CONTEXT() is used, i.e. @b not in the @c nf
+namespace. These functions will use this scope context.
+
+@note Scope contexts do @b not override or hide the @ref nf_log_DefaultContext. Namespaced
+      logging functions will use the default context whereas non-namespaced logging functions
+      will use the scope context.
+
+@code
+NF_LOG_USE_CONTEXT(my_ctx1); // global scope
+
+void func()
+{
+    info("Info message logged with my_ctx1 context");
+    nf::info("Info message logged with the component-wide default log context");
+
+    NF_LOG_USE_CONTEXT(my_ctx2); // function scope
+    info("Info message logged with my_ctx2 context");
+
+    {
+        NF_LOG_USE_CONTEXT(my_ctx3); // block scope; overrides my_ctx2
+        info("Info message logged with my_ctx3 context");
+        nf::info("Still a message with the component-wide default log context");
+    }
+
+    info("Info message logged again with my_ctx2 context");
+}
+@endcode
+
+@section nf_log_Formatting Formatting Messages
+
+Logging functions use <a href="https://fmt.dev"><b>libfmt</b></a> to format messages, a library
+which @cppdoc{C++20 formatting library,utility/format} is based on. The format string syntax is
+similar to the one used in Python. See libfmt's documentation and its <a href="https://fmt.dev/
+latest/syntax.html"><b>Format String Syntax</b></a> for a complete reference.
+
+@par Example
+@code
+nf::info("The answer is {}, and {} with it!", 42, "deal");
+@endcode
+would log this info message
+@code{.unparsed}
+The answer is 42, and deal with it!
+@endcode
+
+@subsection nf_log_FormatChecks Format String Checks
+
+Logging functions neither return errors nor throw exceptions. If the provided format string is
+invalid, they will instead log a fatal message containing the broken format string and an error
+description.
+
+@par Example
+@code
+nf::info("Hello, {:s}", 1);
+@endcode
+contains an invalid format string, because <code>{:s}</code> expects a string but an integer is
+provided. In this case such fatal message will be logged
+@code{.unparsed}
+Cannot log "Hello, {:s}": invalid type specifier
+@endcode
+
+@note <a href="https://fmt.dev/latest/api.html#compile-time-format-string-checks">Compile Time
+Format String Checks</a> are not supported. Using @c FMT_STRING() will have no effect.
+
+@subsection nf_log_CustomTypes User-defined Types
+
+Libfmt provides its own way to format user-defined types. See the <a href="https://fmt.dev/latest/
+api.html#formatting-user-defined-types">corresponding documentation</a> for more details.
+
+It is also possible to use all types which have a defined streaming operator to @c std::ostream.
+Note, that this is less efficient than using the native solution mentioned above.
+
+@section nf_log_FormatHelpers Formatting Helpers
+
+There are two types of formatting helpers: the ones provided by libfmt, and the ones provided by
+the Framework. The latter ones are based on @c std::ostream and might become deprecated over time.
+Prefer using the former ones.
+
+Note, that the formatting result might be different, depending on which approach you use. If both
+are enabled (i.e. both headers are included), the libfmt approach has precedence.
+
+@subsection nf_log_Containers Standard Containers
+
+<code>\#include <fmt/ranges.h></code> allows libfmt to format ranges, such as standard containers.
+
+<code>\#include <nf/ContainerIoStream.h></code> provides streaming operators to @c std::ostream
+for standard containers.
+
+@code
+std::vector v = {1, 2, 3, 4};
+std::cout << v << std::endl;
+nf::debug("vector: {}", v);
+@endcode
+
+@subsection nf_log_Chrono Duration Types
+
+<code>\#include <fmt/chrono.h></code> allows libfmt to format @cppdoc{std::chrono::duration,chrono/
+duration} types.
+
+<code>\#include <nf/ChronoIoStream.h></code> provides streaming operators to @c std::ostream for
+such types.
+
+@code
+std::cout << std::chrono::minutes(5) << std::endl;
+nf::error("delay: {}", std::chrono::seconds(10));
+@endcode
+
+@note Streaming operators for @c std::chrono types are @cppdoc{available from C++20,chrono/duration/
+operator_ltlt}!
+
+@}
+
+*/

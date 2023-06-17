@@ -1,0 +1,194 @@
+/*
+ * BMW Neo Framework
+ *
+ * Copyright (C) 2021-2022 BMW Car IT GmbH. All rights reserved.
+ * Contact: http://www.bmw-carit.de/
+ *
+ * Contributors:
+ *     Antons Jeļkins <antons.jelkins@bmw.de>
+ */
+
+/**
+
+@ingroup nf_core_ExecutionFlow
+@defgroup nf_core_Signals Signals and Attributes
+@brief Signals (a subscribe and notify pattern) and attributes (a value and an
+       @e on-changed signal).
+@{
+
+@code
+#include <nf/Attribute.h>
+#include <nf/Signal.h>
+#include <nf/Subscription.h>
+@endcode
+
+@section nf_sig_Introduction Introduction
+
+Signals and attributes allow objects to interact using a variation of an observer pattern.
+An object can define one or more signals to notify about changes in its internal state. Other
+objects can subscribe to these signals and react to these changes.
+
+An attribute holds a value of some type and a signal to notify when the value changes.
+
+@cond HAS_PLANTUML
+@startuml
+object Guiding {
+  attribute: nextManeuver
+  signal: destinationReached
+}
+
+object NextManeuverDisplay {
+  attribute: displayOnOff
+}
+
+object VoiceAnnouncement {
+}
+
+Guiding <-- NextManeuverDisplay : subscribed to\nchanges in\nnextManeuver
+Guiding <-- NextManeuverDisplay : subscribed to\ndestinationReached
+Guiding <-- VoiceAnnouncement : subscribed to\ndestinationReached
+NextManeuverDisplay <-- VoiceAnnouncement : subscribed to\nchanges in\ndisplayOnOff
+@enduml
+@endcond
+
+@section nf_sig_Signals Defining Signals
+
+To define a signal one needs to create a variable of template type @ref nf::Signal and list
+all its arguments. A signal can have zero or more arguments.
+
+@code
+nf::Signal<> sig0;                 // Signal with no arguments.
+nf::Signal<int> sig1;              // Signal with one argument of type int.
+nf::Signal<int, std::string> sig2; // Signal with two arguments.
+@endcode
+
+@note There is no need to make a signal argument a reference to a constant, e.g. <code>const
+std::string&</code>. @c Signal<T> and @c Signal<const T&> are equivalent.
+
+@par Classes and Interfaces
+
+Signals usually belong to a class' public interface. In this case they should be defined
+as public class member variables.
+
+@code
+class Guiding
+{
+public:
+    nf::Signal<DestPosition> destinationReached;
+};
+@endcode
+
+@section nf_sig_Subscribing Subscribing to Signals
+
+In order to subscribe to a signal, one needs to call @ref nf::Signal::subscribe() and provide
+a listener function which will be invoked when the signal is emitted (notified). Listener
+function arguments must be compatible with (implicitly convertible from) signal arguments.
+To avoid unnecessary argument copying, references to a constant could be used.
+
+There are three types of subscriptions: @e synchronous, @e asynchronous and @e contextual.
+
+@subsection nf_sig_SyncSub Synchronous Subscription
+
+<div class="fragment">
+@ref nf::Subscription Signal::<b>subscribe</b> (listener) noexcept
+</div>
+
+This overload of @c subscribe() establishes a synchronous subscription. It accepts a listener
+and returns @ref nf::Subscription, a RAII token to keep the subscription alive. The subscription
+exists while both @c Signal and @c Subscription objects exist. As soon as one of them is
+destroyed, the subscription becomes invalid and a corresponding listener will never be invoked
+again. This means if the return value is ignored, the subscription will be immediately terminated.
+
+When a signal is notified, all synchronous listeners are directly invoked by the notifier,
+just like normal function calls.
+
+@par Example
+@code
+nf::Subscription sub
+    = guiding.destinationReached.subscribe([](const auto &dp) { ... });
+
+// listener invoked right here
+guiding.destinationReached.notify(dp);
+@endcode
+
+@subsection nf_sig_AsyncSub Asynchronous Subscription
+
+<div class="fragment">
+@ref nf::Subscription Signal::<b>subscribe</b> (executor, listener) noexcept
+</div>
+
+This overload of @c subscribe() establishes an asynchronous subscription. It accepts an
+executor and a listener, and returns @ref nf::Subscription, a RAII token to keep the
+subscription alive. The subscription exists while both @c Signal and @c Subscription objects
+exist. As soon as one of them is destroyed, the subscription becomes invalid and a corresponding
+listener will never be invoked again. This means if the return value is ignored, the subscription
+will be immediately terminated.
+
+When a signal is notified, tasks to invoke all asynchronous listeners are posted to
+corresponding executors. The listener will not be invoked after the subscription is terminated,
+even if it is already posted to the event loop.
+
+@par Example
+@code
+nf::Subscription sub
+    = guiding.destinationReached.subscribe(nf::Executor::thisThread(),
+                                           [](const auto &dp) { ... });
+
+// listener will be invoked later in a context of this thread
+guiding.destinationReached.notify(dp);
+@endcode
+
+@subsection nf_sig_CtxSub Contextual Subscription
+
+<div class="fragment">
+void Signal::<b>subscribe</b> (context, listener) noexcept
+</div>
+
+This overload of @c subscribe() establishes a contextual subscription, i.e. a subscription
+bound to the provided @nfref{Context}. It accepts a context and a listener, and does not
+return anything. The subscription exists while both @c Signal and @c Context objects exist.
+As soon as one of them is destroyed, the subscription becomes invalid and a corresponding
+listener will never be invoked again.
+
+When a signal is notified, tasks to invoke all contextual listeners are posted to executors
+bound to corresponding contexts. The listener will not be invoked after the subscription is
+terminated, even if it is already posted to the event loop.
+
+@par Example
+@code
+class VoiceAnnouncement
+{
+public:
+    void initialize()
+    {
+        m_guiding.destinationReached.subscribe(
+            m_context,
+            [this](DestPosition dp) {
+                // This lambda will not be called if m_context is destroyed
+            });
+    }
+
+private:
+    nf::Context m_context;
+    Guiding &m_guiding;
+};
+
+// listener will be invoked later in a context defined by VoiceAnnouncement::m_context
+guiding.destinationReached.notify(dp);
+@endcode
+
+@subsection nf_sig_Subs Storing Subscriptions
+
+You can store subscriptions in @ref nf::Context.
+
+@code
+nf::Context context;
+context.bind(
+    guiding.destinationReached.subscribe([](DestPosition dp) { ... }));
+@endcode
+
+Bound subscriptions will remain active while the context exists.
+
+@}
+
+*/

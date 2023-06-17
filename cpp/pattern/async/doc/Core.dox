@@ -1,0 +1,27 @@
+/*
+ * BMW Neo Framework
+ *
+ * Copyright (C) 2018-2020 BMW Car IT GmbH. All rights reserved.
+ * Contact: http://www.bmw-carit.de/
+ *
+ * Contributors:
+ *     Antons Jeļkins <antons.jelkins@bmw.de>
+ */
+
+/**
+
+@defgroup nf_Core Core Library
+@brief The Framework's core classes and utilities.
+@{
+
+@namespace nf
+@brief The Framework's namespace.
+
+@defgroup nf_core_Assert Debug Assertions
+@code
+#include <nf/Assert.h>
+@endcode
+
+@}
+
+*/

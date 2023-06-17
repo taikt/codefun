@@ -1,0 +1,55 @@
+/*
+ * BMW Neo Framework
+ *
+ * Copyright (C) 2020 BMW Car IT GmbH. All rights reserved.
+ * Contact: http://www.bmw-carit.de/
+ *
+ * Contributors:
+ *     Antons Jeļkins <antons.jelkins@bmw.de>
+ */
+
+/**
+
+@ingroup nf_Core
+@defgroup nf_core_Types Types, Traits and Helpers
+@brief Types, type traits and type helpers.
+@{
+
+@defgroup nf_core_Enums Enumerations
+@code
+#include <nf/Enums.h>
+@endcode
+
+@c Enums.h provides macros for generating utility functions for enumerations to:
+- Validate the enum value.
+- Convert the enum value to string and vice versa.
+
+@see @qtdoc{Q_ENUM,qobject.html#Q_ENUM}
+
+@defgroup nf_core_Units Unit Types
+@code
+#include <nf/DataSize.h>
+@endcode
+
+@defgroup nf_core_Functional Function Wrappers
+@code
+#include <nf/Function.h>
+#include <nf/FunctionTraits.h>
+@endcode
+
+@defgroup nf_core_ContainerAlgorithms Container Algorithms
+@code
+#include <nf/ContainerAlgorithms.h>
+@endcode
+
+@defgroup nf_core_Singleton Singleton Helpers
+@code
+#include <nf/Singleton.h>
+@endcode
+
+@c Singleton.h provides helper classes to implement a variation of Meyers' singletons and
+allow singleton instances to be deleted before the program execution leaves @c main().
+
+@}
+
+*/

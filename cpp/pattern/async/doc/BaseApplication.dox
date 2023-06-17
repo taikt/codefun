@@ -1,0 +1,17 @@
+/*
+ * BMW Neo Framework
+ *
+ * Copyright (C) 2018-2020 BMW Car IT GmbH. All rights reserved.
+ * Contact: http://www.bmw-carit.de/
+ *
+ * Contributors:
+ *     Antons Jeļkins <antons.jelkins@bmw.de>
+ */
+
+/**
+
+@ingroup nf_Core
+@defgroup nf_core_BaseApp Base Application
+@brief Common logic to initialize, start up and shut down applications.
+
+*/

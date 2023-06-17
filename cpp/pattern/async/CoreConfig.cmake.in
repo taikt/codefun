@@ -1,0 +1,46 @@
+##
+## BMW Neo Framework
+##
+## Copyright (C) 2022 BMW Car IT GmbH. All rights reserved.
+## Contact: http://www.bmw-carit.de/
+##
+## Contributors:
+##     Manuel Nickschas <manuel.nickschas@bmw.de>
+##
+
+@PACKAGE_INIT@
+@NF_PACKAGE_BEGIN@
+
+nf_add_component_dependencies(REQUIRED CMake GTest)
+
+nf_find_dependency(fmt VERSION 8 REQUIRED)
+nf_find_dependency(libcap PKGCONFIG REQUIRED)
+
+nf_find_dependency(Boost MODULE
+  REQUIRED COMPONENTS
+    exception
+    filesystem
+    headers
+    program_options
+    serialization
+    system
+)
+
+@NF_PACKAGE_END@
+
+#[[! @brief Disable log macros deprection warnings.
+
+Set this option to TRUE to disable log macros (@c NF_LOG_INFO() etc.) deprecations warnings.
+Default value: FALSE.
+
+If set, it will define @c NF_DISABLE_LOG_MACRO_DEPRECATION preprocessor directive for all components
+which depend on Nf5::Core. Use this if you do not want to get spammed with deprecation warnings
+while you are migrating from NF 4.x to NF 5.x.
+
+@since 5.0
+]]
+option(NF_DISABLE_LOG_MACRO_DEPRECATION "Disable log macros deprecation warnings")
+
+if(NF_DISABLE_LOG_MACRO_DEPRECATION)
+    target_compile_definitions(Nf5::Core INTERFACE NF_DISABLE_LOG_MACRO_DEPRECATION)
+endif()
