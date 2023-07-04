@@ -43,6 +43,7 @@ a.out
 *.out
 *.exe
 tempCodeRunnerFile.cpp
+.DS_Store
 Module.symvers
 modules.builtin
 tags
