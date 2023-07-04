@@ -42,6 +42,7 @@
 a.out
 *.out
 *.exe
+tempCodeRunnerFile.cpp
 Module.symvers
 modules.builtin
 tags
