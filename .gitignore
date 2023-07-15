@@ -47,9 +47,9 @@ tempCodeRunnerFile.cpp
 Module.symvers
 modules.builtin
 tags
-*
 !/**/
 !*.*
+a.out
 
 #
 # Top-level generic files

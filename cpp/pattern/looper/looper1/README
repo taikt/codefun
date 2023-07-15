@@ -1,0 +1,9 @@
+-- How to use looper --
+Looper1: a basic looper without using runnable object
+
+1. Reference
+http://himmele.blogspot.com/2011/08/android-messaging-and-concurrency-for.html => must read
+https://github.com/Himmele/My-Blog-Repository/blob/master/Google%20Android/Android%20Messaging%20and%20Concurrency/Test.cpp   => must read
+https://github.com/codebrainz/grinder
+https://github.com/dccmx/EventLoop
+https://github.com/googlesamples/android-ndk/tree/master/native-codec/app/src/main/cpp

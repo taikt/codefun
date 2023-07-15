@@ -1,0 +1,8 @@
+Ref: https://medium.com/@rvarago/introduction-to-google-c-unit-testing-3d564c30f3b0
+
+sudo apt install libgtest-dev
+cd /usr/src/gtest sudo && cmake CMakeLists.txt && sudo make
+sudo cp libgtest.a libgtest_main.a /usr/lib
+
+g++ -o calc_test calc_test.cpp calc.cpp -lgtest -lpthread
+./calc_test

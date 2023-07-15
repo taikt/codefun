@@ -1,0 +1,2 @@
+https://stackoverflow.com/questions/13797926/what-does-new-int100-do
+=> new int(5) vs new int[5]

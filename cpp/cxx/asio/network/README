@@ -1,0 +1,18 @@
+// https://www.youtube.com/watch?v=cXtVZ3_xonY&ab_channel=UlasDikme
+// https://www.youtube.com/watch?v=Ffgb6tzQc1U&ab_channel=UlasDikme
+
+sudo apt install libboost-dev
+sudo apt install libboost-system-dev
+g++ server_sync.cpp -o server -lpthread -lboost_system
+g++ server_async1.cpp -o server1 -lpthread -lboost_system
+
+//best one
+g++ server_async2.cpp -o server2 -lpthread -lboost_system
+
+g++ client_sync.cpp -o client -lpthread -lboost_system
+
+./server 127.0.0.1 1234
+./server1
+./server2 127.0.0.1 1234
+
+./client 127.0.0.1 1234 hello
