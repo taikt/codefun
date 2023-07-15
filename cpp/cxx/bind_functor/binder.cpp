@@ -2,6 +2,10 @@
 #include <string>
 #include <functional>
 using namespace std;
+#define MEM_FUNC_BINDING 0
+
+#if MEM_FUNC_BINDING
+// binding member function
 
 class Acceptor
 {
@@ -9,7 +13,7 @@ public:
     Acceptor() {}
     void handlerAcceptor(int x)
     {
-        cout << "handlerAcceptor called:" << x << "\n";
+        cout << "[binding member] handlerAcceptor called:" << x << "\n";
     }
 };
 
@@ -35,11 +39,14 @@ int main()
     bd();
 }
 
-#if 0
+
+
+#else
+
 // binding non-member function
 void handlerAcceptor(int x)
 {
-    cout << "handlerAcceptor called:" << x << "\n";
+    cout << "[binding non-member] handlerAcceptor called:" << x << "\n";
 }
 
 class Binder
@@ -61,4 +68,5 @@ int main()
     Binder bd(&handlerAcceptor, 11);
     bd();
 }
+
 #endif

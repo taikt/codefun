@@ -2,36 +2,12 @@
 #include <string>
 #include <functional>
 using namespace std;
-
 // g++ .\binder_with_argument.cpp -std=c++11
 
-#if 0
-// binding non-member function with arguments supplied at point of use
-void handlerAcceptor(int count, int err_code, int length)
-{
-    cout << "handlerAcceptor called: count=" << count << ", err_code=" << err_code << ", length=" << length << "\n";
-}
 
-class Binder
-{
-public:
-    Binder(void (*fn)(int, int, int), int count, const std::_Placeholder<1> &err_code, const std::_Placeholder<2> &length) : fn_(fn), count_(count) {}
-    void operator()(int err_code, int length)
-    {
-        fn_(count_, err_code, length);
-    }
+#define MEM_FUNC_BINDING 0
 
-public:
-    void (*fn_)(int, int, int);
-    int count_;
-};
-
-int main()
-{
-    Binder bd(&handlerAcceptor, 11, std::placeholders::_1, std::placeholders::_2);
-    bd(1, 16);
-}
-#endif
+#if MEM_FUNC_BINDING
 
 // binding member function with arguments supplied at point of use
 class Acceptor
@@ -73,3 +49,37 @@ int main()
     //bd(1, 12);
     testCallback(bd);
 }
+
+
+
+#else
+
+// binding non-member function with arguments supplied at point of use
+void handlerAcceptor(int count, int err_code, int length)
+{
+    cout << "handlerAcceptor called: count=" << count << ", err_code=" << err_code << ", length=" << length << "\n";
+}
+
+class Binder
+{
+public:
+    Binder(void (*fn)(int, int, int), int count, const std::_Placeholder<1> &err_code, const std::_Placeholder<2> &length) : fn_(fn), count_(count) {}
+    void operator()(int err_code, int length)
+    {
+        fn_(count_, err_code, length);
+    }
+
+public:
+    void (*fn_)(int, int, int);
+    int count_;
+};
+
+int main()
+{
+    Binder bd(&handlerAcceptor, 11, std::placeholders::_1, std::placeholders::_2);
+    bd(1, 16);
+}
+
+
+#endif
+
