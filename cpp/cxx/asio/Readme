@@ -15,6 +15,7 @@ https://www.boost.org/users/download/
 https://www.boost.org/doc/libs/1_69_0/more/getting_started/unix-variants.html#easy-build-and-install
 
 cd boost_1_82_0
+./bootstrap.sh --help
 sudo ./b2 cxxflags="-std=c++14" install
 output:
 ls /usr/local/lib/libboost_*
