@@ -1,29 +1,8 @@
-
-namespace sl {
+#include <memory>
+#include "Refbase.h"
 class Handler;
+#pragma once
 
-/**
- * This is Container data and object which can be send to Handler via MessageSender or
- * enqueue into MessageQueue directly.
- * You can choice the way you want.
- *
- * Message support converting to Parcel so that Message can be posted via IPC as binder
- * so that remote instance can get same Message and take information .
- *
- * Message Ctor is public but you can use Message::obtain() to create.
- *
- * Currently, Service layer is providing two kind of Message.
- * One is this and the other is android::Message.
- * android::Message only can have one int command and ::Message can have various type of
- * message such as what, cmd1, cmd2, cmd3 and parcel.
- */
-
-class RefBase 
-{
-public:
-	int id;
-	std::string method;
-}
 
 class Message 
 {
@@ -66,13 +45,11 @@ public:
     }
 
 
-    void dump();
-
 protected:
     Message& operator=(const Message& other);
     void clear();
 
-private:
+public:
     void setTo(const Message& other);
     std::shared_ptr<Handler> mHandler;
     std::shared_ptr<Message> mNextMessage;
@@ -85,10 +62,6 @@ public:
 
     void* obj;
     ssize_t obj_size;
-
-    Buffer buffer;
-    Buffer buffer2;
-    std::shared_ptr<Post> post;
     std::shared_ptr<RefBase> spRef;
 
 private:
@@ -98,5 +71,3 @@ private:
     friend class MessageQueue;
     friend class SLLooper;
 };
-} //namespace sl
-#endif // SERVICE_LAYER_UTILS_MESSAGE_H

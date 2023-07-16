@@ -1,20 +1,22 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#include "Message.h"
 #include <condition_variable>
+#pragma once
 
-namespace sl {
+
 class MessageQueue
 {
 public:
     MessageQueue();
-    virtual ~MessageQueue();
+   
     bool enqueueMessage(const std::shared_ptr<Message>& message, int64_t whenUs);
     std::shared_ptr<Message> poll();
     void quit();
 
     bool hasMessage(const std::shared_ptr<Handler>& h, int32_t what, void* obj);
-    bool removeMessages(const std::shared_ptr<Handler>& h, int32_t what, void* obj);
+
 
     int64_t uptimeMicros();
 
@@ -28,5 +30,4 @@ private:
     std::condition_variable mQueueChanged;
 
 };
-} //namespace sl
-#endif // SERVICE_LAYER_UTILS_MESSAGE_QUEUE_H
+

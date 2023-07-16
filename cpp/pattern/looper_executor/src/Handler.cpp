@@ -1,23 +1,21 @@
-
-
 #include <assert.h>
 #include <chrono>
-#include <utils/Timers.h>
-#include "utils/Handler.h"
-
-#include "Log.h"
+#include "Handler.h"
+#include <iostream>
+#include <string>
+using namespace std;
 
 
 #define ms2us(x) (x*1000LL)
 
-namespace sl {
+/*
 Handler::Handler()
 {
     std::shared_ptr<SLLooper> looper = SLLooper::myLooper();
     assert(looper != NULL);
     mMessageQueue = looper->messageQueue();
 }
-
+*/
 Handler::Handler(std::shared_ptr<SLLooper>& looper)
 {
     mMessageQueue = looper->messageQueue();
@@ -71,6 +69,7 @@ std::shared_ptr<Message> Handler::obtainMessage(int32_t what , std::shared_ptr<R
 
 bool Handler::sendMessage(const std::shared_ptr<Message>& message)
 {
+    cout<<"handler sendMessage\n";
     return sendMessageAtTime(message, uptimeMicros());
 }
 
@@ -81,10 +80,13 @@ bool Handler::sendMessageDelayed(const std::shared_ptr<Message>& message, int64_
 
 bool Handler::sendMessageAtTime(const std::shared_ptr<Message>& message, int64_t whenUs)
 {
-    message->mHandler = this;
+    //message->mHandler = this;
+    //message->mHandler = std::shared_ptr<Handler>(this);
+
     return mMessageQueue->enqueueMessage(message, whenUs);
 }
 
+/*
 bool Handler::hasMessages(int32_t what)
 {
     return mMessageQueue->hasMessage(this, what, NULL);
@@ -99,10 +101,11 @@ bool Handler::removeMessages(int32_t what, void* obj)
 {
     return mMessageQueue->removeMessages(this, what, obj);
 }
-
+*/
 void Handler::dispatchMessage(const std::shared_ptr<Message>& message)
 {
-    handleMessage(message);
+    cout<<"dispatch msg\n";
+    //handleMessage(message);
 }
 
 int64_t Handler::uptimeMicros()
@@ -111,4 +114,3 @@ int64_t Handler::uptimeMicros()
     auto dur = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
     return dur.count();
 }
-} //namespace sl

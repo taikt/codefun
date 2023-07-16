@@ -1,8 +1,8 @@
 #include "Message.h"
 #include "MessageQueue.h"
 #include "SLLooper.h"
+#pragma once
 
-namespace sl {
 class Handler 
 {
 public:
@@ -38,7 +38,4 @@ private:
     std::shared_ptr<MessageQueue> mMessageQueue;
     std::shared_ptr<SLLooper> mLooper;
 
-    DISALLOW_COPY_ASSIGN_CONSTRUCTORS(Handler)
 };
-} // namespace sl
-#endif // SERVICE_LAYER_UTILS_HANDLER_H

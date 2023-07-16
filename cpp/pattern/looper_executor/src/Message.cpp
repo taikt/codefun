@@ -1,12 +1,6 @@
-include <cassert>
-
-
 #include "Message.h"
 #include "Handler.h"
-#include "Buffer.h"
 
-
-namespace sl {
 Message::Message() :
     what(0),
     arg1(0),
@@ -18,7 +12,7 @@ Message::Message() :
 {
     mNextMessage = NULL;
     mHandler = NULL;
-    post = NULL;
+    //post = NULL;
     spRef = NULL;
 }
 
@@ -150,9 +144,10 @@ std::shared_ptr<Message> Message::obtain(const std::shared_ptr<Handler>& handler
 bool Message::sendToTarget()
 {
     if (mHandler != NULL) {
-        return mHandler->sendMessage(this);
+        //return mHandler->sendMessage(this);
+        return mHandler->sendMessage(std::shared_ptr<Message>(this));
     } else {
-        cout<<"sendToTarget handler is NULL\n";
+        //cout<<"sendToTarget handler is NULL\n";
         return false;
     }
 }
@@ -173,7 +168,7 @@ void Message::clear()
     whenUs = 0;
     mNextMessage = NULL;
     mHandler = NULL;
-    post = NULL;
+    //post = NULL;
     spRef = NULL;
 }
 
@@ -195,79 +190,9 @@ void Message::setTo(const Message& other)
         obj = other.obj;
         obj_size = other.obj_size;
         whenUs = other.whenUs;
-        post = other.post;
+        //post = other.post;
         spRef = other.spRef;
     }
 }
 
-#if 0
-void Message::dump()
-{
-    char buf[1024] = {0, };
-    snprintf(buf,sizeof(buf), "dump Message what:%d, arg1:%d arg2:%d arg3:%d whenUs:%lld\n",
-        what, arg1, arg2, arg3, whenUs);
-    LOGI("%s", buf);
-    if(obj != NULL)
-    {
-        std::shared_ptr<Buffer> dump_buf = new Buffer();
-        dump_buf->setTo((uint8_t*)obj, obj_size);
-        dump_buf->dump();
-    }
-}
 
-
-error_t Message::writeToParcel(android::Parcel* parcel)
-{
-    parcel->writeInt32(what);
-    parcel->writeInt32(arg1);
-    parcel->writeInt32(arg2);
-    parcel->writeInt32(arg3);
-
-    parcel->writeInt32(obj_size);
-    if(obj_size != 0)
-        parcel->write(obj, static_cast<uint32_t>(obj_size));
-
-    parcel->writeInt32(static_cast<int32_t>(buffer.size()));
-    if(buffer.size() != 0U)
-        parcel->write(buffer.data(), buffer.size());
-
-    parcel->writeInt32(static_cast<int32_t>(buffer2.size()));
-    if(buffer2.size() != 0U)
-        parcel->write(buffer2.data(), buffer2.size());
-
-    post->writeToParcel(parcel);
-    return E_OK;
-}
-
-error_t Message::readFromParcel(android::Parcel& parcel)
-{
-    what = parcel.readInt32();
-    arg1 = parcel.readInt32();
-    arg2 = parcel.readInt32();
-    arg3 = parcel.readInt32();
-
-    obj_size = parcel.readInt32();
-    if(obj_size != 0) {
-        parcel.read(obj, static_cast<uint32_t>(obj_size));
-    }
-
-    buffer.setSize(parcel.readInt32());
-    if(buffer.size() != 0U) {
-        parcel.read(buffer.data(), buffer.size());
-    }
-
-    buffer2.setSize(parcel.readInt32());
-    if(buffer2.size() != 0U) {
-        parcel.read(buffer2.data(), buffer2.size());
-    }
-
-    if(post == NULL) {
-        post = new Post();
-    }
-    post->readFromParcel(parcel);
-
-    return E_OK;
-}
-#endif
-
-}// namespace sl
