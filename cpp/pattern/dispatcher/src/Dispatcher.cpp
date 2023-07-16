@@ -10,13 +10,10 @@ std::unique_ptr<T> make_unique(Args &&... args) {
 }
 */
 
-Dispatcher::Dispatcher()
-   : Dispatcher(1) {
-}
 
-Dispatcher::Dispatcher(int threadCount)
+Dispatcher::Dispatcher(std::shared_ptr<Handler>& handler)
    : jobQueue_{std::make_shared<JobQueue>()}
-   , threadCount_(threadCount) {
+   , handler_(handler) {
     /*
     for (int i = 0; i < threadCount_; i++) {
         auto th = make_unique<WorkerThread>(jobQueue_,i);
@@ -25,7 +22,7 @@ Dispatcher::Dispatcher(int threadCount)
         workerThreads_.emplace_back(std::move(th));
     }
     */
-    auto th1 = std::make_unique<MsgWorkerThread>(jobQueue_);
+    auto th1 = std::make_unique<MsgWorkerThread>(jobQueue_,handler_);
     th1->start();
     MsgworkerThreads_.emplace_back(std::move(th1));
     auto th2 = std::make_unique<TaskWorkerThread>(jobQueue_);

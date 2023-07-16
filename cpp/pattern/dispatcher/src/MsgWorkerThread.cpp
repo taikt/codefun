@@ -7,9 +7,10 @@ using namespace std;
 
 
 
-MsgWorkerThread::MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue)
+MsgWorkerThread::MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue, std::shared_ptr<Handler> handler)
    : jobQueue_(taskQueue),
-   shutdown_(false)
+   shutdown_(false),
+   handler_(handler)
    {
     cout<<"msgworkerthread: shutdown="<<shutdown_<<"\n";
    }
@@ -40,7 +41,7 @@ void MsgWorkerThread::processMessage() {
         if (!jobQueue_->isShutdown()) {
             ////LOGI("[MsgWorkerThread %d] get task start",ID_);
             auto msg = jobQueue_->popMessage();
-            handleMessage(msg);
+            handler_->handleMessage(msg);
         } else {
             // jobQueue_ is not available or destroyed
             // killing the thread
@@ -51,5 +52,5 @@ void MsgWorkerThread::processMessage() {
 }
 
 void MsgWorkerThread::handleMessage(std::shared_ptr<Message>& msg) {
-    cout<<"handle a message: id="<<msg->id<<", value:"<<msg->str<<"\n";
+    //cout<<"handle a message: id="<<msg->id<<", value:"<<msg->str<<"\n";
 }

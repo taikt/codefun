@@ -3,10 +3,11 @@
 
 #include <thread>
 #include "JobQueue.h"
+#include "Handler.h"
 
 class MsgWorkerThread {
  public:
-    MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue);
+    MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue, std::shared_ptr<Handler> handler);
     ~MsgWorkerThread();
     void start();
     bool isShutdown();
@@ -27,6 +28,7 @@ class MsgWorkerThread {
 
     // Thread to run the tasks on
     std::thread thread_;
+    std::shared_ptr<Handler> handler_;
 };
 
 

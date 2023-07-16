@@ -7,12 +7,12 @@
 #include "JobQueue.h"
 #include "TaskWorkerThread.h"
 #include "MsgWorkerThread.h"
+#include "Handler.h"
 #include "Message.h"
 
 class Dispatcher {
  public:
-    Dispatcher();
-    Dispatcher(int threadCount);
+    Dispatcher(std::shared_ptr<Handler>& handler);
     ~Dispatcher();
     template <typename F, typename... Args>
     auto deliverTask(F task, Args &&... args) -> std::future<decltype(task(args...))>;
@@ -29,6 +29,7 @@ class Dispatcher {
 
     // Thread count;
     int threadCount_;
+    std::shared_ptr<Handler> handler_;
 
 };
 
