@@ -29,7 +29,7 @@ bool TaskWorkerThread::isShutdown() {
 }
 
 void TaskWorkerThread::processTasks() {
-    cout<<"start task worker thread, shutdown="<<shutdown_<<"\n";;
+    cout<<"start task worker thread \n";;
     while (!shutdown_) {
         ////LOGI("[TaskWorkerThread %d] looping",ID_);
         //auto tq = jobQueue_.lock();

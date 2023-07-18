@@ -39,6 +39,7 @@ void Dispatcher::shutdown() {
     jobQueue_->shutdown();
     MsgworkerThreads_.clear();
     TaskworkerThreads_.clear();
+    
 }
 
 bool Dispatcher::isShutdown() const {

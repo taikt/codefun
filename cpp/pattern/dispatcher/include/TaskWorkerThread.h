@@ -4,6 +4,8 @@
 #include <thread>
 #include "JobQueue.h"
 
+class JobQueue;
+
 class TaskWorkerThread {
  public:
     TaskWorkerThread(std::shared_ptr<JobQueue> taskQueue);

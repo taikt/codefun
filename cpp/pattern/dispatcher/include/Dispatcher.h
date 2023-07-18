@@ -3,12 +3,16 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 
 #include "JobQueue.h"
 #include "TaskWorkerThread.h"
 #include "MsgWorkerThread.h"
 #include "Handler.h"
 #include "Message.h"
+
+class MsgWorkerThread;
+class TaskWorkerThread;
 
 class Dispatcher {
  public:
@@ -26,6 +30,7 @@ class Dispatcher {
     std::shared_ptr<JobQueue> jobQueue_ = nullptr;
     std::vector<std::unique_ptr<MsgWorkerThread>> MsgworkerThreads_;
     std::vector<std::unique_ptr<TaskWorkerThread>> TaskworkerThreads_;
+    std::map<std::thread::id, std::shared_ptr<std::thread>> dispatchers_;
 
     // Thread count;
     int threadCount_;

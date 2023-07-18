@@ -26,6 +26,10 @@ class JobQueue {
     void shutdown();
     bool isShutdown();
 
+    int getMsgQueueSize() {
+        return msg_queue.size();
+    }
+
  private:
     // queue of tasks
     std::deque<std::packaged_task<void()>> queue_;
