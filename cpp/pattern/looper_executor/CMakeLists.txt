@@ -3,7 +3,7 @@ project(binary_build)
 
 #include_directories(include /Users/taikt/Documents/code/codefun/cpp/cxx/cmake/sharedLib/include)
 include_directories(include)
-set(CMAKE_CXX_FLAGS "-std=c++14 -pthread")
+set(CMAKE_CXX_FLAGS "-std=c++17 -pthread")
 
 #set(LINK_LIBS libqueuelib.dylib)
 #link_directories(/Users/taikt/Documents/code/codefun/cpp/cxx/cmake/sharedLib/build)

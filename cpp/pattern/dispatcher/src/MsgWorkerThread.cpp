@@ -87,7 +87,7 @@ void MsgWorkerThread::messageDispatcher() {
 void MsgWorkerThread::invokeHandler(std::shared_ptr<Message>& msg) {
     //cout<<"invoke handler\n";
     boost::asio::steady_timer its_dispatcher_timer(io_);
-    its_dispatcher_timer.expires_from_now(std::chrono::milliseconds(1000)); // default 1sec
+    its_dispatcher_timer.expires_from_now(std::chrono::milliseconds(2000)); // default 1sec
     its_dispatcher_timer.async_wait([this](const boost::system::error_code &_error) {
         if (!_error) {
             if (dispatchers_.size() < 3) {

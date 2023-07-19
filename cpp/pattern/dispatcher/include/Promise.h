@@ -26,7 +26,8 @@ public:
 	}
 
 public:
-	std::function<void (tValue)> f;
+	//std::function<void (const tValue&)> f;
+    std::function<void (tValue)> f;
 };
 
 template <typename tValue>
@@ -38,9 +39,9 @@ public:
     {
         m_value = std::move(value);
 		if (m_continuation) {
-			//m_continuation->f(value);
-            if (m_dispatcher != nullptr)
-                m_dispatcher->deliverTask([this, value]{ m_continuation->f(value);});
+			m_continuation->f(*value);
+            //if (m_dispatcher != nullptr)
+                //m_dispatcher->deliverTask([this, value]{ m_continuation->f(value);});
 		} else cout<<"m_continuation is empty\n";
 		
     }
@@ -55,8 +56,9 @@ public:
 
 private:
  
-    tValue m_value;
-	//std::function<void (tValue)> f;
+    //tValue m_value;
+    std::optional<tValue> m_value;
+
 	std::shared_ptr<Continuation<tValue>> m_continuation;
     std::shared_ptr<Dispatcher> m_dispatcher;
 };

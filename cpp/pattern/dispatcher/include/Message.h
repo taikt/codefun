@@ -16,13 +16,13 @@ public:
     
 
 public:
-    Message(int id_, std::string str_):
-    id(id_), str(str_){}
+    Message(int id_):
+    id(id_){}
     //Message(Message& other);
     //virtual ~Message();
 
     int id;
-    std::string str;
+    std::string payload;
 
     
     std::shared_ptr<Promise<int>> m_promise;

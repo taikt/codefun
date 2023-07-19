@@ -4,10 +4,23 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include "Promise.h"
+#include "requestMsg.pb.h"
 
 #include <iostream>
 #include <string>
 using namespace std;
+using namespace data;
+
+std::shared_ptr<Dispatcher> disp;
+//std::shared_ptr<Promise<int>> mypromise; 
+
+class ResponseMsg {
+public:
+    int code_;
+    string value_;
+};
+
+std::shared_ptr<Promise<ResponseMsg>> mypromise; 
 
 class myHandler : public Handler {
     void handleMessage(std::shared_ptr<Message>& msg) {
@@ -15,7 +28,7 @@ class myHandler : public Handler {
         switch (msg->id) {
             case 2:
                 
-                cout<<"[thread ID] ="<<id_<<", long task start: id="<<msg->id<<", value:"<<msg->str<<"\n";
+                cout<<"[thread ID] ="<<id_<<", long task start: id="<<msg->id<<", value:"<<msg->payload<<"\n";
                 
                 //sleep(20);
                 
@@ -37,17 +50,37 @@ class myHandler : public Handler {
                 break;
             case 4:
                 sleep(6);
-                cout<<"[thread ID] ="<<id_<<", task: id="<<msg->id<<", value:"<<msg->str<<"\n";
+                cout<<"[thread ID] ="<<id_<<", task: id="<<msg->id<<", value:"<<msg->payload<<"\n";
                 break;
 
-            case 0:
-                sleep(10);
+            case 0: {
+                sleep(1);
+                /*
                 if (msg->m_promise != nullptr) {
                     msg->m_promise->set_value(5);
                 }
+                */
+                requestMsg payload;
+                payload.ParseFromString(msg->payload);
+
+                ResponseMsg resp;
+                resp.code_ = payload.code();
+                resp.value_ = payload.data();
+                //cout<<"data:"<<resp.value_<<"\n";
+                mypromise->set_value(resp);
+                }
+
                 break;
+
+            case 1: {
+                requestMsg payload;
+                payload.ParseFromString(msg->payload);
+                cout<<"[thread ID] ="<<id_<<", msg code="<<payload.code() <<", data="<<payload.data()<<"\n";
+                }
+                break;
+
             default:
-                cout<<"[thread ID] ="<<id_<<", task: id="<<msg->id<<", value:"<<msg->str<<"\n";
+                cout<<"[thread ID] ="<<id_<<", task: id="<<msg->id<<", value:"<<msg->payload<<"\n";
                 break;
         }
         
@@ -56,36 +89,35 @@ class myHandler : public Handler {
 };
 
 
-std::shared_ptr<Dispatcher> disp;
+Future<ResponseMsg> startRequest() {
+	auto promise_obj = std::make_shared<Promise<ResponseMsg>>();
+    mypromise = promise_obj;
 
-//Future<int> startRequest(std::shared_ptr<Dispatcher>& disp) {
-Future<int> startRequest() {
-	auto promise_obj = std::make_shared<Promise<int>>();
+    
 
-    std::shared_ptr<Message> msg0 = std::make_shared<Message>(0,"abcdasf");
-    msg0->m_promise =  promise_obj;
+    std::shared_ptr<Message> msg0 = std::make_shared<Message>(0);
+
+    requestMsg payload;
+    payload.set_code(18);
+    payload.set_data("hi there!");
+    payload.SerializeToString(&msg0->payload);
+
+    //msg0->m_promise =  promise_obj;
     disp->deliverMessage(msg0);
 	
 	return promise_obj->get_future();
 }
 
+
 int main() {
     std::shared_ptr<Handler> myHandler_ = std::make_shared<myHandler>();
-    //std::shared_ptr<Dispatcher> disp = std::make_shared<Dispatcher>(myHandler_);
+
     disp = std::make_shared<Dispatcher>(myHandler_);
-    std::shared_ptr<Message> msg1 = std::make_shared<Message>(2,"abc");
-    std::shared_ptr<Message> msg4 = std::make_shared<Message>(4,"hellu");
-    std::shared_ptr<Message> msg2 = std::make_shared<Message>(1,"xyz");
-    std::shared_ptr<Message> msg3 = std::make_shared<Message>(5,"xy00z");
 
-    disp->deliverMessage(msg1);
-    disp->deliverMessage(msg4);
-    disp->deliverMessage(msg2);
-    disp->deliverMessage(msg3);
 
-    disp->deliverTask([=]{cout<<"[task] hello Tai\n";});
+    //disp->deliverTask([=]{cout<<"[task] hello Tai\n";});
 
-    startRequest().then(disp, [](int x) {cout << "hellu promise:"<<x<<"\n";});
+    startRequest().then(disp, [](const ResponseMsg& msg) {cout << "hellu promise:"<<msg.code_<<", data:"<<msg.value_<<"\n";});
 
     while (1) {}
     
