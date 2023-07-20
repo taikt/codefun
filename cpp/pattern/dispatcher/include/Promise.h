@@ -16,7 +16,6 @@ class Dispatcher;
 using namespace std;
 
 template <typename tValue>
-
 class Continuation 
 {
 public:
@@ -30,18 +29,29 @@ public:
     std::function<void (tValue)> f;
 };
 
+
+
 template <typename tValue>
 class SharedState 
 {
 public:
     
+    template<typename Func, typename... Args>
+    void ops(Func&& f, Args&&... args) {
+        return std::forward<Func>(f)(std::forward<Args>(args)...);
+    }
+
     void setValue(tValue &&value)
     {
-        m_value = std::move(value);
+        //m_value = std::move(value);
 		if (m_continuation) {
-			m_continuation->f(*value);
+			//m_continuation->f(*value);
             //if (m_dispatcher != nullptr)
                 //m_dispatcher->deliverTask([this, value]{ m_continuation->f(value);});
+
+            //ops(m_continuation->f, value);
+            if (m_dispatcher != nullptr)
+                m_dispatcher->deliverTask([this, value]{ops(m_continuation->f, value);});
 		} else cout<<"m_continuation is empty\n";
 		
     }
