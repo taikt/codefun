@@ -8,7 +8,6 @@
 #include <iostream>
 #include <functional>
 #include <memory>
-//#include <unistd.h>
 #include "Dispatcher.h"
 
 class Dispatcher;
@@ -88,10 +87,11 @@ public:
 	
     template <typename F>
     void then(std::shared_ptr<Dispatcher>& dispatch_, F func) 
-    {       
+    {    
         m_state->setContinuation(dispatch_, std::move(func));
         
     }
+ 
     
 protected:
 	friend Promise<tValue>;
