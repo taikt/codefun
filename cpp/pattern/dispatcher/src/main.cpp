@@ -14,6 +14,7 @@ using namespace data;
 #define START_REQUEST1 1
 #define START_REQUEST2 2
 #define START_REQUESTx 3
+#define START_REQUEST4 4
 
 struct ResponseMsg {
     int code_;
@@ -59,7 +60,8 @@ class myHandler : public Handler {
                 }
                 break;
 
-            case START_REQUEST1: {
+            case START_REQUEST1: /*{
+                
                 cout<<"case START_REQUEST1\n";
                 sleep(4);
                 requestMsg req;
@@ -81,9 +83,12 @@ class myHandler : public Handler {
                 cout<<"START_REQUEST1 end\n";
 
                 }
+                */
+               cout<<"rec start request1\n";
                 break;
 
-            case START_REQUEST2: {
+            case START_REQUEST2: /*{
+                
                 cout<<"case START_REQUEST2\n";
                 sleep(6);
                 requestMsg req;
@@ -96,7 +101,25 @@ class myHandler : public Handler {
 
                 cout<<"START_REQUEST2 end\n";
                 }
+                */
+                cout<<"rec start request2\n";
                 break;
+            case START_REQUEST4: {
+                requestMsg req;
+                req.ParseFromString(msg->payload);
+                cout<<"receive start request\n";
+                
+                ResponseMsg resp;
+                resp.code_ = req.code();
+                resp.value_ = req.data();
+                resp.index = 10;
+
+                cout<<"promise set value\n";
+                mypromise->set_value(resp);
+                //cout<<"set promise\n";
+                
+            }
+            break;
 
             default:
                 cout<<"[thread ID] ="<<id_<<", task: id="<<msg->id<<", value:"<<msg->payload<<"\n";
@@ -107,6 +130,7 @@ class myHandler : public Handler {
     }
 };
 
+/*
 Future<ResponseMsg2> startRequest2() {
 
     auto promise_obj2 = std::make_shared<Promise<ResponseMsg2>>();
@@ -139,6 +163,26 @@ Future<ResponseMsg> startRequest() {
 	
 	return promise_obj->get_future();
 }
+*/
+
+Future<ResponseMsg> startRequest_test() {
+	auto promise_obj = std::make_shared<Promise<ResponseMsg>>();
+    mypromise = promise_obj;
+
+    std::shared_ptr<Message> msg1 = std::make_shared<Message>(START_REQUEST4);
+
+    requestMsg payload;
+    payload.set_code(1);
+    payload.set_data("message 1+");
+    payload.SerializeToString(&msg1->payload);
+    //msg0->m_promise =  promise_obj;
+
+    cout<<"deliver msg\n";
+
+    mExecutor->deliverMessage(msg1);
+	
+	return promise_obj->get_future();
+}
 
 void sendDelayedMsg() {
     std::shared_ptr<Message> msg = std::make_shared<Message>(START_REQUESTx);
@@ -159,13 +203,24 @@ int main() {
 
     
 
-    mExecutor->deliverTask([=]{cout<<"[task] hello task\n";});
+    //mExecutor->deliverTask([=]{cout<<"[task] hello task\n";});
 
-    startRequest().then(mExecutor, [](const ResponseMsg& msg) {
+    startRequest_test().then(mExecutor, [](const ResponseMsg& msg) {
         cout << "\nfinal promise: code="<<msg.code_<<", data: "<<msg.value_<<"\n";
+        return 16;
+        }).then(mExecutor, [](int x) {
+            //sleep(5);
+            cout <<"x="<<x<<"\n";
+            return 2.8;
+        }).then(mExecutor, [](double y) {
+            cout <<"y="<<y<<"\n";
+            string str="tai";
+            return str;
+        }).then(mExecutor, [](string z) {
+            cout <<"z="<<z<<"\n";
         });
 
-    sendDelayedMsg();
+    //sendDelayedMsg();
     
 
     cout<<"I am running\n";
