@@ -107,17 +107,12 @@ class myHandler : public Handler {
             case START_REQUEST4: {
                 requestMsg req;
                 req.ParseFromString(msg->payload);
-                cout<<"receive start request\n";
                 
                 ResponseMsg resp;
                 resp.code_ = req.code();
                 resp.value_ = req.data();
                 resp.index = 10;
-
-                cout<<"promise set value\n";
-                mypromise->set_value(resp);
-                //cout<<"set promise\n";
-                
+                mypromise->set_value(resp);        
             }
             break;
 
@@ -172,12 +167,9 @@ Future<ResponseMsg> startRequest_test() {
     std::shared_ptr<Message> msg1 = std::make_shared<Message>(START_REQUEST4);
 
     requestMsg payload;
-    payload.set_code(1);
-    payload.set_data("message 1+");
+    payload.set_code(2);
+    payload.set_data("message 2+");
     payload.SerializeToString(&msg1->payload);
-    //msg0->m_promise =  promise_obj;
-
-    cout<<"deliver msg\n";
 
     mExecutor->deliverMessage(msg1);
 	
@@ -198,26 +190,28 @@ void sendDelayedMsg() {
 
 int main() {
     std::shared_ptr<Handler> myHandler_ = std::make_shared<myHandler>();
-
     mExecutor = std::make_shared<Dispatcher>(myHandler_);
 
-    
-
-    //mExecutor->deliverTask([=]{cout<<"[task] hello task\n";});
+    mExecutor->deliverTask([=]{cout<<"[task] hello task\n";});
 
     startRequest_test().then(mExecutor, [](const ResponseMsg& msg) {
-        cout << "\nfinal promise: code="<<msg.code_<<", data: "<<msg.value_<<"\n";
+        std::thread::id id_ = std::this_thread::get_id();
+        cout <<"[thread id]="<<id_<< ", code="<<msg.code_<<", data: "<<msg.value_<<"\n";
         return 16;
         }).then(mExecutor, [](int x) {
             //sleep(5);
-            cout <<"x="<<x<<"\n";
+             std::thread::id id_ = std::this_thread::get_id();
+            cout <<"[thread id]="<<id_ <<", x="<<x<<"\n";
             return 2.8;
         }).then(mExecutor, [](double y) {
-            cout <<"y="<<y<<"\n";
+            sleep(5);
+            std::thread::id id_ = std::this_thread::get_id();
+            cout <<"[thread id]="<<id_<<", y="<<y<<"\n";
             string str="tai";
             return str;
         }).then(mExecutor, [](string z) {
-            cout <<"z="<<z<<"\n";
+             std::thread::id id_ = std::this_thread::get_id();
+            cout <<"[thread id]="<<id_ <<", z="<<z<<"\n";
         });
 
     //sendDelayedMsg();

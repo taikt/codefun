@@ -25,9 +25,9 @@ Dispatcher::Dispatcher(std::shared_ptr<Handler>& handler)
     auto th1 = std::make_unique<MsgWorkerThread>(jobQueue_,handler_);
     th1->start();
     MsgworkerThreads_.emplace_back(std::move(th1));
-    //auto th2 = std::make_unique<TaskWorkerThread>(jobQueue_);
-    //th2->start();
-    //TaskworkerThreads_.emplace_back(std::move(th2));
+    auto th2 = std::make_unique<TaskWorkerThread>(jobQueue_);
+    th2->start();
+    TaskworkerThreads_.emplace_back(std::move(th2));
 }
 
 Dispatcher::~Dispatcher() {

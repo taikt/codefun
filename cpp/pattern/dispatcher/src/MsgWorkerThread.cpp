@@ -84,9 +84,7 @@ void MsgWorkerThread::messageDispatcher() {
     cout<<"exit msg worker thread:"<<id_<<"\n";
 }
 
-void MsgWorkerThread::invokeHandler(std::shared_ptr<Message>& msg) {
-    cout<<"invoke handler 1\n";
-    /*
+void MsgWorkerThread::invokeHandler(std::shared_ptr<Message>& msg) {    
     boost::asio::steady_timer its_dispatcher_timer(io_);
     its_dispatcher_timer.expires_from_now(std::chrono::milliseconds(2000)); // default 1sec
     its_dispatcher_timer.async_wait([this](const boost::system::error_code &_error) {
@@ -102,14 +100,11 @@ void MsgWorkerThread::invokeHandler(std::shared_ptr<Message>& msg) {
             }          
         }
     });
-    */
-         
-    cout<<"handler handlemessage why\n";
-    handler_->handleMessage(msg);
-    cout<<"handler handlemessage end\n";
 
-    //boost::system::error_code ec;
-    //its_dispatcher_timer.cancel(ec);
+    handler_->handleMessage(msg);
+  
+    boost::system::error_code ec;
+    its_dispatcher_timer.cancel(ec);
 }
 
 void MsgWorkerThread::handleMessage(std::shared_ptr<Message>& msg) {
