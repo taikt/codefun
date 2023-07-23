@@ -1,0 +1,9 @@
+# create protobuf 
+mkdir gen
+protoc --cpp_out=./gen requestMsg.proto
+
+# build
+mkdir build
+cd build
+cmake ..
+make
