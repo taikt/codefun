@@ -192,13 +192,14 @@ public:
     template <typename F>
     auto then(std::shared_ptr<Dispatcher>& dispatch_, F func) 
     {   
+        
         if constexpr (std::is_void_v<tValue>) {
             static_assert(std::is_invocable_v<F>, "Continuation must be invocable with 'void'");
         } else {
             static_assert(std::is_invocable_v<F, tValue>,
                           "Continuation must be invocable with 'TValue'");
         }
-
+        
         //using tReturn = typename std::conditional_t<std::is_void_v<tValue>, std::invoke_result<F>,std::invoke_result<F, tValue>>::type;
         using tReturn = typename std::invoke_result<F,tValue>::type;
 

@@ -15,6 +15,7 @@ using namespace data;
 #define START_REQUEST2 2
 #define START_REQUESTx 3
 #define START_REQUEST4 4
+#define START_REQUEST5 5
 
 struct ResponseMsg {
     int code_;
@@ -30,6 +31,11 @@ struct ResponseMsg2 {
 std::shared_ptr<Dispatcher> mExecutor;
 std::shared_ptr<Promise<ResponseMsg>> mypromise; 
 std::shared_ptr<Promise<ResponseMsg2>> mypromise2; 
+//std::shared_ptr<Promise<int>> mypromise3; 
+
+Promise<int> mypromise3; 
+
+//Promise<double> mypromise3; 
 
 Future<ResponseMsg2> startRequest2();
 Future<ResponseMsg> startRequest();
@@ -107,12 +113,25 @@ class myHandler : public Handler {
             case START_REQUEST4: {
                 requestMsg req;
                 req.ParseFromString(msg->payload);
-                
+
                 ResponseMsg resp;
                 resp.code_ = req.code();
                 resp.value_ = req.data();
                 resp.index = 10;
                 mypromise->set_value(resp);        
+            }
+            break;
+
+            case START_REQUEST5: {
+                requestMsg req;
+                req.ParseFromString(msg->payload);
+
+                ResponseMsg resp;
+                resp.code_ = req.code();
+                resp.value_ = req.data();
+                //resp.index = 10;
+                cout<<"receive code:"<<resp.code_<<"\n";
+                mypromise3.set_value(resp.code_);        
             }
             break;
 
@@ -167,8 +186,8 @@ Future<ResponseMsg> startRequest_test() {
     std::shared_ptr<Message> msg1 = std::make_shared<Message>(START_REQUEST4);
 
     requestMsg payload;
-    payload.set_code(2);
-    payload.set_data("message 2+");
+    payload.set_code(1);
+    payload.set_data("message 1+");
     payload.SerializeToString(&msg1->payload);
 
     mExecutor->deliverMessage(msg1);
@@ -176,8 +195,15 @@ Future<ResponseMsg> startRequest_test() {
 	return promise_obj->get_future();
 }
 
+
+double startRequest_test2(int& x) {
+   double y;
+   y = 2.0 + x;
+   return y;
+}
+
 void sendDelayedMsg() {
-    std::shared_ptr<Message> msg = std::make_shared<Message>(START_REQUESTx);
+    std::shared_ptr<Message> msg = std::make_shared<Message>(START_REQUEST5);
 
     requestMsg payload;
     payload.set_code(5);
@@ -188,10 +214,39 @@ void sendDelayedMsg() {
 }
 
 
+Future<int> doAnotherAsyncCall() {
+    //std::shared_ptr<Promise<int>> promise = std::make_shared<Promise<int>>();
+    Promise<int> promise;
+    mypromise3 = promise;
+
+    sendDelayedMsg();
+
+    return promise.get_future();
+
+}
+
+Future<int> doAsyncall() {
+
+    //std::shared_ptr<Promise<int>> m_promise = std::make_shared<Promise<int>>();
+    Promise<int> m_promise;
+    // need add mutable!
+    // https://stackoverflow.com/questions/27584128/passing-const-cmyclass-as-this-argument-of-discards-qualifiers-fpermis 
+    doAnotherAsyncCall().then(mExecutor, [m_promise](int nextResult) mutable{
+        std::thread::id id_ = std::this_thread::get_id();
+
+        cout <<"[thread id]="<<id_ <<", next Result:"<<nextResult<<"\n";
+        int rep = nextResult + 1;    
+        m_promise.set_value(rep);
+    });
+    
+
+    return m_promise.get_future();
+}
+
 int main() {
     std::shared_ptr<Handler> myHandler_ = std::make_shared<myHandler>();
     mExecutor = std::make_shared<Dispatcher>(myHandler_);
-
+    
     mExecutor->deliverTask([=]{cout<<"[task] hello task\n";});
 
     startRequest_test().then(mExecutor, [](const ResponseMsg& msg) {
@@ -202,7 +257,8 @@ int main() {
             //sleep(5);
              std::thread::id id_ = std::this_thread::get_id();
             cout <<"[thread id]="<<id_ <<", x="<<x<<"\n";
-            return 2.8;
+            //return 2.8;
+            return startRequest_test2(x);
         }).then(mExecutor, [](double y) {
             sleep(5);
             std::thread::id id_ = std::this_thread::get_id();
@@ -215,6 +271,14 @@ int main() {
         });
 
     //sendDelayedMsg();
+
+   
+    doAsyncall().then(mExecutor, [](int mResult){ // or const int& mResult
+        cout<<"final result is:"<<mResult<<"\n";
+        return 2;
+    }).then(mExecutor, [](const int& t) { // note: to check error if int& t, but no error if: int t or const int& t
+        cout<<"x="<<t<<"\n";
+    });
     
 
     cout<<"I am running\n";
