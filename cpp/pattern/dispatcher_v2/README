@@ -1,5 +1,5 @@
-# dispatcher v1
-use both promise, future
+# dispatcher v2
+only promise, no future
 
 # create protobuf 
 mkdir gen
