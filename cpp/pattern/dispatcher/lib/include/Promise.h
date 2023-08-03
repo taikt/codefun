@@ -21,9 +21,6 @@
 using namespace std;
 
 class Dispatcher;
-
-using namespace std;
-
 template <typename tReturn>
 class Promise;
 

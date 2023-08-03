@@ -6,16 +6,16 @@ JobQueue::JobQueue()
 }
 
 std::packaged_task<void()> JobQueue::popTask() {
-    ////LOGI("JobQueue: request to popTask task");
+   
     std::packaged_task<void()> pt;
 
     std::unique_lock<std::mutex> lock{mtx_};
     auto isWait = [this]() { return shutdown_ || !queue_.empty(); };
     if (!isWait()) {
-        ////LOGI("JobQueue: waiting for task");
+      
         cv_.wait(lock, isWait);
     }
-    ////LOGI("JobQueue: task is available, get task now");
+
     if (!queue_.empty()) {
         pt = std::move(queue_.front());
         queue_.pop_front();
@@ -28,10 +28,10 @@ std::shared_ptr<Message> JobQueue::popMessage() {
     std::unique_lock<std::mutex> lock{mtx_};
     auto isWait = [this]() { return shutdown_ || !msg_queue.empty(); };
     if (!isWait()) {
-        ////LOGI("JobQueue: waiting for task");
+
         cv_.wait(lock, isWait);
     }
-    ////LOGI("JobQueue: task is available, get task now");
+
     if (!msg_queue.empty()) {
         msg = msg_queue.front();
         msg_queue.pop_front();

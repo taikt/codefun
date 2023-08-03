@@ -1,4 +1,4 @@
-//#include "Log.h"
+
 #include "TaskWorkerThread.h"
 #include <iostream>
 #include <string>
@@ -33,18 +33,18 @@ void TaskWorkerThread::processTasks() {
     std::thread::id id_ = std::this_thread::get_id();
     cout<<"start task thread: "<<id_<<"\n";
     while (!shutdown_) {
-        ////LOGI("[TaskWorkerThread %d] looping",ID_);
+  
         //auto tq = jobQueue_.lock();
         //if (tq && !tq->isShutdown()) {
         if (!jobQueue_->isShutdown()) {
-            ////LOGI("[TaskWorkerThread %d] get task start",ID_);
+      
             auto task = jobQueue_->popTask();
-            ////LOGI("[TaskWorkerThread %d] get task done",ID_);
+    
             if (task.valid()) {
-                //LOGI("[TaskWorkerThread %d] processing task",ID_);
+         
                 task();
             } else {
-                //LOGI(" unable to process task");
+         
             }
         } else {
             // jobQueue_ is not available or destroyed
