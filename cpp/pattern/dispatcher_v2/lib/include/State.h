@@ -27,7 +27,13 @@ template <typename tValue>
 class State 
 {
 public:
-   
+    State() {
+		//cout<<"creat shared state object\n";
+	}
+   	~State(){
+		//cout<<"shared state is destroy\n";
+	}
+
     template<typename Func, typename... Args>
     void ops(Func&& f, Args&&... args) {
         return std::forward<Func>(f)(std::forward<Args>(args)...);

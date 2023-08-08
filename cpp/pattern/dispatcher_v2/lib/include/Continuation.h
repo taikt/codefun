@@ -55,6 +55,10 @@ public:
         m_Invocation = std::make_shared<Invocation<F, tReturn, tValue>>(std::move(func));
 	}
 
+    ~Continuation() {
+		//cout<<"destroy continatio object\n";
+	}
+
     Promise<tReturn> getNextPromise() {
         return m_Invocation->getNextPromise();
     }
@@ -65,7 +69,9 @@ public:
     }
 
     void handle(tValue&& value) {
-        dispatch->deliverTask([this,value]{ops(*m_Invocation.get(),value);});
+        auto fn = std::bind(*m_Invocation.get(),value);
+        dispatch->deliverTask(fn);
+        //dispatch->deliverTask([this,value]{ops(*m_Invocation.get(),value);});
     }
 
 public:

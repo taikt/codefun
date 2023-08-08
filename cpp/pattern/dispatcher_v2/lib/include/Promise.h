@@ -36,7 +36,7 @@ public:
     }
 
     void set_value() {
-        cout<<"promise set void argument\n";
+        //cout<<"promise set void argument\n";
     }
 
     template <typename F>
@@ -85,7 +85,7 @@ class Promise<void>
 public:
    
     void set_value() {
-       cout<<"promise set void argument\n";
+       //cout<<"promise set void argument\n";
     }
 
 	Promise() 

@@ -9,27 +9,29 @@ std::packaged_task<void()> JobQueue::popTask() {
    
     std::packaged_task<void()> pt;
 
-    std::unique_lock<std::mutex> lock{mtx_};
+    std::unique_lock<std::mutex> lock{task_mtx_};
     auto isWait = [this]() { return shutdown_ || !queue_.empty(); };
     if (!isWait()) {
       
-        cv_.wait(lock, isWait);
+        task_cv_.wait(lock, isWait);
     }
 
     if (!queue_.empty()) {
         pt = std::move(queue_.front());
         queue_.pop_front();
     }
+	//cout<<"pop a task\n";
+	
     return pt;
 }
 
 std::shared_ptr<Message> JobQueue::popMessage() {
     std::shared_ptr<Message> msg;
-    std::unique_lock<std::mutex> lock{mtx_};
+    std::unique_lock<std::mutex> lock{msg_mtx_};
     auto isWait = [this]() { return shutdown_ || !msg_queue.empty(); };
     if (!isWait()) {
 
-        cv_.wait(lock, isWait);
+        msg_cv_.wait(lock, isWait);
     }
 
     if (!msg_queue.empty()) {
@@ -40,10 +42,11 @@ std::shared_ptr<Message> JobQueue::popMessage() {
 }
 
 void JobQueue::shutdown() {
-    std::lock_guard<std::mutex> lk{mtx_};
+    std::lock_guard<std::mutex> lk{msg_mtx_};
     queue_.clear();
     shutdown_ = true;
-    cv_.notify_all();
+    msg_cv_.notify_all();
+	task_cv_.notify_all();
 }
 
 bool JobQueue::isShutdown() {
@@ -51,8 +54,8 @@ bool JobQueue::isShutdown() {
 }
 
 bool JobQueue::pushMessage(const std::shared_ptr<Message>& message) {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::lock_guard<std::mutex> lock(msg_mtx_);
     msg_queue.emplace_back(message);
-    cv_.notify_one();
+    msg_cv_.notify_one();
 }
 

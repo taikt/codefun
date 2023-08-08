@@ -200,12 +200,28 @@ Future<ResponseMsg> startRequest_test() {
 }
 */
 
+void doAsyncRequestNow(string& out, Promise<ResponseMsg>& mypromise) {
+    std::thread::id id_ = std::this_thread::get_id();
+    cout<<"[thread ID] ="<<id_<<", doAsyncRequestNow invoke\n";
+
+    requestMsg req;
+    req.ParseFromString(out);
+
+    ResponseMsg resp;
+    resp.code_ = req.code();
+    resp.value_ = req.data();
+    resp.index = 10;
+    sleep(10);
+    cout<<"fullfil promise\n";
+    mypromise.set_value(resp); 
+}
+
 Promise<ResponseMsg> startRequest_test() {
-	//auto promise_obj = std::make_shared<Promise<ResponseMsg>>();
+	//promise_t = std::make_shared<Promise<ResponseMsg>>();
     auto promise_obj = Promise<ResponseMsg>();
-
-    mypromise = promise_obj;
-
+  
+    /*
+    
     std::shared_ptr<Message> msg1 = std::make_shared<Message>(START_REQUEST4);
 
     requestMsg payload;
@@ -214,7 +230,33 @@ Promise<ResponseMsg> startRequest_test() {
     payload.SerializeToString(&msg1->payload);
 
     mExecutor->deliverMessage(msg1);
+    */
+
+    
+    requestMsg payload;
+    payload.set_code(1);
+    payload.set_data("message 1+");
+    std::string out;
+    payload.SerializeToString(&out);
+
+    auto fn = std::bind(doAsyncRequestNow,out,promise_obj);
+    /*
+    mExecutor->deliverTask([promise_obj, out]() mutable {
+        sleep(2);
+        requestMsg req;
+        req.ParseFromString(out);
+
+        ResponseMsg resp;
+        resp.code_ = req.code();
+        resp.value_ = req.data();
+        resp.index = 10;
+        promise_obj.set_value(resp); 
+    });
+    */
+
+    mExecutor->deliverTask(fn);
 	
+    cout<<"return promise\n";
 	return promise_obj;
 }
 
@@ -267,12 +309,46 @@ Future<int> doAsyncall() {
 }
 */
 
+void func(int a, int b, int c) {
+    std::thread::id id_ = std::this_thread::get_id();
+    cout<<"[thread ID] ="<<id_<<", task call:\n";
+    cout<<"a="<<a<<", b="<<b<<", c="<<c<<"\n\n";
+}
+
 int main() {
     std::shared_ptr<Handler> myHandler_ = std::make_shared<myHandler>();
     mExecutor = std::make_shared<Dispatcher>(myHandler_);
     
-    //mExecutor->deliverTask([=]{cout<<"[task] hello task\n";});
+    std::thread::id main_id_ = std::this_thread::get_id();
 
+    cout<<"main thread ID ="<<main_id_<<"\n";
+    
+    /*
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+
+        cout<<"[thread ID] ="<<id_<<", [task1] hello task\n";
+        });
+
+
+    uint32_t i = 2;
+    mExecutor->deliverTask([i]{
+        std::thread::id id_ = std::this_thread::get_id();
+
+        cout<<"[thread ID] ="<<id_<<", [task2] i="<<i<<"\n";
+        });
+
+ 
+    auto fn = std::bind(func,1,3,4);
+    mExecutor->deliverTask(fn);
+
+
+    auto fn2 = std::bind(func,std::placeholders::_1,3,4);
+    mExecutor->deliverTask([=]{fn2(9);});
+    */
+	mExecutor->deliverTask([=]{cout<<"hello main\n";});
+
+	#if 0
     startRequest_test().then(mExecutor, [](const ResponseMsg& msg) {
         std::thread::id id_ = std::this_thread::get_id();
         cout <<"[thread id]="<<id_<< ", code="<<msg.code_<<", data: "<<msg.value_<<"\n";
@@ -286,13 +362,14 @@ int main() {
             sleep(5);
             std::thread::id id_ = std::this_thread::get_id();
             cout <<"[thread id]="<<id_<<", y="<<y<<"\n";
-            string str="tai";
-            return str;
+            //string str="tai";
+            //return str;
+            return "vl";
         }).then(mExecutor, [](string z) {
              std::thread::id id_ = std::this_thread::get_id();
             cout <<"[thread id]="<<id_ <<", z="<<z<<"\n";
         });
-
+	#endif
     //sendDelayedMsg();
 
    /*
@@ -304,7 +381,7 @@ int main() {
     });
     */
 
-    cout<<"I am running\n";
+    //cout<<"I am running\n";
 
     while (1) {}
     

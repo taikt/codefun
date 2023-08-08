@@ -9,6 +9,10 @@
 #include <deque>
 #include "Message.h"
 
+#include <iostream>
+#include <string>
+using namespace std;
+
 class JobQueue {
  public:
     JobQueue();
@@ -37,8 +41,11 @@ class JobQueue {
     // queue of messages
     std::deque<std::shared_ptr<Message>> msg_queue;
 
-    std::mutex mtx_;
-    std::condition_variable cv_;
+    std::mutex task_mtx_;
+    std::condition_variable task_cv_;
+
+	std::mutex msg_mtx_;
+    std::condition_variable msg_cv_;
 
     std::atomic_bool shutdown_;
 
@@ -50,21 +57,21 @@ class JobQueue {
 
 template <typename F, typename... Args>
 auto JobQueue::pushTaskTo(F task, Args &&... args) -> std::future<decltype(task(args...))> {
-
+	//cout<<"push new task to queue\n";
     using returnType = decltype(task(args...));
     auto boundedTask = std::bind(std::forward<F>(task), std::forward<Args>(args)...);
 
     auto pkgedTask = std::packaged_task<returnType()>(boundedTask);
     auto future = pkgedTask.get_future();
     {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard<std::mutex> lock(task_mtx_);
+		//cout<<"ok queue task now\n";
         queue_.emplace_back(std::move(pkgedTask));
     }
-    cv_.notify_one();
+    task_cv_.notify_one();
 
     return future;
 }
-
 
 
 #endif

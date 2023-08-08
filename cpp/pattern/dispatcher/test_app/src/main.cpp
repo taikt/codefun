@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+
 using namespace std;
 using namespace data;
 
@@ -30,6 +31,7 @@ struct ResponseMsg2 {
 
 std::shared_ptr<Dispatcher> mExecutor;
 std::shared_ptr<Promise<ResponseMsg>> mypromise; 
+std::shared_ptr<Promise<ResponseMsg>> mypromise4; 
 std::shared_ptr<Promise<ResponseMsg2>> mypromise2; 
 //std::shared_ptr<Promise<int>> mypromise3; 
 
@@ -178,11 +180,17 @@ Future<ResponseMsg> startRequest() {
 	return promise_obj->get_future();
 }
 */
-
+//std::shared_ptr<Promise<ResponseMsg>> promise_obj;
+//Promise<ResponseMsg> mypromise_t; 
 Future<ResponseMsg> startRequest_test() {
-	auto promise_obj = std::make_shared<Promise<ResponseMsg>>();
-    mypromise = promise_obj;
+	//auto promise_obj = std::make_shared<Promise<ResponseMsg>>();
+    Promise<ResponseMsg> promise_obj;
 
+    //mypromise_t = promise_obj; // why error if not copy here, dm, why promise need global decrlare
+
+    //Promise<ResponseMsg> promise_obj; // error here
+
+   /*
     std::shared_ptr<Message> msg1 = std::make_shared<Message>(START_REQUEST4);
 
     requestMsg payload;
@@ -191,8 +199,33 @@ Future<ResponseMsg> startRequest_test() {
     payload.SerializeToString(&msg1->payload);
 
     mExecutor->deliverMessage(msg1);
+    */
+
+    requestMsg payload;
+    payload.set_code(1);
+    payload.set_data("message 1+");
+    std::string out;
+    payload.SerializeToString(&out);
+
+    cout<<"promise_obj address1:"<<&promise_obj<<"\n";
+
+    mExecutor->deliverTask([promise_obj, out]() mutable {
+        //Promise<ResponseMsg> promise = promise_obj;
+        sleep(2);
+        requestMsg req;
+        req.ParseFromString(out);
+
+        ResponseMsg resp;
+        resp.code_ = req.code() + 1;
+        resp.value_ = req.data();
+        resp.index = 10;
+        cout<<"promise_obj address2:"<<&promise_obj<<"\n";
+        promise_obj.set_value(resp); 
+        //sleep(7);
+    });
+
 	
-	return promise_obj->get_future();
+	return promise_obj.get_future();
 }
 
 
@@ -257,29 +290,31 @@ int main() {
             //sleep(5);
              std::thread::id id_ = std::this_thread::get_id();
             cout <<"[thread id]="<<id_ <<", x="<<x<<"\n";
-            //return 2.8;
-            return startRequest_test2(x);
+            return 2.8;
+            //return startRequest_test2(x);
         }).then(mExecutor, [](double y) {
-            sleep(5);
+            //sleep(5);
             std::thread::id id_ = std::this_thread::get_id();
             cout <<"[thread id]="<<id_<<", y="<<y<<"\n";
-            string str="tai";
-            return str;
+            //string str="tai"; // why this cause error!!!!
+            //return str;
+            return "vl";
         }).then(mExecutor, [](string z) {
              std::thread::id id_ = std::this_thread::get_id();
             cout <<"[thread id]="<<id_ <<", z="<<z<<"\n";
         });
+       
 
     //sendDelayedMsg();
 
-   
+   /*
     doAsyncall().then(mExecutor, [](int mResult){ // or const int& mResult
         cout<<"final result is:"<<mResult<<"\n";
         return 2;
     }).then(mExecutor, [](const int& t) { // note: to check error if int& t, but no error if: int t or const int& t
         cout<<"x="<<t<<"\n";
     });
-    
+    */
 
     cout<<"I am running\n";
 

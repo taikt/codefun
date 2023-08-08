@@ -37,14 +37,14 @@ void TaskWorkerThread::processTasks() {
         //auto tq = jobQueue_.lock();
         //if (tq && !tq->isShutdown()) {
         if (!jobQueue_->isShutdown()) {
-      
+      		//cout<<"[task thread] try pop task\n";
             auto task = jobQueue_->popTask();
-    
+    		//cout<<"[task thread] get a task\n";
             if (task.valid()) {
-         
+                //cout<<"invoke task\n";
                 task();
             } else {
-         
+         		cout<<"[task thread] task invalid\n";
             }
         } else {
             // jobQueue_ is not available or destroyed
