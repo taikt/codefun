@@ -1,3 +1,7 @@
+/*
+* tai2.tran
+*/
+
 #ifndef STATE_HPP
 #define STATE_HPP
 

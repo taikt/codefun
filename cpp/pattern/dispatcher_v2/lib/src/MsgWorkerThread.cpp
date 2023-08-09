@@ -1,5 +1,8 @@
-#include "MsgWorkerThread.h"
+/*
+* tai2.tran
+*/
 
+#include "MsgWorkerThread.h"
 #include <iostream>
 #include <string>
 using namespace std;

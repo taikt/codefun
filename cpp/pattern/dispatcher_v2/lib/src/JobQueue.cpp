@@ -1,4 +1,7 @@
-//#include "Log.h"
+/*
+* tai2.tran
+*/
+
 #include "JobQueue.h"
 
 JobQueue::JobQueue()

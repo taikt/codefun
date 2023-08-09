@@ -1,7 +1,10 @@
+/*
+* tai2.tran
+*/
+
 #include <memory>
 #include <string>
 #include "Promise.h"
-//#pragma once
 
 #ifndef MESSAGE_HPP
 #define MESSAGE_HPP
