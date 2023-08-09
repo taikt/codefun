@@ -7,3 +7,58 @@ Chapter 5 | Bit Manipulation
 https://usaco.guide/silver/intro-bitwise?lang=cpp
 https://usaco.guide/plat/bitsets?lang=cpp
 https://usaco.guide/gold/dp-bitmasks?lang=cpp
+
+
+Basic operation:
+x << k = x*2^k
+x >> k = [x/2^k]
+k_th bit = 1 if (x & (1 << k)) = 1 // 0001: 0_th = 1, 1_th = 0
+
+set k_th bit of x to 1
+x | (1 << k)
+
+set k_th bit of x to 0
+x & ~(1 << k)
+
+invert k_th bit of x
+x ^ (1 << k)
+
+sets the last one bit of x to zero
+x & (x - 1)
+
+sets all the one bits to zero, except for the last one bit
+x & -x
+
+inverts all the bits after the last one bit
+x | (x-1)
+
+positive number x is power of two
+<=> x&(x-1) = 0
+
+__builtin_clz(x): the number of zeros at the beginning of the number
+
+__builtin_ctz(x): the number of zeros at the end of the number
+
+__builtin_popcount(x): the number of ones in the number
+
+
+Set operation
+any subset of {0,1, .. n-1} co the bieu dien bang so nguyen n bit
+{} -> 0: tap rong
+{0} -> 01 = 1
+{1} -> 10 = 2
+{0,1} -> 11 = 3
+{0,1,2} -> 111 = 2^3 -1 = 7
+{0,1,2, .. n-1} -> 1111...1 = 2^n -1
+{k} -> 00..010000 (k_th bit = 1)
+
+loop subsets:
+int = 0; i < 2^n; i++
+note : 2^n = 1<<n
+
+
+
+
+
+
+
