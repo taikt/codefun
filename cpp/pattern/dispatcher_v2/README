@@ -5,8 +5,39 @@ only promise, no future
 mkdir gen
 protoc --cpp_out=./gen requestMsg.proto
 
-# build
+# build on Linux
+cd lib
+mkdir build 
+cd build
+cmake ..
+sudo make install
+
+cd test_app/
 mkdir build
 cd build
 cmake ..
-make
+sudo make install
+
+# deploy on target board with bitbake
+copy test_app/* to
+nad/LGE/icon-src/asynctestapp
+
+copy lib/* to
+nad/LGE/icon-src/asynctiger
+
+copy asynctiger.bb to nad/LGE/metalayer/meta-icon-nad/receipes-extended/asynctiger/
+
+copy asynctestapp.bb to nad/LGE/metalayer/meta-icon-nad/receipes-extended/asyntestapp
+
+
+-- build.
+::lib
+./build.sh target sa525m/apps debug module asynctiger cleanbuild
+
+::app test
+./build.sh target sa525m/apps debug module asynctestapp cleanbuild
+
+Note:
+can install binary, lib, header 
+--> (1) with cmake: install(...) (check cmake file)
+--> (2) or with bitbake using do_install() (check bb file)

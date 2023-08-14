@@ -39,7 +39,7 @@ Dispatcher::~Dispatcher() {
 }
 
 void Dispatcher::shutdown() {
-    cout<<"dispatcher shutdown\n";
+    cout<<"dispatcher shutdown..\n";
     jobQueue_->shutdown();
     MsgworkerThreads_.clear();
     TaskworkerThreads_.clear();

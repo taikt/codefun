@@ -1,17 +1,26 @@
-cmake_minimum_required(VERSION 3.0)
-#project(binary_build)
+add_compile_options(
+    -Wno-error
+)
 
-#include_directories(include /Users/taikt/Documents/code/codefun/cpp/cxx/cmake/sharedLib/include)
-include_directories(include /data001/tai2.tran/codefun/cpp/pattern/dispatcher_v2/lib/include)
-set(CMAKE_CXX_FLAGS "-std=c++17 -pthread")
+set (CMAKE_CXX_STANDARD 17)
+
 
 set(LINK_LIBS libboost_system.so libboost_thread.so libprotobuf.so libasync_tiger.so)
-link_directories(/usr/local/lib /data001/tai2.tran/codefun/cpp/pattern/dispatcher_v2/build/lib)
+
+link_directories(/usr/lib)
+
+#file(GLOB SOURCES "src/*.cpp" "src/*.cc")
+file(GLOB SOURCES "src/main_test.cpp")
+
+add_executable(asynctest_app ${SOURCES})
+
+target_link_libraries(asynctest_app ${LINK_LIBS})
+
+# https://stackoverflow.com/questions/48428647/how-to-use-cmake-to-install
+# install(TARGETS asynctest_app DESTINATION /usr/bin)
+
+install(TARGETS asynctest_app DESTINATION /usr/bin)
 
 
-file(GLOB SOURCES "src/*.cpp" "src/*.cc")
 
-add_executable(a.out ${SOURCES})
-
-target_link_libraries(a.out ${LINK_LIBS})
 

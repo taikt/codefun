@@ -1,30 +1,19 @@
-/*
-* tai2.tran
-*/
-
 #ifndef TASKDISPATCHER_HPP
 #define TASKDISPATCHER_HPP
 
 #include <memory>
 #include <vector>
-#include <map>
 
-#include "JobQueue.h"
-#include "TaskWorkerThread.h"
-#include "MsgWorkerThread.h"
-#include "Handler.h"
-#include "Message.h"
-
-class MsgWorkerThread;
-class TaskWorkerThread;
+#include "JobQueue.hpp"
+#include "WorkerThread.hpp"
 
 class Dispatcher {
  public:
-    Dispatcher(std::shared_ptr<Handler>& handler);
+    Dispatcher();
+    Dispatcher(int threadCount);
     ~Dispatcher();
     template <typename F, typename... Args>
     auto deliverTask(F task, Args &&... args) -> std::future<decltype(task(args...))>;
-    bool deliverMessage(const std::shared_ptr<Message>& message);
 
     void shutdown();
     bool isShutdown() const;
@@ -32,13 +21,11 @@ class Dispatcher {
  private:
     // Queue of tasks
     std::shared_ptr<JobQueue> jobQueue_ = nullptr;
-    std::vector<std::unique_ptr<MsgWorkerThread>> MsgworkerThreads_;
-    std::vector<std::unique_ptr<TaskWorkerThread>> TaskworkerThreads_;
-    std::map<std::thread::id, std::shared_ptr<std::thread>> dispatchers_;
+
     // Thread count;
     int threadCount_;
-    std::shared_ptr<Handler> handler_;
 
+    std::vector<std::unique_ptr<WorkerThread>> workerThreads_;
 };
 
 template <typename F, typename... Args>

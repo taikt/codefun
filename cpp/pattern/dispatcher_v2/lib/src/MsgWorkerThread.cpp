@@ -8,14 +8,13 @@
 using namespace std;
 
 
-
 MsgWorkerThread::MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue, std::shared_ptr<Handler> handler)
    : jobQueue_(taskQueue),
    shutdown_(false),
    handler_(handler),
    work_(std::make_shared<boost::asio::io_service::work>(io_))
    {
-        cout<<"msgworkerthread: shutdown="<<shutdown_<<"\n";
+        cout<<"msgworkerthread:shutdown="<<shutdown_<<"\n"; 
    }
 
 MsgWorkerThread::~MsgWorkerThread() {
@@ -28,7 +27,6 @@ MsgWorkerThread::~MsgWorkerThread() {
 
     dispatchers_.clear();
     
-
     work_.reset();
     io_.stop();
 }
@@ -86,6 +84,7 @@ void MsgWorkerThread::messageDispatcher() {
     }
     cout<<"exit msg worker thread:"<<id_<<"\n";
 }
+
 
 void MsgWorkerThread::invokeHandler(std::shared_ptr<Message>& msg) {    
     boost::asio::steady_timer its_dispatcher_timer(io_);

@@ -1,0 +1,13 @@
+{
+  "name": "stuckdetector-service",
+  "desc": "stuckdetector Manager Service",
+  "ExecStart": "/usr/bin/stuckdetector",
+  "bootmode": "all",
+  "args": null,
+  "SVC_ID": "STUCKDETECTOR",
+  "MODULE_ID": "STUCKDETECTOR_MGR",
+  "fork_by_init":  true,
+  "restart_by_startd": false,
+  "WatchdogSec": 60,
+  "tiger-desktop": "regist"
+}
