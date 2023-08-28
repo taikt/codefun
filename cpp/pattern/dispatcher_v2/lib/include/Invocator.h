@@ -30,6 +30,8 @@
 using namespace std;
 
 
+namespace kt {
+
 class Dispatcher;
 template <typename tReturn>
 class Promise;
@@ -80,5 +82,7 @@ public:
     Promise<tReturn> m_promise;
     std::decay_t<F> m_func;
 };
+
+}
 
 #endif

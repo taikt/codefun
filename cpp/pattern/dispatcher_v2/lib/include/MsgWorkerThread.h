@@ -13,6 +13,10 @@
 #include "JobQueue.h"
 #include "Handler.h"
 
+
+
+namespace kt {
+
 class JobQueue;
 
 class MsgWorkerThread {
@@ -49,5 +53,6 @@ class MsgWorkerThread {
     std::map<std::thread::id, std::shared_ptr<std::thread>> dispatchers_;
 };
 
+}
 
 #endif

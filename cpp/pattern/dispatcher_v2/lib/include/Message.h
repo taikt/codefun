@@ -9,6 +9,9 @@
 #ifndef MESSAGE_HPP
 #define MESSAGE_HPP
 
+
+namespace kt {
+
 template<typename vValue>
 class Promise;
 
@@ -32,4 +35,7 @@ public:
 
  
 };
+
+}
+
 #endif

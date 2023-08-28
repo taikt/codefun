@@ -8,6 +8,9 @@
 
 using namespace std;
 
+
+namespace kt {
+
 TaskWorkerThread::TaskWorkerThread(std::shared_ptr<JobQueue> taskQueue)
    : jobQueue_(taskQueue)
    , shutdown_(false){
@@ -56,4 +59,6 @@ void TaskWorkerThread::processTasks() {
         }
     }
     cout<<"exit task worker thread, shutdown="<<shutdown_<<"\n";
+}
+
 }

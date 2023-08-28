@@ -8,7 +8,11 @@
 #include <thread>
 #include "JobQueue.h"
 
+
+namespace kt {
+
 class JobQueue;
+
 
 class TaskWorkerThread {
  public:
@@ -36,5 +40,6 @@ class TaskWorkerThread {
     int ID_;
 };
 
+}
 
 #endif

@@ -15,6 +15,10 @@
 #include "Handler.h"
 #include "Message.h"
 
+
+
+namespace kt {
+
 class MsgWorkerThread;
 class TaskWorkerThread;
 
@@ -44,6 +48,8 @@ class Dispatcher {
 template <typename F, typename... Args>
 auto Dispatcher::deliverTask(F task, Args &&... args) -> std::future<decltype(task(args...))> {
     return jobQueue_->pushTask(task, std::forward<Args>(args)...);
+}
+
 }
 
 #endif  // THREADPOOL_HPP

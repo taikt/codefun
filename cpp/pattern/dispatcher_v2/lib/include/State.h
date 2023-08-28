@@ -27,6 +27,9 @@
 
 using namespace std;
 
+
+namespace kt {
+
 template <typename tValue>
 class State 
 {
@@ -65,5 +68,7 @@ private:
 	std::shared_ptr<ContinuationBase<tValue>> m_continuation;
     std::shared_ptr<Dispatcher> m_dispatcher;
 };
+
+}
 
 #endif

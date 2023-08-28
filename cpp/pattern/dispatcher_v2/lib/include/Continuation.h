@@ -28,6 +28,9 @@
 
 using namespace std;
 
+
+namespace kt {
+
 class Dispatcher;
 
 template<typename F, typename tReturn, typename... tArgument>
@@ -81,5 +84,7 @@ public:
     std::shared_ptr<Invocation<F, tReturn, tValue>> m_Invocation;
     std::shared_ptr<Dispatcher> dispatch;
 };
+
+}
 
 #endif

@@ -15,6 +15,8 @@ std::unique_ptr<T> make_unique(Args &&... args) {
 */
 
 
+namespace kt {
+
 Dispatcher::Dispatcher(std::shared_ptr<Handler>& handler)
    : jobQueue_{std::make_shared<JobQueue>()}
    , handler_(handler) {
@@ -54,3 +56,4 @@ bool Dispatcher::deliverMessage(const std::shared_ptr<Message>& message) {
     return jobQueue_->pushMessage(message);
 }
 
+}

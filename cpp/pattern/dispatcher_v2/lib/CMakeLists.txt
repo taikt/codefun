@@ -39,7 +39,7 @@ target_include_directories(async_tiger PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 #working below
 set_target_properties(async_tiger PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
 install(TARGETS async_tiger 
-        LIBRARY DESTINATION /usr/lib
+        LIBRARY DESTINATION /usr/lib/
         PUBLIC_HEADER DESTINATION /usr/include/
 )
 

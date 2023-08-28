@@ -17,6 +17,8 @@
 #include <string>
 using namespace std;
 
+
+namespace kt {
 class JobQueue {
  public:
     JobQueue();
@@ -77,6 +79,6 @@ auto JobQueue::pushTaskTo(F task, Args &&... args) -> std::future<decltype(task(
     return future;
 }
 
-
+}
 
 #endif

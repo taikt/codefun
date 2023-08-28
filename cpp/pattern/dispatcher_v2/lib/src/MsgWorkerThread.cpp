@@ -8,6 +8,9 @@
 using namespace std;
 
 
+
+namespace kt {
+
 MsgWorkerThread::MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue, std::shared_ptr<Handler> handler)
    : jobQueue_(taskQueue),
    shutdown_(false),
@@ -111,4 +114,6 @@ void MsgWorkerThread::invokeHandler(std::shared_ptr<Message>& msg) {
 
 void MsgWorkerThread::handleMessage(std::shared_ptr<Message>& msg) {
     //cout<<"handle a message: id="<<msg->id<<", value:"<<msg->str<<"\n";
+}
+
 }

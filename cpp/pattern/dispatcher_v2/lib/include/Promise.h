@@ -29,6 +29,8 @@
 using namespace std;
 
 
+namespace kt {
+
 template <typename tValue>
 class Promise
 {
@@ -105,6 +107,8 @@ public:
 private:
     std::shared_ptr<State<std::monostate>> m_state;
 };
+
+}
 
 #endif
 

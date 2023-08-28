@@ -4,6 +4,9 @@
 
 #include "JobQueue.h"
 
+
+namespace kt {
+
 JobQueue::JobQueue()
    : shutdown_(false) {
 }
@@ -33,7 +36,6 @@ std::shared_ptr<Message> JobQueue::popMessage() {
     std::unique_lock<std::mutex> lock{msg_mtx_};
     auto isWait = [this]() { return shutdown_ || !msg_queue.empty(); };
     if (!isWait()) {
-
         msg_cv_.wait(lock, isWait);
     }
 
@@ -62,3 +64,4 @@ bool JobQueue::pushMessage(const std::shared_ptr<Message>& message) {
     msg_cv_.notify_one();
 }
 
+}
