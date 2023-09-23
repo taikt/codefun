@@ -1,0 +1,45 @@
+!pragma teoz true
+autonumber
+autoactivate on
+box "NAD\n"
+
+    participant "Config Manager" as config
+
+    participant "Binder IPC" as bin #IndianRed
+    
+
+    box "Nad Proxy" #99FF99
+    participant "Provisioning" as nadm_nadm
+    end box
+
+end box
+
+    participant "SomeIP IPC" as sip #IndianRed
+
+box "BAM\n"
+
+ 
+    box "NAD Manager" #99FF99
+    participant "Provisioning" as nadm
+    end box
+
+    participant "Provisioning Daemon" as nadm_data
+
+end box
+
+
+
+    nadm -> nadm_data: subcribeSecsions()
+    loop for each session
+    nadm_data -> nadm: nadmvisioningData()
+
+    nadm -> nadm: mergeData()
+    end loop
+
+
+    nadm ->> sip: sendNadnadmvisioningData()
+    sip ->> nadm_nadm: sendNadnadmvisioningData()
+    nadm_nadm ->> bin: write()
+    bin ->> config: write()
+
+

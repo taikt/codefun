@@ -1,0 +1,96 @@
+
+
+
+' set diag job 
+
+@startuml
+autonumber
+autoactivate on
+participant "Apps" as app
+participant "Diagnostic Manager" as diag_mgr
+
+participant "Binder IPC" as bin #IndianRed
+
+box "Nad Proxy" #99FF99
+'participant "Main" as nad_main
+participant "Diagnostic" as diag_pr
+end box
+
+participant "SomeIP IPC" as sip #IndianRed
+
+
+
+box "Nad Manager" #99FF99
+
+participant "Diagnostic" as nadm
+end box
+
+participant "LSMF" as lsmf
+
+
+lsmf -> nadm: serviceN:methodN()
+nadm ->> sip: setDiagJob() 
+sip ->> diag_pr: setDiagJob() 
+
+alt write DID
+diag_pr ->> bin: writeDID()
+bin ->> diag_mgr: writeDID()
+diag_mgr -> app: onRequestWriteDID()
+else read DID
+diag_pr ->> bin: readDID()
+bin ->> diag_mgr: readDID()
+diag_mgr -> app: onRequestReadDID()
+else Routine Control
+diag_pr ->> bin: routineControl()
+bin ->> diag_mgr: routineControl()
+diag_mgr -> app: onRequestroutineControl()
+end
+
+
+@enduml
+
+
+' set DTC
+
+@startuml
+
+!pragma teoz true
+autonumber
+autoactivate on
+' box "NAD\n"
+
+    participant "Apps" as app
+    participant "Diagnostic Manager" as diag_mgr
+
+    participant "Binder IPC" as bin #IndianRed
+
+    box "Nad Proxy" #99FF99
+    participant "Diagnostic" as diag_co
+    end box
+
+' end box
+
+    participant "SomeIP IPC" as sip #IndianRed
+' box "BAM\n"
+
+ 
+
+    box "Nad Manager" #99FF99
+    participant "Diagnostic" as nadm
+    end box
+
+    participant "LSMF" as lsmf
+
+' end box
+
+app -> diag_mgr: setDTCStatus()
+diag_mgr ->> bin: setDtcToNadProxy()
+bin -> diag_co: setDtcToNadProxy()
+diag_co ->> sip: setFatalError()
+sip ->> nadm: setFatalError()
+
+nadm -> lsmf: setDTCStatus()
+
+@enduml
+
+

@@ -1,0 +1,47 @@
+
+@startuml
+!pragma teoz true
+autonumber
+
+autoactivate on
+box "NAD\n"
+
+    participant "Config Manager" as config
+
+    participant "Binder IPC" as bin #IndianRed
+
+    box "Nad Proxy" #99FF99
+ 
+    participant "Coding" as code_pro
+    end box
+end box
+
+    participant "SomeIP IPC" as sip #IndianRed
+
+box "BAM\n"
+
+    box "Nad Manager" #99FF99
+    participant "Coding" as nadm
+    end box
+
+    participant "LibCod" as lib
+
+end box
+
+
+
+== set coding flag ==
+    loop 
+    nadm -> lib: getCodingFlag()
+    end loop
+ 
+    nadm ->> sip: setCodingData()
+    sip ->> code_pro: setCodingData()
+    code_pro ->> bin: setData()
+    bin ->> config: setData()
+
+
+
+@enduml
+
+

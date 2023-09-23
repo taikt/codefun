@@ -1,0 +1,59 @@
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+box "NAD\n"
+
+    participant "LPA" as lpa
+    participant "Binder IPC" as bin #IndianRed
+
+    box "Nad Proxy" #99FF99
+    participant "LPA" as lpa_pr
+    end box
+
+end box
+
+    participant "SomeIP IPC" as sip #IndianRed
+
+box "BAM\n"
+
+    box "Nad Manager" #99FF99
+    participant "LPA" as nadm
+    end box
+
+    participant "MCP Gateway" as gw
+end box
+
+box "Backend"
+    participant "Mosquitto MQTT broker" as bro
+    participant "Backend app" as backend
+end box
+
+== Vehicle startup ==
+
+gw -> bro: connect()
+bro -> gw: connack()
+
+nadm -> gw: connect()
+gw -> nadm: connack()
+
+== Start interface ==
+nadm -> gw: subcribe()
+gw -> bro: subcribe()
+bro -> gw: suback()
+gw -> nadm: suback()
+
+== Event change ==
+backend -> bro: publish()
+bro -> gw: publish()
+
+gw -> nadm: publish()
+
+
+nadm -> sip: triggerSubman()
+sip -> lpa_pr: triggerSubman()
+
+lpa_pr -> bin: triggerSubman()
+bin -> lpa: triggerSubman()
+
+@enduml

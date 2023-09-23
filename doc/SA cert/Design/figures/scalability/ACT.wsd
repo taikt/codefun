@@ -1,0 +1,42 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+participant "Nad Manager" as nam #GreenYellow
+participant "SomeIP IPC" as sip #IndianRed
+
+box "Nad Proxy Service" #LightYellow
+    participant "Nad Proxy" as nap
+    participant "Asynchronous Manager" as as
+    participant "Task executor" as exe
+end box
+participant "Binder IPC" as bin #IndianRed
+participant "Other service" as ser #GreenYellow
+
+
+nam ->> sip: sendRequest(callback)
+sip ->> nap: sendRequest(callback)
+nap -> nap: createFactoryRequest
+nap -> as: create Promise(callback)
+as -> as: create Asynchronous Completion Token(ACT)
+as --> nap:
+nap -> nap: store promise with ACT
+nap ->> exe: handleTaskAsync(request, ACT)
+exe ->>bin: handleTaskAsync(request, ACT)
+
+bin ->> ser: handleRequest(request, ACT)
+ser -> ser: process request
+ser --> bin: response(data,ACT)
+bin ->> nap: sendResponse(data, ACT)
+
+nap -> nap: get promise based ACT
+
+nap -> as: fulfill promise
+as ->> exe: perform continuation (callback(data))
+
+exe ->> sip: callback(data)
+sip ->> nam: callback(data)
+
+@enduml

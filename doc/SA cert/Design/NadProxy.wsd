@@ -1,0 +1,275 @@
+' Option 1
+@startuml
+!pragma teoz true
+autoactivate on
+autonumber
+
+box "BAM\n"
+
+    participant "Coding service" as codeservice
+    participant "LSMF" as lsmf
+
+    box "Nad Manager" 
+    participant "Coding" as codeb
+    participant "Diagnostic" as diagb
+    end box
+
+    
+end box
+
+    participant "someIP IPC" as someip
+
+box "NAD\n"
+
+    box "Nad Proxy" 
+    participant "Coding" as coden
+    participant "Diagnostic" as diagn
+    end box
+
+    participant "binder IPC" as binder
+
+    participant "config Mgr" as config
+    participant "Diagnostic Mgr" as diagmgr
+end box
+
+== set coding ==
+    codeservice -> codeb: setCodingData
+    codeb -> someip: setCodingData
+    someip -> coden: setCodingData
+    coden -> binder: setCodingData
+    binder -> config: setCodingData
+    config --> binder: responseCodingStatus
+    binder --> coden: responseCodingStatus
+    coden --> someip: responseCodingStatus
+    someip --> codeb: responseCodingStatus
+    codeb --> codeservice: responseCodingStatus
+
+== diagnostic request ==
+    lsmf -> diagb: setDiagJobs
+    diagb -> someip: setDiagJobs
+    someip -> diagn: setDiagJobs
+    diagn -> binder: setDiagJobs
+    binder -> diagmgr: setDiagJobs
+
+    diagmgr --> binder: responseDiagStatus
+    binder --> diagn: responseDiagStatus
+    diagn --> someip: responseDiagStatus
+    someip --> diagb: responseDiagStatus
+    diagb -->lsmf: responseDiagStatus
+
+@enduml
+
+
+
+
+' Option 2
+@startuml
+!pragma teoz true
+autonumber
+
+box "BAM\n"
+
+
+    participant "LSMF" as lsmf
+
+    box "Nad Manager" 
+    
+    participant "Diagnostic" as diagb
+    end box
+
+    
+end box
+
+    participant "someIP IPC" as someip
+
+box "NAD\n"
+
+    box "Nad Proxy" 
+ 
+    participant "Diagnostic" as diagn
+
+    participant "Executor" as exe #GreenYellow
+    end box
+
+    participant "binder IPC" as binder
+
+  
+    participant "Diagnostic Mgr" as diagmgr
+end box
+
+
+
+== diagnostic request ==
+    lsmf ->> diagb: setDiagJobs
+    diagb ->> someip: setDiagJobs
+    someip ->> diagn: setDiagJobs
+    diagn ->> exe: setDiagJobs
+    exe ->> exe: initiate promise
+    note over exe
+    set future continuation = responseFunction()
+    end note
+    exe -> binder: setDiagJobs
+    binder -> diagmgr: setDiagJobs
+
+    diagmgr --> binder: DiagResult
+    binder --> exe: DiagResult
+    exe -> exe: fullfil promise: value = DiagResult
+    exe -> exe: invoke continuation
+   
+    exe --> someip: responseFunction(DiagResult)
+    someip --> diagb: responseFunction(DiagResult)
+    diagb -->lsmf: responseFunction(DiagResult)
+
+@enduml
+
+
+
+' Option 3: detail
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+box "BAM\n"
+
+
+    participant "LSMF" as lsmf
+
+    box "Nad Manager" 
+    
+    participant "Diagnostic" as diagb
+    end box
+
+    
+end box
+
+    participant "someIP IPC" as someip
+
+box "NAD\n"
+
+    box "Nad Proxy" 
+ 
+    participant "Diagnostic" as diagn
+
+    end box 
+
+    box "Executor\n" #LightCyan
+ 
+    participant "Promise" as promise
+    participant "Message handler thread" as msgh #GreenYellow
+    participant "Task handler thread" as taskh #Yellow
+    end box
+
+    participant "binder IPC" as binder
+
+  
+    participant "Diagnostic Mgr" as diagmgr
+end box
+
+
+
+== diagnostic request ==
+    lsmf ->> diagb: setDiagJobs
+    diagb ->> someip: setDiagJobs
+    someip ->> diagn: setDiagJobs
+    note over diagn
+    serialize message payload to protobuf 
+    end note
+    diagn -> diagn: serializeMessage
+    
+    diagn ->> promise: initiate promise
+    note over promise
+    set continuation = responseFunction()
+    end note
+    diagn ->> msgh: deliverMessage
+   
+    msgh -> msgh: handleMessage
+    msgh -> binder: setDiagJobs
+    binder -> diagmgr: setDiagJobs
+
+    diagmgr --> binder: DiagResult
+    binder --> msgh: DiagResult
+    msgh -> promise: fullfil promise: value = DiagResult
+    promise -> promise: invoke continuation
+    promise -> promise: pack task
+    promise ->> taskh: deliverTask
+   
+    taskh --> someip: responseFunction(DiagResult)
+    someip --> diagb: responseFunction(DiagResult)
+    diagb -->lsmf: responseFunction(DiagResult)
+
+@enduml
+
+
+
+' Option 4: detail
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+box "BAM\n"
+
+
+    participant "LSMF" as lsmf
+
+    box "Nad Manager" 
+    
+    participant "Diagnostic" as diagb
+    end box
+
+    
+end box
+
+    participant "someIP IPC" as someip
+
+box "NAD\n"
+
+    box "Nad Proxy" 
+ 
+    participant "Diagnostic" as diagn
+
+    end box 
+
+    box "Executor\n" #LightCyan
+ 
+    participant "Promise" as promise
+    participant "Message handler thread" as msgh #GreenYellow
+    participant "Task handler thread" as taskh #Yellow
+    end box
+
+    participant "binder IPC" as binder
+
+  
+    participant "Diagnostic Mgr" as diagmgr
+end box
+
+
+
+== diagnostic request ==
+    lsmf ->> diagb: setDiagJobs
+    diagb ->> someip: setDiagJobs
+    someip ->> diagn: setDiagJobs
+
+    
+    diagn -> promise: initiate promise
+    promise -> promise: set continuation = responseFunction()
+    diagn <-- promise:
+    
+    diagn ->> taskh: deliverTask (task = setDiagJobs, promise)
+   
+    taskh -> taskh: handleTask
+    taskh -> binder: setDiagJobs
+    binder -> diagmgr: setDiagJobs
+
+    diagmgr --> binder: DiagResult
+    binder --> taskh: DiagResult
+    taskh -> promise: fullfil promise: value = DiagResult
+    promise -> promise: invoke continuation
+
+    promise ->> taskh: deliverTask (task = invoke continuation func)
+    taskh -> taskh: handleTask
+   
+    taskh --> someip: responseFunction(DiagResult)
+    someip --> diagb: responseFunction(DiagResult)
+    diagb -->lsmf: responseFunction(DiagResult)
+
+@enduml

@@ -1,0 +1,8 @@
+Question:
+non-functional requirement to map with Quality attribute?
+Use case diagram?
+add tiger extension?
+
+Review:
+external first -> then internal : (i.e dynamic part)
+all parts related to Nad manager/nad proxy (if not, remove it, i,e tiger extension part)

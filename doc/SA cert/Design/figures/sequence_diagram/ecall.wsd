@@ -1,0 +1,72 @@
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+box "NAD\n"
+
+    participant "eCall" as ecall
+
+    participant "Binder IPC" as bin #IndianRed
+
+    box "Nad Proxy" #99FF99
+    participant "eCall" as ecall_con_nad
+
+    end box
+
+end box
+
+    participant "SomeIP IPC" as sip #IndianRed
+
+box "BAM\n"
+  
+
+    box "NAD Manager" #99FF99
+    participant "eCall" as nadm
+    end box
+
+    participant "MCP Gateway" as gw
+end box
+
+box "Backend"
+    participant "Mosquitto MQTT broker" as bro
+    participant "Backend app" as backend
+end box
+== backend startup ==
+backend ->> bro: connect()
+bro -> backend: connack()
+
+== vehicle startup ==
+gw ->> bro: connect()
+bro ->> gw: connack()
+nadm ->> gw: connect()
+gw ->> nadm: connack()
+
+== start interface ==
+backend ->> bro: subscribe()
+bro ->> backend: suback()
+
+nadm ->> gw: subcribe()
+gw ->> bro: subcribe()
+bro ->> gw: suback()
+gw ->> nadm: suback()
+
+== event change ==
+ecall ->> bin: sendStartEcallEvent()
+bin ->> ecall_con_nad: sendStartEcallEvent()
+ecall_con_nad ->> sip: sendStartEcallEvent()
+sip ->> nadm: sendStartEcallEvent()
+
+nadm ->> gw: publish()
+gw ->> bro: publish()
+bro ->> backend: publish()
+
+backend ->> bro: publish()
+bro ->> gw: publish()
+gw ->> nadm: publish()
+
+nadm ->> sip: onSetupEcallVoice()
+sip ->> ecall_con_nad: onSetupEcallVoice()
+ecall_con_nad ->> bin: onSetupEcallVoice()
+bin ->> ecall: onSetupEcallVoice()
+
+@enduml
