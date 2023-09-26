@@ -1,0 +1,13 @@
+tai2.tran@LGEAVCCON18V:~/someip_stack/someip/src/methods$ rm -rf src-gen/*
+tai2.tran@LGEAVCCON18V:~/someip_stack/someip/src/methods$ ./../../../tools/core_generator/commonapi-core-generator-linux-x86_64 -sk fidl/Interface.fidl
+tai2.tran@LGEAVCCON18V:~/someip_stack/someip/src/methods$ ./../../../tools/sip_generator/commonapi-someip-generator-linux-x86_64 fidl/Interface-SomeIP.fdepl
+
+mkdir build
+cd build
+cmake ..
+make
+
+./myService
+./myClient
+
+
