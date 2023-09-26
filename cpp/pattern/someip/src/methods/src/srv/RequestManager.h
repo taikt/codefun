@@ -2,6 +2,7 @@
 #include "Dispatcher.h"
 
 #include "MsgHandler.h"
+using namespace kt;
 
 class RequestManager {
 public:

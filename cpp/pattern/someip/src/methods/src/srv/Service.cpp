@@ -16,6 +16,7 @@
 #include "Message.h"
 #include "MsgHandler.h"
 
+using namespace kt;
 
 int main() {
     CommonAPI::Runtime::setProperty("LogContext", "E03S");

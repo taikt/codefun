@@ -12,7 +12,7 @@
 #include "Promise.h"
 #include "Dispatcher.h"
 #include "Message.h"
-
+using namespace kt;
 
 class ResponseMsg;
 class RequestManager;

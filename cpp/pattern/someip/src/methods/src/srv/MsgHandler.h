@@ -7,6 +7,7 @@
 
 
 using namespace v1_2::taikt;
+using namespace kt;
 
 #define START_REQUEST1 1
 
