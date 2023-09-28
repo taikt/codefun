@@ -33,8 +33,8 @@ int main() {
     
     mExecutor = std::make_shared<Dispatcher>();
     mExecutor->enableTaskConcurrency(true);
-    mExecutor->startTaskThreadPool();
     mExecutor->setMaxTaskPoolSize(3);
+    mExecutor->startTaskThreadPool();
     
     std::thread::id main_id_ = std::this_thread::get_id();
 
