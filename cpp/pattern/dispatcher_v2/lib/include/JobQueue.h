@@ -40,6 +40,10 @@ class JobQueue {
         return msg_queue.size();
     }
 
+     int getTaskQueueSize() {
+        return queue_.size();
+    }
+
  private:
     // queue of tasks
     std::deque<std::packaged_task<void()>> queue_;

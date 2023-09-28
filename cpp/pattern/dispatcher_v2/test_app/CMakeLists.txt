@@ -10,7 +10,7 @@ set(LINK_LIBS libboost_system.so libboost_thread.so libprotobuf.so libasync_tige
 link_directories(/usr/lib)
 
 #file(GLOB SOURCES "src/*.cpp" "src/*.cc")
-file(GLOB SOURCES "src/main_test.cpp")
+file(GLOB SOURCES "src/main_longtask.cpp")
 
 add_executable(asynctest_app ${SOURCES})
 

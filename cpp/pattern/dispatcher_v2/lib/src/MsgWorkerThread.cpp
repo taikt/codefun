@@ -36,7 +36,7 @@ MsgWorkerThread::~MsgWorkerThread() {
 
 void MsgWorkerThread::start() {
     thread_ = std::thread(&MsgWorkerThread::mainMessageDispatcher,this);
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
         std::shared_ptr<std::thread> its_thread = std::make_shared<std::thread>([this, i] {
                                         io_.run();
                                         });

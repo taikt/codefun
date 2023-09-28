@@ -23,7 +23,9 @@ class TaskWorkerThread {
 
  private:
     // process tasks
-    void processTasks();
+    void MainProcessTasks();
+    void WorkerProcessTasks();
+    void invokeTask(std::packaged_task<void()>& task);
 
     // weak_ptr for the JobQueue, if task queue is not accessible there is no need to execute
     // tasks
@@ -36,6 +38,12 @@ class TaskWorkerThread {
 
     // Thread to run the tasks on
     std::thread thread_;
+
+
+    boost::asio::io_service io_;
+    std::shared_ptr<boost::asio::io_service::work> work_;
+    std::set<std::shared_ptr<std::thread> > io_threads_;
+    std::map<std::thread::id, std::shared_ptr<std::thread>> dispatchers_;
 
     int ID_;
 };
