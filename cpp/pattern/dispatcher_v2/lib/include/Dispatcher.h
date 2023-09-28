@@ -24,7 +24,7 @@ class TaskWorkerThread;
 
 class Dispatcher {
  public:
-    Dispatcher(std::shared_ptr<Handler>& handler);
+    Dispatcher();
     ~Dispatcher();
     template <typename F, typename... Args>
     auto deliverTask(F task, Args &&... args) -> std::future<decltype(task(args...))>;
@@ -32,15 +32,21 @@ class Dispatcher {
 
     void shutdown();
     bool isShutdown() const;
+    void setMessageHandler(std::shared_ptr<Handler>& handler);
+    void enableTaskConcurrency(bool m_concurrent);
+    void setExpiredTaskTime(uint m_expiredtime); //ms
+    void setMaxTaskPoolSize(uint m_maxPoolSize);
+    void startTaskThreadPool();
+    void startMessageThreadPool();
+
 
  private:
     // Queue of tasks
     std::shared_ptr<JobQueue> jobQueue_ = nullptr;
-    std::vector<std::unique_ptr<MsgWorkerThread>> MsgworkerThreads_;
-    std::vector<std::unique_ptr<TaskWorkerThread>> TaskworkerThreads_;
-    std::map<std::thread::id, std::shared_ptr<std::thread>> dispatchers_;
-    // Thread count;
-    int threadCount_;
+    std::unique_ptr<MsgWorkerThread> msgExecutor_;
+    std::unique_ptr<TaskWorkerThread> taskExecutor_;
+    
+   
     std::shared_ptr<Handler> handler_;
 
 };

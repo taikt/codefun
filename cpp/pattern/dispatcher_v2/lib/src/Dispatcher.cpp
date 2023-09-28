@@ -17,24 +17,14 @@ std::unique_ptr<T> make_unique(Args &&... args) {
 
 namespace kt {
 
-Dispatcher::Dispatcher(std::shared_ptr<Handler>& handler)
+Dispatcher::Dispatcher()
    : jobQueue_{std::make_shared<JobQueue>()}
-   , handler_(handler) {
-    /*
-    for (int i = 0; i < threadCount_; i++) {
-        auto th = make_unique<WorkerThread>(jobQueue_,i);
-        //LOGI("start thread %d",i);
-        th->start();
-        workerThreads_.emplace_back(std::move(th));
-    }
-    */
-    auto th1 = std::make_unique<MsgWorkerThread>(jobQueue_,handler_);
-    th1->start();
-    MsgworkerThreads_.emplace_back(std::move(th1));
-    auto th2 = std::make_unique<TaskWorkerThread>(jobQueue_);
-    th2->start();
-    TaskworkerThreads_.emplace_back(std::move(th2));
+{
+    msgExecutor_ = std::make_unique<MsgWorkerThread>(jobQueue_);
+    taskExecutor_ = std::make_unique<TaskWorkerThread>(jobQueue_);
 }
+
+
 
 Dispatcher::~Dispatcher() {
     shutdown();
@@ -43,8 +33,6 @@ Dispatcher::~Dispatcher() {
 void Dispatcher::shutdown() {
     cout<<"dispatcher shutdown..\n";
     jobQueue_->shutdown();
-    MsgworkerThreads_.clear();
-    TaskworkerThreads_.clear();
     
 }
 
@@ -54,6 +42,31 @@ bool Dispatcher::isShutdown() const {
 
 bool Dispatcher::deliverMessage(const std::shared_ptr<Message>& message) {
     return jobQueue_->pushMessage(message);
+}
+
+void Dispatcher::enableTaskConcurrency(bool m_concurrent) {
+    taskExecutor_->enableConcurrency(m_concurrent);
+}
+
+void Dispatcher::setExpiredTaskTime(uint m_expiredtime) { //ms
+    taskExecutor_->setExpiredTime(m_expiredtime);
+}
+
+void Dispatcher::setMaxTaskPoolSize(uint m_maxPoolSize) { 
+    taskExecutor_->setMaxPoolSize(m_maxPoolSize);
+}
+
+void Dispatcher::startTaskThreadPool() {
+    taskExecutor_->start();
+}
+
+// note: must call setMessageHandler before start message pool
+void Dispatcher::setMessageHandler(std::shared_ptr<Handler>& handler) {
+    msgExecutor_->setHandler(handler);
+}
+
+void Dispatcher::startMessageThreadPool() {
+    msgExecutor_->start();
 }
 
 }

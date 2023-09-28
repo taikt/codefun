@@ -21,11 +21,11 @@ class JobQueue;
 
 class MsgWorkerThread {
  public:
-    MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue, std::shared_ptr<Handler> handler);
+    MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue);
     ~MsgWorkerThread();
     void start();
     bool isShutdown();
-
+   void setHandler(std::shared_ptr<Handler>& handler);
 
  private:
     // process tasks
@@ -33,6 +33,7 @@ class MsgWorkerThread {
     void messageDispatcher();
     void handleMessage(std::shared_ptr<Message>& msg);
     void invokeHandler(std::shared_ptr<Message>& msg);
+    
     // weak_ptr for the JobQueue, if task queue is not accessible there is no need to execute
     // tasks
     //std::weak_ptr<JobQueue> jobQueue_;

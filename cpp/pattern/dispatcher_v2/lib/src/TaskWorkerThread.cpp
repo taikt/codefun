@@ -15,7 +15,7 @@ TaskWorkerThread::TaskWorkerThread(std::shared_ptr<JobQueue> taskQueue)
    : jobQueue_(taskQueue)
    , shutdown_(false)
    , work_(std::make_shared<boost::asio::io_service::work>(io_)) {
-    cout<<"taskworkerthread: shutdown="<<shutdown_<<"\n";
+        //cout<<"taskworkerthread: shutdown="<<shutdown_<<"\n";
    }
 
 TaskWorkerThread::~TaskWorkerThread() {
@@ -106,25 +106,41 @@ void TaskWorkerThread::WorkerProcessTasks() {
 
 void TaskWorkerThread::invokeTask(std::packaged_task<void()>& task) {
     boost::asio::steady_timer its_dispatcher_timer(io_);
-    its_dispatcher_timer.expires_from_now(std::chrono::milliseconds(2000)); // default 1sec
-    its_dispatcher_timer.async_wait([this](const boost::system::error_code &_error) {
-        if (!_error) {
-            if (dispatchers_.size() < 4) {
-                    cout<<"start new task dispatcher\n";
-                    auto its_dispatcher = std::make_shared<std::thread>(
-                        std::bind(&TaskWorkerThread::WorkerProcessTasks, this));
-                    dispatchers_[its_dispatcher->get_id()] = its_dispatcher;
-               
-            } else {
-                cout << "Maximum number of dispatchers exceeded.\n";
-            }          
-        }
-    });
+    if (concurrent_) {
+        its_dispatcher_timer.expires_from_now(std::chrono::milliseconds(expiredtime_)); // default 1sec
+        its_dispatcher_timer.async_wait([this](const boost::system::error_code &_error) {
+            if (!_error) {
+                if (dispatchers_.size() < maxPoolSize_) {
+                        cout<<"start new task dispatcher\n";
+                        auto its_dispatcher = std::make_shared<std::thread>(
+                            std::bind(&TaskWorkerThread::WorkerProcessTasks, this));
+                        dispatchers_[its_dispatcher->get_id()] = its_dispatcher;
+                
+                } else {
+                    cout << "Maximum number of dispatchers exceeded.\n";
+                }          
+            }
+        });
+    }
 
     task();
-  
-    boost::system::error_code ec;
-    its_dispatcher_timer.cancel(ec);
+    
+    if (concurrent_) {
+        boost::system::error_code ec;
+        its_dispatcher_timer.cancel(ec);
+    }
+}
+
+void TaskWorkerThread::enableConcurrency(bool m_concurrent) {
+    concurrent_ = m_concurrent;
+}
+
+void TaskWorkerThread::setExpiredTime(uint m_expiredtime) { //ms
+    expiredtime_ = m_expiredtime;
+}
+
+void TaskWorkerThread::setMaxPoolSize(uint m_maxPoolSize) { //ms
+    maxPoolSize_ = m_maxPoolSize;
 }
 
 }

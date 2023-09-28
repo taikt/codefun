@@ -76,6 +76,9 @@ tiger app use namespace: using namespace TIGER_DEF
 ./servicelayer/core/services/communication-service/include/CM_Parser.h:25:using namespace TIGER_DEF;
 
 
-
-
+***********
+History log:
+28.9.2023: remove message handler from dispatcher initialization
+        tested for task executor but not for message executor.
+        test_app: main_longtask.cpp working, main_test.cpp, main.cpp to be reworked later.
 

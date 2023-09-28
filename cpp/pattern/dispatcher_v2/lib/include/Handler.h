@@ -11,7 +11,8 @@
 namespace kt {
 class Handler {
 public:
-    virtual void handleMessage(std::shared_ptr<Message>& msg) = 0;
+    //virtual void handleMessage(std::shared_ptr<Message>& msg) = 0;
+    void handleMessage(std::shared_ptr<Message>& msg){};
 };
 
 } // end kt

@@ -11,13 +11,12 @@ using namespace std;
 
 namespace kt {
 
-MsgWorkerThread::MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue, std::shared_ptr<Handler> handler)
+MsgWorkerThread::MsgWorkerThread(std::shared_ptr<JobQueue> taskQueue)
    : jobQueue_(taskQueue),
    shutdown_(false),
-   handler_(handler),
    work_(std::make_shared<boost::asio::io_service::work>(io_))
    {
-        cout<<"msgworkerthread:shutdown="<<shutdown_<<"\n"; 
+        //cout<<"msgworkerthread:shutdown="<<shutdown_<<"\n"; 
    }
 
 MsgWorkerThread::~MsgWorkerThread() {
@@ -32,6 +31,10 @@ MsgWorkerThread::~MsgWorkerThread() {
     
     work_.reset();
     io_.stop();
+}
+
+void MsgWorkerThread::setHandler(std::shared_ptr<Handler>& handler) {
+    handler_ = handler;
 }
 
 void MsgWorkerThread::start() {

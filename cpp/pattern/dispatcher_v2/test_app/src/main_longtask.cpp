@@ -7,28 +7,17 @@
 #include <iostream>
 #include <string>
 using namespace std;
-
+using namespace kt;
 
 
 
 std::shared_ptr<Dispatcher> mExecutor;
 
 
-class myHandler : public Handler {
-    void handleMessage(std::shared_ptr<Message>& msg) {
-        std::thread::id id_ = std::this_thread::get_id();
-        switch (msg->id) {
-            
-            default:
-                cout<<"[thread ID] ="<<id_<<", task: id="<<msg->id<<", value:"<<msg->payload<<"\n";
-                break;
-        }
-        
-        
-    }
-};
+void delayProcess(uint mSec) { // delay in mSec seconds
+    struct timeval tv_begin, tv_current;
+    gettimeofday(&tv_begin, NULL);
 
-void delayProcess(uint16 mSec) { // delay in mSec seconds
     for (;;) {
         gettimeofday(&tv_current, NULL);
         unsigned long long diff = 
@@ -41,8 +30,11 @@ void delayProcess(uint16 mSec) { // delay in mSec seconds
 }
 
 int main() {
-    std::shared_ptr<Handler> myHandler_ = std::make_shared<myHandler>();
-    mExecutor = std::make_shared<Dispatcher>(myHandler_);
+    
+    mExecutor = std::make_shared<Dispatcher>();
+    mExecutor->enableTaskConcurrency(true);
+    mExecutor->startTaskThreadPool();
+    mExecutor->setMaxTaskPoolSize(3);
     
     std::thread::id main_id_ = std::this_thread::get_id();
 
