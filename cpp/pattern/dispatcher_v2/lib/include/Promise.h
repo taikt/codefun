@@ -25,6 +25,7 @@
 
 #include "Dispatcher.h"
 #include "State.h"
+#include "Log.h"
 
 using namespace std;
 

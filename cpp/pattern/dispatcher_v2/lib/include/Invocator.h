@@ -26,6 +26,7 @@
 #include "Dispatcher.h"
 #include "Promise.h"
 #include "Continuation.h"
+#include "Log.h"
 
 using namespace std;
 

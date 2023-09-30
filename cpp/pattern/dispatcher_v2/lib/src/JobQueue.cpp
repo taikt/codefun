@@ -15,12 +15,14 @@ std::packaged_task<void()> JobQueue::popTask() {
    
     std::packaged_task<void()> pt;
 
+    /*
     std::unique_lock<std::mutex> lock{task_mtx_};
     auto isWait = [this]() { return shutdown_ || !queue_.empty(); };
     if (!isWait()) {
       
         task_cv_.wait(lock, isWait);
     }
+    */
 
     if (!queue_.empty()) {
         pt = std::move(queue_.front());

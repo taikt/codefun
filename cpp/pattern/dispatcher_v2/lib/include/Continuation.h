@@ -25,6 +25,7 @@
 #include "Invocator.h"
 #include "Dispatcher.h"
 #include "Promise.h"
+#include "Log.h"
 
 using namespace std;
 

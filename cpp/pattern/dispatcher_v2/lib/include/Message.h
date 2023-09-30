@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include "Promise.h"
+#include "Log.h"
 
 #ifndef MESSAGE_HPP
 #define MESSAGE_HPP

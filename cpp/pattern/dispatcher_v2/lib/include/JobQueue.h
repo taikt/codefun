@@ -12,6 +12,7 @@
 #include <mutex>
 #include <deque>
 #include "Message.h"
+#include "Log.h"
 
 #include <iostream>
 #include <string>
@@ -79,7 +80,7 @@ auto JobQueue::pushTaskTo(F task, Args &&... args) -> std::future<decltype(task(
         queue_.emplace_back(std::move(pkgedTask));
     }
     task_cv_.notify_one();
-
+   
     return future;
 }
 

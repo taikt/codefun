@@ -14,8 +14,11 @@
 #include "MsgWorkerThread.h"
 #include "Handler.h"
 #include "Message.h"
+#include "Log.h"
 
-
+#include <iostream>
+#include <string>
+using namespace std;
 
 namespace kt {
 
@@ -53,6 +56,9 @@ class Dispatcher {
 
 template <typename F, typename... Args>
 auto Dispatcher::deliverTask(F task, Args &&... args) -> std::future<decltype(task(args...))> {
+    cout<<"[dispatcher] notify a new task, current size="<<jobQueue_->getTaskQueueSize()<<"\n";
+    // only unblock a waiting thread, not unblock all waiting thread
+    taskExecutor_->dispatcher_condition_.notify_one();
     return jobQueue_->pushTask(task, std::forward<Args>(args)...);
 }
 

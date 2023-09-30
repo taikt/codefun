@@ -12,7 +12,7 @@
 #include <map>
 #include "JobQueue.h"
 #include "Handler.h"
-
+#include "Log.h"
 
 
 namespace kt {

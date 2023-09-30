@@ -55,6 +55,60 @@ int main() {
         cout<<"[thread ID] ="<<id_<<", [task2] i="<<i<<"\n";
         });
 
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(4);
+        cout<<"[thread ID] ="<<id_<<", [task3] hello task3\n";
+        });
+
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(0.5);
+        cout<<"[thread ID] ="<<id_<<", [task4] hello task4\n";
+        });
+
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(7);
+        cout<<"[thread ID] ="<<id_<<", [task5] hello tash5\n";
+        });
+    
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(2);
+        cout<<"[thread ID] ="<<id_<<", [task6] hello task6\n";
+        });
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(1);
+        cout<<"[thread ID] ="<<id_<<", [task7] hello task7\n";
+        });
+
+    delayProcess(2);
+
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(1);
+        cout<<"[thread ID] ="<<id_<<", [task8] hello task8\n";
+        });
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(2);
+        cout<<"[thread ID] ="<<id_<<", [task9] hello task9\n";
+        });
+
+    delayProcess(10);
+
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(4);
+        cout<<"[thread ID] ="<<id_<<", [task10] hello task10\n";
+        });
+    mExecutor->deliverTask([=]{
+        std::thread::id id_ = std::this_thread::get_id();
+        delayProcess(2);
+        cout<<"[thread ID] ="<<id_<<", [task11] hello task11\n";
+        });
 
 
     while (1) {}

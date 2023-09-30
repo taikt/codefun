@@ -5,21 +5,16 @@
 #include "Dispatcher.h"
 #include <iostream>
 #include <string>
+
 using namespace std;
-
-/*
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-*/
-
 
 namespace kt {
 
 Dispatcher::Dispatcher()
    : jobQueue_{std::make_shared<JobQueue>()}
 {
+    
+    LOGI("start dispatcher");
     msgExecutor_ = std::make_unique<MsgWorkerThread>(jobQueue_);
     taskExecutor_ = std::make_unique<TaskWorkerThread>(jobQueue_);
 }

@@ -15,7 +15,7 @@ PKG_DIR_NAME = "asynctiger"
 FILESPATH := "${ICON_SRC_DIR}"
 ICON_MODULE_NAME = "asynctiger"
 
-DEPENDS = "boost dlt-daemon gtest protobuf"
+DEPENDS = "boost gtest protobuf dlt-daemon servicelayer-log"
 
 S = "${WORKDIR}/${PN}/"
 

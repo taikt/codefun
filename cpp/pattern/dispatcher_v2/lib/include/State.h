@@ -24,6 +24,7 @@
 
 #include "Dispatcher.h"
 #include "Invocator.h"
+#include "Log.h"
 
 using namespace std;
 
