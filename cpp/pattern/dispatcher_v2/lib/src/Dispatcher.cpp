@@ -16,7 +16,9 @@ Dispatcher::Dispatcher()
     
     LOGI("start dispatcher");
     msgExecutor_ = std::make_unique<MsgWorkerThread>(jobQueue_);
-    taskExecutor_ = std::make_unique<TaskWorkerThread>(jobQueue_);
+    //taskExecutor_ = std::make_unique<TaskWorkerThread>(jobQueue_);
+    taskExecutor_ = std::make_shared<TaskWorkerThread>(jobQueue_);
+    jobQueue_->setTaskExecutor(taskExecutor_);
 }
 
 

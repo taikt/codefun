@@ -12,8 +12,11 @@ JobQueue::JobQueue()
 }
 
 std::packaged_task<void()> JobQueue::popTask() {
-   
+   std::lock_guard<std::mutex> lock(task_mtx_);
+    
+   std::thread::id id_ = std::this_thread::get_id();
     std::packaged_task<void()> pt;
+    //LOGI("[thread:%llu]Jobqueue: pop task: current queue size=%d",id_,queue_.size());
 
     /*
     std::unique_lock<std::mutex> lock{task_mtx_};
@@ -23,19 +26,22 @@ std::packaged_task<void()> JobQueue::popTask() {
         task_cv_.wait(lock, isWait);
     }
     */
-
     if (!queue_.empty()) {
+        //LOGI("Jobqueue: queue not empty");
         pt = std::move(queue_.front());
         queue_.pop_front();
     }
-	//cout<<"pop a task\n";
-	
+
+	//LOGI("Jobqueue: return task");
     return pt;
 }
 
 std::shared_ptr<Message> JobQueue::popMessage() {
-    std::shared_ptr<Message> msg;
+    // to use with condition variable, must use unique_lock instead of lock_guard
     std::unique_lock<std::mutex> lock{msg_mtx_};
+
+    std::shared_ptr<Message> msg;
+    
     auto isWait = [this]() { return shutdown_ || !msg_queue.empty(); };
     if (!isWait()) {
         msg_cv_.wait(lock, isWait);
@@ -49,7 +55,7 @@ std::shared_ptr<Message> JobQueue::popMessage() {
 }
 
 void JobQueue::shutdown() {
-    std::lock_guard<std::mutex> lk{msg_mtx_};
+    std::lock_guard<std::mutex> lk{task_mtx_}; // TODO: check lock msg too
     queue_.clear();
     shutdown_ = true;
     msg_cv_.notify_all();

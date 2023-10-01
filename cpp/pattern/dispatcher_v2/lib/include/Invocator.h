@@ -65,10 +65,11 @@ public:
     }
 
     void operator()(tArgument... value){
-        if constexpr (argumentsVoid() && std::is_void_v<tReturn>) {
+        //LOGI("invocation set value");
+        if constexpr (argumentsVoid() && std::is_void_v<tReturn>) {  
             m_func();
             m_promise.set_value();
-        } else if constexpr (argumentsVoid() && !std::is_void_v<tReturn>) {
+        } else if constexpr (argumentsVoid() && !std::is_void_v<tReturn>) {  
             m_promise.set_value(m_func());
         } else if constexpr (!argumentsVoid() && std::is_void_v<tReturn>) {
             m_func(std::move(value)...);

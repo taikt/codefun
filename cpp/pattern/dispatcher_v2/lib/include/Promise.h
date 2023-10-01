@@ -39,6 +39,7 @@ class Promise
 public:
     void set_value(tValue value) 
     {
+        //LOGI("promise set value");
         m_state->setValue(std::move(value));
     }
 

@@ -76,8 +76,12 @@ public:
     }
 
     void handle(tValue&& value) {
+        //LOGI("continuation handle, send to dispatcher");
         auto fn = std::bind(*m_Invocation.get(),value);
-        dispatch->deliverTask(fn);
+        //fn();
+        if (dispatch != nullptr)
+            dispatch->deliverTask(fn);
+        else LOGI("dispatcher is null, cannot send");
         //dispatch->deliverTask([this,value]{ops(*m_Invocation.get(),value);});
     }
 

@@ -81,7 +81,7 @@ void TaskWorkerThread::MainProcessTasks() {
    
     std::thread::id id_ = std::this_thread::get_id();
     cout<<"start task main thread: "<<id_<<"\n";
-    LOGI("start task main thread:%llu,id_");
+    LOGI("start task main thread:%llu",id_);
     if (!concurrent_) {
         while (!shutdown_) {
             //auto tq = jobQueue_.lock();
@@ -105,91 +105,99 @@ void TaskWorkerThread::MainProcessTasks() {
     }else {
         std::unique_lock<std::mutex> its_lock(handlers_mutex_);
         while (!shutdown_) {
-            
+        
             if (jobQueue_->getTaskQueueSize() == 0 || !is_active_dispatcher(id_)) {
-                //cout<<"notify other dispatcher\n";
                 // Cancel other waiting dispatcher
                 dispatcher_condition_.notify_all();
                 // Wait for new handlers to execute
                 while (!shutdown_ && (jobQueue_->getTaskQueueSize() == 0 || !is_active_dispatcher(id_))) {
-                    cout<<"main woker: I am waiting task\n";
-                    //remove_elapsed_dispatchers();
+                    LOGI("main worker: I am waiting task");
                     dispatcher_condition_.wait(its_lock);
-                    remove_elapsed_dispatchers();
+                    LOGI("main worker wakeup");
+                    remove_elapsed_dispatchers();                 
                 }
             } else {    
-                cout<<"check task\n";            
-                auto task = jobQueue_->popTask();  
-                while (!shutdown_  && is_active_dispatcher(id_) && task.valid()) {
+                std::packaged_task<void()> task;
+                if (is_active_dispatcher(id_)) task = jobQueue_->popTask();
+            
+                // need check active dispacher first (enough condition to do job)
+                // then pop task (in case of inactive condition , don't pop task)
+                while (!shutdown_  && task.valid()) {
                     its_lock.unlock();
-                    //auto task = jobQueue_->popTask();
-                    if (task.valid()) {
-                        //cout<<"invoke task\n";
-                        invokeTask(task);
-                    } else {
-                        //cout<<"[task thread] task invalid\n";
-                    }
+                    
+                    invokeTask(task);
+                    
                     if (shutdown_) return;
 
                     its_lock.lock();
                     remove_elapsed_dispatchers();
-                    task = jobQueue_->popTask();  
+                
+                    if (is_active_dispatcher(id_)) task = jobQueue_->popTask();
+                    else {
+                        LOGI("main worker not active");
+                        break;
+                    }
                 }
             }
         }
+         
         its_lock.unlock();
     }
-    
     cout<<"exit task main thread, shutdown="<<shutdown_<<"\n";
 }
 
-
 void TaskWorkerThread::WorkerProcessTasks() {
     std::thread::id id_ = std::this_thread::get_id();
-    cout<<"start task worker thread: "<<id_<<"\n";
-    LOGI("start task worker thread:%llu,id_");
+    LOGI("start task worker thread:%llu",id_);
     
     std::unique_lock<std::mutex> its_lock(handlers_mutex_);
     while (is_active_dispatcher(id_)) {
-        //cout <<"[worker:"<<id_<<"], queue size="<<jobQueue_->getTaskQueueSize()<<"\n";  
+        LOGI("[worker:%d, queue size=%d",id_,jobQueue_->getTaskQueueSize()); 
         if (jobQueue_->getTaskQueueSize() == 0 && !shutdown_) {
-            //cout <<"[worker:"<<id_<<"] queue is empty, just wait\n";  
+            
             dispatcher_condition_.wait(its_lock); //this worker is sleeping to wait to be wakeuped, which means it is free dispatcher
             // Maybe woken up from main dispatcher
-
+            LOGI("worker awake, current size=%d",jobQueue_->getTaskQueueSize());
             if (jobQueue_->getTaskQueueSize() == 0 && !is_active_dispatcher(id_)) {
-                //cout <<"[worker:"<<id_<<"] queue is still empty, exit\n";  
+                
                 if (shutdown_) {
                     return;
                 }
                 std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
-                //cout <<"[worker:"<<id_<<"] add me to elapsed list\n";  
+                 
                 elapsed_dispatchers_.insert(id_);
                 // wakeup other worker to clean me
                 dispatcher_condition_.notify_all();
                 return;
             }
             //cout <<"[worker] exit waiting\n"; 
+            LOGI("[worker] exit waiting"); 
         } else {
-            //cout <<"[worker] worker thread check task\n"; 
-            auto task = jobQueue_->popTask();           
-            while (!shutdown_  && is_active_dispatcher(id_) && task.valid()) {
-                //cout <<"[worker:"<<id_<<"] try pop task\n";
+          
+            std::packaged_task<void()> task;
+            if (is_active_dispatcher(id_)) task = jobQueue_->popTask();
+            
+            // need check active dispacher first (enough condition to do job)
+            // then pop task (in case of inactive condition , don't pop task)
+            while (!shutdown_  && task.valid()) {
                 its_lock.unlock();
-                //auto task = jobQueue_->popTask();
-                if (task.valid()) {
-                    //cout<<"[worker:"<<id_<<"], invoke task\n";
-                    invokeTask(task);
-                } else {
-                    //cout<<"[worker] task invalid\n";
-                }
+                
+                invokeTask(task);
+                
                 if (shutdown_) return;
 
                 its_lock.lock();
                 remove_elapsed_dispatchers();
-
-                task = jobQueue_->popTask();
-            }
+            
+                if (is_active_dispatcher(id_)) {
+                    LOGI("worker try pop task");
+                    task = jobQueue_->popTask();
+                }
+                else {
+                    LOGI("worker not active");
+                    break;
+                }
+            } 
         }
     }
 
@@ -293,8 +301,17 @@ bool TaskWorkerThread::has_active_dispatcher() {
     return false;
 }
 
-// taikt: return true if current thread enough condition to handle job
+// taikt: return true if cannot find any other free dispatcher, meaning this dispacher need to do job 
+// (it found a differrent free dispatcher in pool -> return false)
 bool TaskWorkerThread::is_active_dispatcher(const std::thread::id &_id) {
+    /*
+    LOGI("is_active_dispatcher: dispatchers list");
+    // dbuggi
+    for (auto el: dispatchers_) {
+        cout<<"worker:"<<el.first<<"\n";
+        LOGI("worker:%llu",el.first);
+    }
+    */
     while (!shutdown_) {
         if (dispatcher_mutex_.try_lock()) {
             for (const auto &d : dispatchers_) { 
@@ -303,6 +320,7 @@ bool TaskWorkerThread::is_active_dispatcher(const std::thread::id &_id) {
                     elapsed_dispatchers_.find(d.first) == elapsed_dispatchers_.end()) { // checked worker dispatcher not in elapsed list
                     dispatcher_mutex_.unlock();
                     //cout<<"not active dispatcher\n";
+                    //LOGI("not active dispatcher, d.first=%llu, _id=%llu",d.first, _id);
                     return false; // if there is a free dispatcher in pool, which differ with current thread => return fail (this thread cannot do job, and will be moved to elapsed list)
                                   // this to prevent case that: current thread has to take a lot of job, meanwhile other free worker do nothing
                                   // to provide balance between workers? 
@@ -310,15 +328,18 @@ bool TaskWorkerThread::is_active_dispatcher(const std::thread::id &_id) {
             }
             dispatcher_mutex_.unlock();
             //cout<<"active dispatcher\n";
+            //LOGI("active dispatcher");
             return true; // taikt: if every woker dispatcher in pool is busy, return true (this thread must do job)
         }
         std::this_thread::yield();
     }
     //cout<<"not active dispatcher2\n";
+    //LOGI("not active dispatcher2");
     return false;
 }
 
 void TaskWorkerThread::remove_elapsed_dispatchers() {
+    LOGI("remove_elapsed_dispatchers");
     if (!shutdown_) {
         std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
         for (auto id : elapsed_dispatchers_) {
@@ -370,7 +391,7 @@ void TaskWorkerThread::TimerHandler( const boost::system::error_code & error, bo
         }
 
         cout<<"elapsed list\n";
-        LOGI("running list");
+        LOGI("elapsed list");
         for (auto el: elapsed_dispatchers_) {
             cout<<"worker:"<<el<<"\n";
             LOGI("worker:%llu",el);

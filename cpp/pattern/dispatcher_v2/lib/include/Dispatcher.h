@@ -47,7 +47,8 @@ class Dispatcher {
     // Queue of tasks
     std::shared_ptr<JobQueue> jobQueue_ = nullptr;
     std::unique_ptr<MsgWorkerThread> msgExecutor_;
-    std::unique_ptr<TaskWorkerThread> taskExecutor_;
+    //std::unique_ptr<TaskWorkerThread> taskExecutor_;
+    std::shared_ptr<TaskWorkerThread> taskExecutor_;
     
    
     std::shared_ptr<Handler> handler_;
@@ -56,10 +57,13 @@ class Dispatcher {
 
 template <typename F, typename... Args>
 auto Dispatcher::deliverTask(F task, Args &&... args) -> std::future<decltype(task(args...))> {
-    cout<<"[dispatcher] notify a new task, current size="<<jobQueue_->getTaskQueueSize()<<"\n";
+   
     // only unblock a waiting thread, not unblock all waiting thread
-    taskExecutor_->dispatcher_condition_.notify_one();
-    return jobQueue_->pushTask(task, std::forward<Args>(args)...);
+
+    auto future = jobQueue_->pushTask(task, std::forward<Args>(args)...);
+    LOGI("[dispatcher] alread submit task, current size=%d",jobQueue_->getTaskQueueSize());
+    
+    return future;
 }
 
 }

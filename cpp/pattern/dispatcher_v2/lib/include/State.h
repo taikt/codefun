@@ -49,6 +49,7 @@ public:
 
     void setValue(tValue &&value)
     {
+        //LOGI("State set value");
         m_value = std::move(value);
 		if (m_continuation) {
             m_continuation->process(std::move(*m_value));

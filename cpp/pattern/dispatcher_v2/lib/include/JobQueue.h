@@ -12,6 +12,7 @@
 #include <mutex>
 #include <deque>
 #include "Message.h"
+#include "TaskWorkerThread.h"
 #include "Log.h"
 
 #include <iostream>
@@ -38,14 +39,23 @@ class JobQueue {
     bool isShutdown();
 
     int getMsgQueueSize() {
+        std::lock_guard<std::mutex> lock{msg_mtx_};
         return msg_queue.size();
     }
 
-     int getTaskQueueSize() {
+    int getTaskQueueSize() {
+        std::lock_guard<std::mutex> lock{task_mtx_};
         return queue_.size();
     }
 
+    void setTaskExecutor(std::shared_ptr<TaskWorkerThread>& mTaskExecutor_) {
+        mTaskExecutor = mTaskExecutor_;
+        LOGI("[job queue] set task executor done");
+    }
+
  private:
+    std::shared_ptr<TaskWorkerThread> mTaskExecutor;
+
     // queue of tasks
     std::deque<std::packaged_task<void()>> queue_;
 
@@ -56,6 +66,7 @@ class JobQueue {
     std::condition_variable task_cv_;
 
 	std::mutex msg_mtx_;
+ 
     std::condition_variable msg_cv_;
 
     std::atomic_bool shutdown_;
@@ -76,10 +87,12 @@ auto JobQueue::pushTaskTo(F task, Args &&... args) -> std::future<decltype(task(
     auto future = pkgedTask.get_future();
     {
         std::lock_guard<std::mutex> lock(task_mtx_);
-		//cout<<"ok queue task now\n";
+		
+        //LOGI("queue task");
         queue_.emplace_back(std::move(pkgedTask));
     }
-    task_cv_.notify_one();
+    //task_cv_.notify_one();
+    mTaskExecutor->dispatcher_condition_.notify_one();
    
     return future;
 }
