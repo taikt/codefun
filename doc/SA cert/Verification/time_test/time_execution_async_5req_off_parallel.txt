@@ -1,0 +1,5 @@
+Time taken: 2031 ms
+Time taken: 2023 ms
+Time taken: 2036 ms
+Time taken: 2038 ms
+Time taken: 2042 ms
