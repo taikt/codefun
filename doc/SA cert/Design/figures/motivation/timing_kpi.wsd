@@ -1,0 +1,57 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+== Startup start ==
+box "BAM"
+participant "libcod" as libc
+participant "provisioning Daemon" as prod
+participant "NAD Manager" as nadm #GreenYellow
+end box
+
+participant "SomeIP" as sip #BlanchedAlmond
+
+box "NAD"
+participant "NAD Proxy" as nadp #GreenYellow
+
+
+participant "Binder IPC" as bind #BlanchedAlmond
+
+participant "Configuration Manager" as conf
+
+participant "Applications" as app
+
+end box
+
+== deliver coding data ==
+nadm -> libc: read coding data
+libc --> nadm:
+nadm -> sip: send coding
+sip -> nadp: send coding
+nadp -> bind: send coding
+bind -> conf: send coding
+conf -> app: apply coding data
+app --> conf:
+conf --> bind:
+bind --> nadp:
+nadp --> sip:
+sip --> nadm:
+
+== deliver provisioning data ==
+nadm -> prod: read provisioning data
+prod -->nadm:
+nadm -> sip: read provisioning
+sip -> nadp: read provisioning
+nadp -> bind: read provisioning
+bind -> conf: read provisioning
+conf -> app: apply provisioning data
+app --> conf:
+conf --> bind:
+bind --> nadp:
+nadp --> sip:
+sip --> nadm:
+
+== Startup end ==
+@enduml

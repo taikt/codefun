@@ -1,0 +1,37 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+Box "Client"
+participant "Main process" as main
+participant "Proxy" as pro #GoldenRod
+end box
+
+participant "IPC (SomeIP/Binder)" as ipc #BlanchedAlmond
+
+Box "Service"
+participant "Sub" as stu #GoldenRod
+end box
+
+== inialization RPC objects==
+stu -> ipc: register Stub object
+ipc --> stu:
+main -> ipc: create Proxy object
+ipc --> main:
+
+== Stub is up ==
+main -> pro: send request
+pro -> ipc: method1
+ipc -> stu: method1
+stu --> ipc:
+ipc --> pro:
+pro --> main:
+
+== Stub is down ==
+main -> pro: send other request
+pro -> ipc: method2
+note over ipc
+cannot send request to Stub
+end note
+@enduml

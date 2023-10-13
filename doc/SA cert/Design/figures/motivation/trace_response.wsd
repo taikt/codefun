@@ -1,0 +1,51 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+Box "NAD Manager (or NAD Proxy)"
+participant "Main process" as main
+participant "Proxy1" as pro #GoldenRod
+participant "Proxy2" as pro2 #SeaGreen
+end box
+
+participant "IPC (SomeIP/Binder)" as ipc #BlanchedAlmond
+
+Box "Service1"
+participant "Sub1" as stu #GoldenRod
+participant "Internal Component" as comp1
+end box
+
+Box "Service2"
+participant "Sub2" as stu2 #SeaGreen
+participant "Internal Component" as comp2
+end box
+
+
+== send request 1 ==
+main -> pro: send request
+note over main
+method1 is processed on time (acceptable delay)
+end note
+pro -> ipc: method1
+ipc -> stu: method1
+stu -> comp1: internal process
+comp1 --> stu:
+stu --> ipc:
+ipc --> pro:
+pro --> main:
+
+== send request 2 ==
+main -> pro2: send other request
+note over main
+response is delayed to return (not accetable delay)
+end note
+pro2 -> ipc: method2
+ipc -> stu2: method2
+stu2 -> comp2: internal process
+note over comp2
+handling is blocking due to abnormal operation
+end note
+
+
+@enduml
