@@ -1,0 +1,53 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+box "BAM"
+participant "NAD Manager" as nam #LightYellow
+end box
+
+participant "SomeIP" as sip 
+
+box "NAD"
+box "Nad Proxy" #SkyBlue
+    participant "Request Manager" as reqm
+    participant "Asynchronous Helper" as as #LawnGreen
+    participant "Task Executor" as exe
+end box
+participant "Binder" as bin 
+participant "Other Services" as ser #LightYellow
+end box
+
+nam ->> sip: sendRequest(input, callback)
+sip ->> reqm: sendRequest(input, callback)
+reqm -> reqm: createFactoryRequest
+reqm -> as: create Promise(callback)
+as -> as: create Asynchronous Completion Token(ACT)
+as --> reqm:
+reqm -> reqm: store promise in ACT table
+note over reqm #Pink
+ACT table is a map of Promise objects  
+with corresponding Token
+end note
+reqm -> reqm: package task event
+reqm ->> exe: deliverTask(task(input), ACT)
+exe ->bin: send task( task(input), ACT)
+
+bin -> ser: handleRequest(input, ACT)
+ser -> ser: process request
+ser -> bin: response(data,ACT)
+bin -> exe: sendResponse(data, ACT)
+exe -> reqm: sendResponse(data, ACT)
+
+reqm -> reqm: get promise in ACT table
+
+reqm ->> as: fulfill promise (data)
+as -> as: pack task event to invoke continuation function
+as ->> exe: deliverTask ( callback(data))
+
+exe ->> sip: callback(data)
+sip ->> nam: callback(data)
+
+@enduml

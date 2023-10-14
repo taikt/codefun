@@ -1,0 +1,50 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+
+box "BAM"
+participant "Service A" as sa
+participant "Service B" as sb
+participant "NAD Manager" as nadm #GreenYellow
+end box
+
+participant "SomeIP" as sip #BlanchedAlmond
+
+box "NAD"
+participant "NAD Proxy" as nadp #GreenYellow
+
+
+participant "Binder IPC" as bind #BlanchedAlmond
+
+participant "Service C" as sc
+
+end box
+
+== send request synchronously ==
+sa -> nadm: request 1
+sb -> nadm: request 2
+note over sb
+request 2 is blocking until NAD Manager finishes request 1.
+It causes Service B be blocked.
+end note
+
+note over sa
+Service A is blocking until it receives response from NAD Manager.
+Service A cannot do other job during waiting time.
+end note
+
+nadm -> sip: request 1
+sip -> nadp: request 1
+nadp -> bind: request 1
+bind -> sc: request 1
+sc --> bind:
+bind --> nadp:
+nadp --> sip:
+sip --> nadm:
+nadm --> sa:
+
+
+@enduml
