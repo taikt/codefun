@@ -29,12 +29,35 @@ void delayProcess(uint mSec) { // delay in mSec seconds
     }
 }
 
+
+void doSomething() {
+}
+
 int main() {
-    
+
+	// initiate task executor
     mExecutor = std::make_shared<Dispatcher>();
+	
+	// enable concurrency
     mExecutor->enableTaskConcurrency(true);
-    mExecutor->setMaxTaskPoolSize(3);
+
+	// set size of thread pool
+    mExecutor->setMaxTaskPoolSize(15);
+
+	// start thread pool
     mExecutor->startTaskThreadPool();
+
+
+
+
+
+	// run task asynchronously
+	mExecutor->deliverTask([=]{doSomething();});
+
+	// delay 10s before running task
+	mExecutor->deliverTask([=]{10s, doSomething();});
+
+	
     
     std::thread::id main_id_ = std::this_thread::get_id();
 

@@ -36,6 +36,9 @@ void func(int a, int b, int c) {
     cout<<"a="<<a<<", b="<<b<<", c="<<c<<"\n\n";
 }
 
+void doSomething() {
+}
+
 int main() {
     std::shared_ptr<Handler> myHandler_ = std::make_shared<myHandler>();
     mExecutor = std::make_shared<Dispatcher>(myHandler_);
@@ -68,6 +71,10 @@ int main() {
     
 	mExecutor->deliverTask([=]{cout<<"hello main\n";});
 
+
+	mExecutor->deliverTask([=]{doSomething();});
+
+	mExecutor->deliverTask([=]{10s, doSomething();});
 	
 
     while (1) {}
