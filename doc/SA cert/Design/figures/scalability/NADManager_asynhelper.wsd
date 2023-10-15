@@ -19,8 +19,8 @@ participant "NAD Proxy" as nap #LightYellow
 participant "Other Services" as ser
 end box
 
-bmw ->> sip: sendrequest(input, callback)
-sip ->> reqm: sendrequest(input, callback)
+bmw ->> sip: requestAsync(input, callback)
+sip ->> reqm: requestAsync(input, callback)
 
 reqm -> reqm: createFactoryRequest
 reqm -> as: create Promise(callback)

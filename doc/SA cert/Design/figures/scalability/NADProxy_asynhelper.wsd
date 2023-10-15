@@ -20,8 +20,8 @@ participant "Binder" as bin
 participant "Other Services" as ser #LightYellow
 end box
 
-nam ->> sip: sendRequest(input, callback)
-sip ->> reqm: sendRequest(input, callback)
+nam ->> sip: requestAsync(input, callback)
+sip ->> reqm: requestAsync(input, callback)
 reqm -> reqm: createFactoryRequest
 reqm -> as: create Promise(callback)
 as -> as: create Asynchronous Completion Token(ACT)
