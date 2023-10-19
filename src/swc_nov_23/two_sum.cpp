@@ -33,6 +33,5 @@ int main() {
     }
 
     cout<<s_arr;
-
     return 0;
 }
