@@ -15,6 +15,22 @@
 #include "log.hpp"
 using namespace std;
 
+class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        map<int,int> m;
+        for (int i=0; i<nums.size(); i++) {
+            m[nums[i]] = i;
+        }
+        for (int i=0; i<nums.size(); i++) {
+            if (m.find(target-nums[i]) != m.end() && (i != m[target - nums[i]])) {
+                return {i, m[target-nums[i]]};
+            }
+        }
+        return {};
+    }
+};
+
 int main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
@@ -31,7 +47,12 @@ int main() {
     while (str>>number) {
         s_arr.push_back(number);
     }
+    int target;
+    cin>>target;
 
-    cout<<s_arr;
+    //cout<<s_arr;
+    Solution a;
+    cout <<a.twoSum(s_arr,target);
+
     return 0;
 }
