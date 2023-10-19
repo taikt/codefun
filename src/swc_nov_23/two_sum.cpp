@@ -25,7 +25,7 @@ int main() {
     string line;
     
 
-    cin<<line;
+    getline(cin, line);
     stringstream str(line);
 
     while (str>>number) {
