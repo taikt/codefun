@@ -1,5 +1,3 @@
-// https://leetcode.com/problems/longest-substring-without-repeating-characters/
-
 #include <bits/stdc++.h>
 #include "log.hpp"
 using namespace std;
