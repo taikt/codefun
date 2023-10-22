@@ -1,20 +1,8 @@
 #include <bits/stdc++.h>
+#include "log.hpp"
 using namespace std;
 
-template<typename T>
-ostream& operator<<(ostream& out, vector<T>& vec) {
-    if (vec.size() == 0)
-    {
-        out<<"{}\n";
-        return out;
-    }
-    out<<"{";
-    for (int i = 0; i < vec.size() - 1; i++) {
-        out<<vec[i]<<", ";
-    }
-    out<<vec.back()<<"}\n";
-    return out;
-}
+
 
 int main() {
     ios::sync_with_stdio(0);
@@ -25,23 +13,48 @@ int main() {
     getline(cin, line);
     stringstream str(line);
     int num;
-    vector<int> numarr;
+    vector<int> a;
     while (str>>num) {
-        numarr.push_back(num);
+        a.push_back(num);
     }
-    int value;
-    cin>>value;
+    int x;
+    cin>>x;
 
-    cout<<numarr;
-    //sort(numarr.begin(), numarr.end(), greater<int>());
-    sort(numarr.begin(), numarr.end()); // increasing
-    cout<<numarr;
-    cout<<"need to find:"<<value<<"\n";
+    cout<<a;
 
-    if (binary_search(numarr.begin(), numarr.end(), value))
+    sort(a.begin(), a.end()); // increasing
+    cout<<a;
+    
+    if (binary_search(a.begin(), a.end(), x))
     cout<<"found\n";
     else cout<<"not found\n";
 
+
+    /*
+    // find upper bound not using lib: 
+    // uppper bound position: lo
+    int lo = 0, hi = n - 1;
+    int mid;
+    while (lo < hi) {
+        mid = (lo+hi)/2;
+        if (x < a[mid]) {
+            hi = mid;
+        } else {
+            lo = mid + 1;
+        }
+    }
+    cout<<"lo="<<lo<<", value:"<<a[lo]<<"\n";
+    */
+
+    // if x is in array or even not, return position of next higher one
+    cout<< "upper bound position of "<<x<<" is: "
+    <<upper_bound(a.begin(), a.end(), x) - a.begin()<<"\n";
+    
+    // if x is in array, return position of x
+    // otherwise, position of next higher one
+    cout<< "lower bound position of "<<x<<" is: "
+    <<lower_bound(a.begin(), a.end(), x) - a.begin() <<"\n";
+    
 
     return 0;
 }

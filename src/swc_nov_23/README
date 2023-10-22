@@ -15,6 +15,9 @@ https://leetcode.com/problems/intersection-of-two-arrays/description/
 https://leetcode.com/problems/find-the-difference/description/
 
 binary_search
+Guide:
+https://usaco.guide/silver/binary-search?lang=cpp
+
 https://leetcode.com/problems/search-insert-position/description/
 https://leetcode.com/problems/sqrtx/description/
 https://leetcode.com/problems/count-complete-tree-nodes/description/
@@ -49,12 +52,34 @@ https://leetcode.com/problems/as-far-from-land-as-possible/description/
 https://leetcode.com/problems/path-with-minimum-effort/description/
 
 Greedy
+Guide:
+https://www.hackerearth.com/practice/algorithms/greedy/basics-of-greedy-algorithms/tutorial/
+https://usaco.guide/bronze/intro-greedy?lang=cpp
+https://usaco.guide/silver/greedy-sorting?lang=cpp
+https://www.geeksforgeeks.org/greedy-algorithms/
+https://leetcode.com/discuss/general-discussion/1061059/ABCs-of-Greedy
+https://leetcode.com/discuss/general-discussion/669996/greedy-for-beginners-problems-sample-solutions
+https://leetcode.com/discuss/interview-question/3972722/Top-Greedy-Questions-helpful-for-OA-and-Interviews
+https://favtutor.com/blogs/greedy-algorithms
+
+https://leetcode.com/tag/greedy/
+https://seanprashad.com/leetcode-patterns/
+https://vnspoj.github.io/category/greedy
+https://medium.com/algorithms-and-leetcode/greedy-algorithm-explained-using-leetcode-problems-80d6fee071c4
+
+
+Practice:
 https://leetcode.com/problems/container-with-most-water/description/
 https://leetcode.com/problems/jump-game-ii/description/
 https://leetcode.com/problems/jump-game/description/
 https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/description/
 https://leetcode.com/problems/largest-number/description/
 https://leetcode.com/problems/meeting-rooms-ii/description/
+
+
+Two-pointer
+Guide:
+https://usaco.guide/silver/two-pointers?lang=cpp
 
 LGE practices
 https://www.hackerrank.com/contests/swct-pre-testold/challenges

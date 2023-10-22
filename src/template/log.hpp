@@ -6,6 +6,19 @@
 #include <set>
 #include <unordered_set>
 
+void print(int arr[], int size) {
+    if (size == 0) {
+        cout<<"{}";
+        return;
+    }
+    cout<<"{";
+    for (int i = 0; i < size - 1; i++) {
+        cout<<arr[i]<<", ";
+    }
+    cout<<arr[size-1]<<"}\n";
+
+}
+
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const std::vector<T>& vec) {
     if (vec.empty()) {
