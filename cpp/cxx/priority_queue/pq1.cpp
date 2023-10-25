@@ -23,7 +23,7 @@ using namespace std;
 
 int main()
 {
-#if 0  //MaxHeap  
+#if 1  //MaxHeap  
     priority_queue<int> myq;
     
     myq.push(2);
@@ -47,7 +47,7 @@ int main()
     printf("size of queue %d\n", myq.size());
 #endif
 
-#if 1 // MinHeap
+#if 0 // MinHeap
     priority_queue<int, vector<int>, greater<int> > myq;
     
     myq.push(2);
