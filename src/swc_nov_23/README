@@ -75,7 +75,7 @@ https://leetcode.com/problems/jump-game/description/
 https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/description/
 https://leetcode.com/problems/largest-number/description/
 https://leetcode.com/problems/meeting-rooms-ii/description/
-
+https://www.hackerrank.com/contests/swpct-batch-5-pretest-3/challenges
 
 Two-pointer
 Guide:
@@ -87,3 +87,8 @@ https://www.hackerrank.com/contests/swpct-practice/challenges
 https://www.hackerrank.com/contests/spct-pretest-1-batch-4/challenges
 https://www.hackerrank.com/swpct-batch-5-pretest-2
 https://www.hackerrank.com/contests/swct-pre-test/challenges
+
+
+Important note:
+number of elements on vector/array: <= 10^6
+to < 1sec run, number of operations <= 10^9
