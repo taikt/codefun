@@ -1,0 +1,110 @@
+
+sorting
+
+binary_search
+Guide:
+https://usaco.guide/silver/binary-search?lang=cpp
+https://vnoi.info/wiki/algo/basic/binary-search.md
+
+
+
+bfs
+https://vnoi.info/wiki/algo/graph-theory/breadth-first-search.md
+
+0-1 bfs
+https://codeforces.com/blog/entry/22276
+
+
+
+Greedy
+Guide:
+https://www.hackerearth.com/practice/algorithms/greedy/basics-of-greedy-algorithms/tutorial/
+https://vnoi.info/wiki/translate/topcoder/Greedy-is-Good.md
+https://usaco.guide/bronze/intro-greedy?lang=cpp
+https://usaco.guide/silver/greedy-sorting?lang=cpp
+https://www.geeksforgeeks.org/greedy-algorithms/
+https://leetcode.com/discuss/general-discussion/1061059/ABCs-of-Greedy
+https://leetcode.com/discuss/general-discussion/669996/greedy-for-beginners-problems-sample-solutions
+https://leetcode.com/discuss/interview-question/3972722/Top-Greedy-Questions-helpful-for-OA-and-Interviews
+https://favtutor.com/blogs/greedy-algorithms
+
+https://leetcode.com/tag/greedy/
+https://seanprashad.com/leetcode-patterns/
+https://vnspoj.github.io/category/greedy
+https://medium.com/algorithms-and-leetcode/greedy-algorithm-explained-using-leetcode-problems-80d6fee071c4
+
+
+
+Two-pointer
+Guide:
+https://usaco.guide/silver/two-pointers?lang=cpp
+
+LGE practices
+https://www.hackerrank.com/contests/swct-pre-testold/challenges
+https://www.hackerrank.com/contests/swpct-practice/challenges
+https://www.hackerrank.com/contests/spct-pretest-1-batch-4/challenges
+https://www.hackerrank.com/swpct-batch-5-pretest-2
+https://www.hackerrank.com/contests/swct-pre-test/challenges
+https://www.hackerrank.com/contests/swpct-batch-5-pretest-3/challenges
+
+Important note:
+number of elements on vector/array: <= x.10^8
+https://stackoverflow.com/questions/3813124/c-vector-max-size
+(10^9 size for 1-d vector of bool is ok)
+vector<char> a(1e9): ok
+vector<bool> a(1e9): ok
+vector<int> a(1e9): not ok, because max size = 1e9 * 4 > int size
+vector<int> a(1e8): ok, because max size = 1e8 * 4 < int size = 2 * 1e9
+
+IMPOTARNT:
+calculate max size in byte of vector or array must <= int max size: 2*1e9
+i.e if using vector<int,int>[n][m], n,m <= 1e5
+=> max size: 1e10 * 4 > max int size => not acceptable
+(4: size of a int is 4 bytes
+size of bool or char is 1 byte)
+
+to < 1sec run, check O()
+
+number of operations per second on PC <= 10^8
+n <= 10 allowed O(n!)
+n <= 20 -> O(2^n)
+n <= 500 -> O(n^3)
+n <= 5000 -> O(n^2)
+n <= 10^6 -> O(nlogn) or O(n)
+n > 10^6  -> O(1) or O(logn)
+
+https://www.geeksforgeeks.org/knowing-the-complexity-in-competitive-programming/
+
+int(32bit to present a number): -2.10^9 - 2.10^9
+long long (64bit to present a number): -9.10^18 - 9.10^18
+
+
+** How to practice **
+leetcode: to interview
+codefores: to competitive programming
+
+https://www.quora.com/How-can-we-see-solutions-on-Codeforces-for-any-problem-code
+
+view editor solution on codefores: click Tutorial on a problem
+to view user solutions: 
+click to a problem
+click link to the test (i.e codeforces round 898(div4))
+click to last column of the problem (i.e x1234)
+on status filter:
+- verdict: accepted
+- language: c++14
+-> apply
+
+
+How to solve:
+1. check problem with available editior tutorial
+2. read problem carefully
+3. 5 min to think solution
+ - check input constraint 
+   -> check algorithm with suitable complexity to meet time limitation (1sec)
+4. read editior tutorial
+5. coding or read editor/user solutions
+6. recoding and submit result
+
+
+

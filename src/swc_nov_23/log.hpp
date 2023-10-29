@@ -32,6 +32,23 @@ std::ostream& operator<<(std::ostream& out, const std::vector<T>& vec) {
     return out << vec.back() << ']' <<"\n";
 }
 
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const vector<vector<T>>& vec) {
+    if (vec.empty()) {
+        out << "[]";
+        return out;
+    }
+    //out << '[';
+    for (int i = 0; i < vec.size(); i++) {
+        out << '[';
+        for (int j = 0; j < vec[i].size() - 1; j++) {
+             out << vec[i][j] << ", ";
+        }
+        out << vec[i].back() << ']' <<"\n";
+    }
+    return out;
+}
+
 template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& out, const std::pair<T1, T2>& pair) {
     return out << '(' << pair.first << ", " << pair.second << ')';
