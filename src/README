@@ -1,3 +1,6 @@
+Documents.
+https://vnoi.info/wiki/algo/basic/Tai-Lieu-Thuat-Toan
+
 
 sorting
 
@@ -10,6 +13,8 @@ https://vnoi.info/wiki/algo/basic/binary-search.md
 
 bfs
 https://vnoi.info/wiki/algo/graph-theory/breadth-first-search.md
+https://cp-algorithms.com/graph/breadth-first-search.html
+
 
 0-1 bfs
 https://codeforces.com/blog/entry/22276
@@ -33,7 +38,8 @@ https://seanprashad.com/leetcode-patterns/
 https://vnspoj.github.io/category/greedy
 https://medium.com/algorithms-and-leetcode/greedy-algorithm-explained-using-leetcode-problems-80d6fee071c4
 
-
+Stack, queue
+// need practice here...
 
 Two-pointer
 Guide:
