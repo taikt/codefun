@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 
 // find maximum value <= t
-// TTTTTFFFF -> FFFFTTTT
+// TTTTTFFFF -> FFFFFTTTT
 // max(ai) that T
 // for ai+1>> F
 int bf1() {
@@ -49,6 +49,7 @@ int bf2() {
         else
             lo = m + 1;
    }
+   return ans;
 }
 void solve() 
 {
