@@ -6,6 +6,8 @@ const int maxn = 2e5+7;
 int n,k;
 int a[maxn];
 
+//  TTTTTTTTTTFFFFFFF
+//  #op<=k  ans  #op>k
 bool f(int m) {
     long long s=0;// if int -> wrong answer
     for (int i=(n-1)/2;i<n;i++)
@@ -20,7 +22,7 @@ void solve(){
     cin>>a[i];
     sort(a,a+n);
 
-    int lo=0, hi=2e9;
+    int lo=0, hi=2e9;// max k = 1e9, ai<=1e9, inrease ai in max k times
     int ans=0;
     while (lo <= hi) {
         int m =  lo+(hi-lo)/2;
