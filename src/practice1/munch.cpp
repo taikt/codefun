@@ -1,0 +1,65 @@
+// https://oj.vnoi.info/problem/vmunch
+
+#include <bits/stdc++.h>
+using namespace std;
+const int maxn = 200;
+int n,m;
+char a[maxn][maxn];
+int sx,sy, mx,my;
+
+int dx[]={0,0,-1,1};
+int dy[]={1,-1,0,0};
+int d[maxn][maxn];
+bool vi[maxn][maxn];
+int bfs(int x, int y) {
+    for (int i=0;i<n;i++)
+    fill_n(d[i],m,0);
+
+    for (int i=0;i<n;i++)
+    fill_n(vi[i],m,false);
+
+    queue<pair<int,int>> q;
+    q.push({x,y});
+    vi[x][y] = true;
+    while(!q.empty()) {
+        int cx=q.front().first;
+        int cy=q.front().second;
+        if (a[cx][cy] == 'C') return d[mx][my];
+        q.pop();
+        for (int i=0; i<4;i++) {
+            int u=cx+dx[i];
+            int v=cy+dy[i];
+            
+            if (u<0 || u>=n || v<0 || v>=m || a[u][v]=='*' || vi[u][v]) continue;
+            
+            d[u][v] = d[cx][cy] + 1;
+            
+            //cout<<"u="<<u<<"v="<<v<<",d="<<d[u][v]<<"\n";
+            vi[u][v]=true;
+            q.push({u,v});
+        }
+    }
+    return d[mx][my];
+}
+void solve() {
+ 
+    cin>>n>>m;
+   
+    for (int i=0; i<n;i++)
+    for (int j=0;j<m;j++) {
+        cin>>a[i][j];
+        
+        if (a[i][j] == 'B') {
+            sx=i;sy=j;
+        };
+        if (a[i][j] == 'C') {
+            mx=i;my=j;
+        };
+    }
+    cout<<bfs(sx,sy);
+}
+int main() {
+    //freopen("input.txt","r",stdin);
+    solve();
+    return 0;
+}
