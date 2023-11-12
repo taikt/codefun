@@ -19,6 +19,17 @@ void pr(T arr[], int size) {
     }
     cout <<arr[size - 1]<<"}\n";
 }
+
+template<typename T, size_t n, size_t m>
+void pr(T (&a)[n][m]) {
+    cout<<"{";
+    for (int i=0; i<n;i++) {
+        for (int j=0; j<m;j++) cout<<a[i][j]<<" ";
+        cout<<"\n";
+    }
+    cout<<"}";
+}
+
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const std::vector<T>& vec) {
     if (vec.empty()) {

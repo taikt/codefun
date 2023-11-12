@@ -1,0 +1,158 @@
+
+' as is
+
+@startuml
+!pragma teoz true
+autonumber
+'autoactivate on
+
+Box "NAD Relay" 
+participant "Proxy" as prox #GreenYellow
+end box
+
+participant "IPC (SomeIP/Binder)" as bin #Yellow
+
+Box "other Service" 
+participant "Stub" as stub #GreenYellow
+end box
+
+== startup: initialization ==
+stub -> bin: register Stub
+
+prox -> bin: create Proxy
+
+prox -> bin: check service available
+
+
+== Service stub is up ==
+
+alt service is available
+prox -> bin: send request
+bin -> stub: send request
+
+end 
+
+== service stub is down ==
+
+loop #YellowGreen
+prox -> bin: check service available
+bin --> prox: 
+end loop
+@enduml
+
+
+' to be1
+
+@startuml
+!pragma teoz true
+autonumber
+'autoactivate on
+
+Box "NAD Relay" 
+participant "Proxy" as prox #GreenYellow
+end box
+
+participant "IPC (SomeIP/Binder)" as bin #Yellow
+
+Box "other Service" 
+participant "Stub" as stub #GreenYellow
+end box
+
+== startup: initialization ==
+stub -> bin: register Stub
+prox -> bin: create Proxy
+
+prox -[#Red]> bin: register service availability 
+
+
+== Service stub is up ==
+
+alt service is available
+bin -[#Red]>> prox: on Available
+prox -> bin: send request
+bin -> stub: send request
+end 
+
+== service stub is down ==
+
+
+alt service is not available
+bin -[#Red]>> prox: on Unavailable
+prox -> prox: hold request
+end
+
+== service stub is up again ==
+alt service is available
+bin -[#Red]>> prox: on available
+prox -> bin: send request
+bin -> stub: send request
+end
+
+@enduml
+
+
+' to be2
+
+@startuml
+!pragma teoz true
+autonumber
+' autoactivate on
+
+Box "NAD Relay"
+participant "Proxy" as prox #GreenYellow
+end box
+
+Box "Binder"
+participant "Binder driver" as dri
+participant "Service Manager" as man
+end box 
+
+Box "other Service(NAD)"
+participant "Stub" as stub #GreenYellow
+end box
+
+== startup: initialization ==
+stub -> dri: register Stub 
+dri -> man: register Stub
+
+
+prox -> dri: create Proxy
+dri -> man: get service
+
+
+prox -[#Red]> dri: register service availability 
+dri -[#Red]> man: register service availability
+man -[#Red]> man: store client registration
+
+== service stub is down ==
+note over stub
+stub is down
+end note
+
+dri ->> man: on binder die
+man -[#Red]> man: check client registration
+man -[#Red]>> dri: service is unavailable
+dri -[#Red]>> prox: service is unavailable
+
+note over prox
+hold request
+end note
+
+== service stub is up ==
+note over stub
+stub is up
+end note
+
+stub -> dri: re-register Stub
+dri -> man: re-register Stub
+
+man -[#Red]> man: check client registration
+man -[#Red]>> dri: service is available
+dri -[#Red]>> prox: service is available
+prox -> dri: re-create proxy
+dri -> man: get service
+
+== send request ==
+prox -> dri: send request
+dri -> stub: send request
+@enduml
