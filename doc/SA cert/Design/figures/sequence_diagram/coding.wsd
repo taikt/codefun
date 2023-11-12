@@ -4,25 +4,26 @@
 autonumber
 
 autoactivate on
-box "NAD\n"
+box "NAD Soc\n"
 
     participant "Config Manager" as config
 
-    participant "Binder IPC" as bin #IndianRed
+    participant "Binder IPC" as bin 
 
-    box "Nad Proxy" #99FF99
+    
  
-    participant "Coding" as code_pro
-    end box
+    participant "NAD Relay" as code_pro #99FF99
+   
 end box
 
-    participant "SomeIP IPC" as sip #IndianRed
+    
 
-box "BAM\n"
+box "BAM Soc\n"
+    participant "SomeIP IPC" as sip 
 
-    box "Nad Manager" #99FF99
-    participant "Coding" as nadm
-    end box
+  
+    participant "NAD Manager" as nadm #99FF99
+  
 
     participant "LibCod" as lib
 

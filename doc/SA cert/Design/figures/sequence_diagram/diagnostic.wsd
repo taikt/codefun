@@ -5,28 +5,33 @@
 
 @startuml
 autonumber
-autoactivate on
-participant "Apps" as app
-participant "Diagnostic Manager" as diag_mgr
+'autoactivate on
 
-participant "Binder IPC" as bin #IndianRed
+box "NAD Soc\n"
+    participant "Apps" as app
+    participant "Diagnostic Manager" as diag_mgr
 
-box "Nad Proxy" #99FF99
-'participant "Main" as nad_main
-participant "Diagnostic" as diag_pr
+    
+    participant "Binder IPC" as bin 
+
+   
+    participant "NAD Relay" as diag_pr #99FF99
+   
+
+
 end box
 
-participant "SomeIP IPC" as sip #IndianRed
 
 
 
-box "Nad Manager" #99FF99
+box "BAM Soc\n"
+    participant "SomeIP IPC" as sip 
 
-participant "Diagnostic" as nadm
+   
+    participant "NAD Manager" as nadm #99FF99
+ 
+    participant "LSMF\n(Lightweight SysteM Function)" as lsmf
 end box
-
-participant "LSMF" as lsmf
-
 
 lsmf -> nadm: serviceN:methodN()
 nadm ->> sip: setDiagJob() 

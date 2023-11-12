@@ -2,33 +2,31 @@
 !pragma teoz true
 autonumber
 autoactivate on
-box "NAD\n"
+box "NAD SoC\n"
 
-    participant "eCall" as ecall
+    participant "eCall app" as ecall
 
-    participant "Binder IPC" as bin #IndianRed
+    participant "Binder" as bin 
 
-    box "Nad Proxy" #99FF99
-    participant "eCall" as ecall_con_nad
+   
+    participant "NAD Relay" as ecall_con_nad #99FF99
 
-    end box
+  
 
 end box
 
-    participant "SomeIP IPC" as sip #IndianRed
+ 
 
-box "BAM\n"
+box "BAM SoC\n"
+   participant "SomeIP" as sip 
+    participant "NAD Manager" as nadm #99FF99
   
-
-    box "NAD Manager" #99FF99
-    participant "eCall" as nadm
-    end box
 
     participant "MCP Gateway" as gw
 end box
 
 box "Backend"
-    participant "Mosquitto MQTT broker" as bro
+    participant "MQTT broker" as bro
     participant "Backend app" as backend
 end box
 == backend startup ==
