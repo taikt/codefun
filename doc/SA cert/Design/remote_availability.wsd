@@ -91,7 +91,7 @@ end
 @enduml
 
 
-' to be2
+' detail via binder
 
 @startuml
 !pragma teoz true
