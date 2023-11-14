@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-11-11T14:22:05.729Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.0.2 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36" etag="6jhEjDUunhpZ0CmHMMR5" version="22.0.2" type="device" pages="16">
+<mxfile host="Electron" modified="2023-11-14T15:39:30.099Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.0.2 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36" etag="Gos9KRF_erhYz70FrRMg" version="22.0.2" type="device" pages="16">
   <diagram name="asynhelper" id="Q-QKnq3gX9eCVLC3-1wW">
     <mxGraphModel dx="1224" dy="1129" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -148,7 +148,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="promise_static" id="T2eVl1j5ZCfuCxYEhPbc">
-    <mxGraphModel dx="236" dy="806" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1224" dy="1129" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="none" math="0" shadow="0">
       <root>
         <mxCell id="M-uHaVgukaM5y-l4pMH8-0" />
         <mxCell id="M-uHaVgukaM5y-l4pMH8-1" parent="M-uHaVgukaM5y-l4pMH8-0" />
@@ -180,7 +180,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="fXwhuCZbmYdMgGNvhCYk-1" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="M-uHaVgukaM5y-l4pMH8-1" vertex="1">
-          <mxGeometry x="1540" y="1450" width="180" height="100" as="geometry" />
+          <mxGeometry x="1540" y="1450" width="180" height="120" as="geometry" />
         </mxCell>
         <mxCell id="fXwhuCZbmYdMgGNvhCYk-2" value="Key" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="M-uHaVgukaM5y-l4pMH8-1" vertex="1">
           <mxGeometry x="1540" y="1450" width="60" height="30" as="geometry" />
@@ -215,11 +215,14 @@
             <mxPoint x="1389" y="1258" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="fXwhuCZbmYdMgGNvhCYk-11" value="Use" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="M-uHaVgukaM5y-l4pMH8-1" source="M-uHaVgukaM5y-l4pMH8-14" target="M-uHaVgukaM5y-l4pMH8-12" edge="1">
+        <mxCell id="yfgKkniGo4HDtYcvWSkM-2" value="Use" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" edge="1" parent="M-uHaVgukaM5y-l4pMH8-1">
           <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="1320" y="1328" as="sourcePoint" />
-            <mxPoint x="1148" y="1328" as="targetPoint" />
+            <mxPoint x="1560" y="1550" as="sourcePoint" />
+            <mxPoint x="1630" y="1550" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="yfgKkniGo4HDtYcvWSkM-3" value="Use relationship" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="M-uHaVgukaM5y-l4pMH8-1">
+          <mxGeometry x="1640" y="1530" width="60" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
