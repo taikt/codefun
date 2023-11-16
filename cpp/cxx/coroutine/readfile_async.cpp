@@ -2,6 +2,8 @@
 #include <iostream>
 #include <thread>
 
+// https://cppuniverse.com/EverydayCpp20/CoroutinesAsync
+
 struct AsyncFileIOLibrary {
 	~AsyncFileIOLibrary() {
 		done = true;
