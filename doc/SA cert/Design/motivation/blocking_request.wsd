@@ -5,16 +5,15 @@ autonumber
 autoactivate on
 
 
-box "BAM"
+box "BAM SoC"
 participant "Service A" as sa
 participant "Service B" as sb
 participant "NAD Manager" as nadm #GreenYellow
+participant "SomeIP" as sip #BlanchedAlmond
 end box
 
-participant "SomeIP" as sip #BlanchedAlmond
-
-box "NAD"
-participant "NAD Proxy" as nadp #GreenYellow
+box "NAD SoC"
+participant "NAD Relay" as nadp #GreenYellow
 
 
 participant "Binder IPC" as bind #BlanchedAlmond
@@ -28,7 +27,7 @@ sa -> nadm: request 1
 sb -> nadm: request 2
 note over sb
 request 2 is blocking until NAD Manager finishes request 1.
-It causes Service B be blocked.
+It causes Service B be blocked and end-to-end response time is large.
 end note
 
 note over sa
