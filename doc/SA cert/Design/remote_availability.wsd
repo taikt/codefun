@@ -10,21 +10,24 @@ Box "NAD Relay"
 participant "Proxy" as prox #GreenYellow
 end box
 
-participant "IPC (SomeIP/Binder)" as bin #Yellow
+participant "IPC (SomeIP/Binder daemon)" as bin #Yellow
 
 Box "other Service" 
 participant "Stub" as stub #GreenYellow
 end box
 
+participant "systemd(health_monitor)" as syst 
 == startup: initialization ==
 stub -> bin: register Stub
 
 prox -> bin: create Proxy
 
+== Remote service is connected ==
 prox -> bin: check service available
 
-
-== Service stub is up ==
+bin -> stub: ping
+stub -> bin: pong
+bin --> prox: available
 
 alt service is available
 prox -> bin: send request
@@ -32,12 +35,25 @@ bin -> stub: send request
 
 end 
 
-== service stub is down ==
+skinparam SequenceDividerBackgroundColor #PaleVioletRed
+ == Detect Failure: Remote service is disconnected == 
 
-loop #YellowGreen
+loop #YellowGreen 
 prox -> bin: check service available
-bin --> prox: 
+bin -> stub: ping
+bin --> prox: unavailable
+
 end loop
+
+== Failure recovery ==
+syst -> stub: restart service \n(create new instance)
+stub -> bin: re-register Stub
+
+prox -> bin: check service available
+
+bin -> stub: ping
+stub -> bin: pong
+bin --> prox: available
 @enduml
 
 
@@ -52,11 +68,13 @@ Box "NAD Relay"
 participant "Proxy" as prox #GreenYellow
 end box
 
-participant "IPC (SomeIP/Binder)" as bin #Yellow
+participant "IPC (SomeIP/Binder) daemon" as bin #Yellow
 
 Box "other Service" 
 participant "Stub" as stub #GreenYellow
 end box
+
+participant "systemd(health_monitor)" as syst 
 
 == startup: initialization ==
 stub -> bin: register Stub
@@ -65,28 +83,34 @@ prox -> bin: create Proxy
 prox -[#Red]> bin: register service availability 
 
 
-== Service stub is up ==
+== Remote service is connected ==
 
-alt service is available
+
+bin -> stub: ping
+stub -> bin: pong
 bin -[#Red]>> prox: on Available
 prox -> bin: send request
 bin -> stub: send request
-end 
-
-== service stub is down ==
 
 
-alt service is not available
+skinparam SequenceDividerBackgroundColor #PaleVioletRed
+ == Detect Failure: Remote service is disconnected == 
+
+bin -> stub: ping
 bin -[#Red]>> prox: on Unavailable
 prox -> prox: hold request
-end
 
-== service stub is up again ==
-alt service is available
+== Failure recovery ==
+syst -> stub: restart service \n(create new instance)
+stub -> bin: re-register Stub
+bin -> stub: ping
+stub -> bin: pong
+
+
 bin -[#Red]>> prox: on available
 prox -> bin: send request
 bin -> stub: send request
-end
+
 
 @enduml
 
