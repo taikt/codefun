@@ -17,7 +17,7 @@ end box
 
 box "BAM SoC\n"
      participant "SomeIP" as sip 
-    participant "Nad Manager" as nadm #99FF99
+    participant "NAD Manager" as nadm #99FF99
  
     participant "MCP Gateway" as gw
 end box
@@ -30,28 +30,28 @@ end box
 == Vehicle startup ==
 
 gw -> bro: connect()
-bro -> gw: connack()
+bro --> gw: connack()
 
 nadm -> gw: connect()
-gw -> nadm: connack()
+gw --> nadm: connack()
 
 == Start interface ==
 nadm -> gw: subcribe()
 gw -> bro: subcribe()
-bro -> gw: suback()
-gw -> nadm: suback()
+bro --> gw: suback()
+gw --> nadm: suback()
 
 == Event change ==
-backend -> bro: publish()
-bro -> gw: publish()
+backend ->> bro: publish()
+bro ->> gw: publish()
 
-gw -> nadm: publish()
+gw ->> nadm: publish()
 
 
-nadm -> sip: triggerSubman()
-sip -> lpa_pr: triggerSubman()
+nadm ->> sip: triggerSubman()
+sip ->> lpa_pr: triggerSubman()
 
-lpa_pr -> bin: triggerSubman()
-bin -> lpa: triggerSubman()
+lpa_pr ->> bin: triggerSubman()
+bin ->> lpa: triggerSubman()
 
 @enduml

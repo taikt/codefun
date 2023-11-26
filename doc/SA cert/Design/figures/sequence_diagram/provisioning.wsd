@@ -30,16 +30,17 @@ end box
 
 
     nadm -> nadm_data: subcribeSecsions()
+    nadm_data --> nadm:
     loop for each session
-    nadm_data -> nadm: nadmvisioningData()
-
+    nadm_data -> nadm: nadProvisioningData()
+    nadm_data <-- nadm:
     nadm -> nadm: mergeData()
     end loop
 
 
-    nadm ->> sip: sendNadnadmvisioningData()
-    sip ->> nadm_nadm: sendNadnadmvisioningData()
-    nadm_nadm ->> bin: write()
-    bin ->> config: write()
+    nadm ->> sip: sendNADProvisioningData()
+    sip ->> nadm_nadm: sendNADProvisioningData()
+    nadm_nadm ->> bin: writeProvisioning()
+    bin ->> config: writeProvisioning()
 
 

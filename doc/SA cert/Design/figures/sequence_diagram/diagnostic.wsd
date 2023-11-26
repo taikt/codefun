@@ -22,33 +22,30 @@ box "NAD Soc\n"
 end box
 
 
-
-
 box "BAM Soc\n"
     participant "SomeIP IPC" as sip 
-
    
     participant "NAD Manager" as nadm #99FF99
  
     participant "LSMF\n(Lightweight SysteM Function)" as lsmf
 end box
 
-lsmf -> nadm: serviceN:methodN()
+lsmf ->> nadm: RequestDiagJob()
 nadm ->> sip: setDiagJob() 
 sip ->> diag_pr: setDiagJob() 
 
 alt write DID
 diag_pr ->> bin: writeDID()
 bin ->> diag_mgr: writeDID()
-diag_mgr -> app: onRequestWriteDID()
+diag_mgr ->> app: onRequestWriteDID()
 else read DID
 diag_pr ->> bin: readDID()
 bin ->> diag_mgr: readDID()
-diag_mgr -> app: onRequestReadDID()
+diag_mgr ->> app: onRequestReadDID()
 else Routine Control
 diag_pr ->> bin: routineControl()
 bin ->> diag_mgr: routineControl()
-diag_mgr -> app: onRequestroutineControl()
+diag_mgr ->> app: onRequestroutineControl()
 end
 
 

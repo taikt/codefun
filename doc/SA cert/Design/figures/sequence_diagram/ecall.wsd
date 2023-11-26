@@ -15,8 +15,6 @@ box "NAD SoC\n"
 
 end box
 
- 
-
 box "BAM SoC\n"
    participant "SomeIP" as sip 
     participant "NAD Manager" as nadm #99FF99
@@ -30,23 +28,23 @@ box "Backend"
     participant "Backend app" as backend
 end box
 == backend startup ==
-backend ->> bro: connect()
-bro -> backend: connack()
+backend -> bro: connect()
+bro --> backend: connack()
 
 == vehicle startup ==
-gw ->> bro: connect()
-bro ->> gw: connack()
-nadm ->> gw: connect()
-gw ->> nadm: connack()
+gw -> bro: connect()
+bro --> gw: connack()
+nadm -> gw: connect()
+gw --> nadm: connack()
 
 == start interface ==
-backend ->> bro: subscribe()
-bro ->> backend: suback()
+backend -> bro: subscribe()
+bro --> backend: suback()
 
-nadm ->> gw: subcribe()
-gw ->> bro: subcribe()
-bro ->> gw: suback()
-gw ->> nadm: suback()
+nadm -> gw: subcribe()
+gw -> bro: subcribe()
+bro --> gw: suback()
+gw --> nadm: suback()
 
 == event change ==
 ecall ->> bin: sendStartEcallEvent()

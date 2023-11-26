@@ -34,12 +34,13 @@ end box
 == set coding flag ==
     loop 
     nadm -> lib: getCodingFlag()
+    nadm <-- lib:
     end loop
  
     nadm ->> sip: setCodingData()
     sip ->> code_pro: setCodingData()
-    code_pro ->> bin: setData()
-    bin ->> config: setData()
+    code_pro ->> bin: setCoding()
+    bin ->> config: setCoding()
 
 
 
