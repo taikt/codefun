@@ -1,0 +1,4 @@
+<map id="kt::Dispatcher" name="kt::Dispatcher">
+<area shape="rect" id="node6" href="$classkt_1_1MsgWorkerThread.html" title="{kt::MsgWorkerThread\n||+ MsgWorkerThread()\l+ ~MsgWorkerThread()\l+ start()\l+ isShutdown()\l+ setHandler()\l&#45; mainMessageDispatcher()\l&#45; messageDispatcher()\l&#45; handleMessage()\l&#45; invokeHandler()\l}" alt="" coords="516,315,699,509"/>
+<area shape="rect" id="node14" title="STL class. " alt="" coords="1156,160,1240,237"/>
+</map>

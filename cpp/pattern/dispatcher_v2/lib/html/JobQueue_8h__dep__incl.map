@@ -1,0 +1,15 @@
+<map id="include/JobQueue.h" name="include/JobQueue.h">
+<area shape="rect" id="node2" href="$Dispatcher_8h.html" title="include/Dispatcher.h" alt="" coords="299,155,440,181"/>
+<area shape="rect" id="node9" href="$MsgWorkerThread_8h.html" title="include/MsgWorkerThread.h" alt="" coords="65,528,250,555"/>
+<area shape="rect" id="node12" href="$TaskWorkerThread_8h.html" title="include/TaskWorkerThread.h" alt="" coords="93,80,283,107"/>
+<area shape="rect" id="node14" href="$JobQueue_8cpp.html" title="src/JobQueue.cpp" alt="" coords="357,80,485,107"/>
+<area shape="rect" id="node3" href="$State_8h.html" title="include/State.h" alt="" coords="453,229,563,256"/>
+<area shape="rect" id="node4" href="$Continuation_8h.html" title="include/Continuation.h" alt="" coords="351,379,502,405"/>
+<area shape="rect" id="node5" href="$Invocator_8h.html" title="include/Invocator.h" alt="" coords="361,453,493,480"/>
+<area shape="rect" id="node6" href="$Promise_8h.html" title="include/Promise.h" alt="" coords="251,304,378,331"/>
+<area shape="rect" id="node11" href="$Dispatcher_8cpp.html" title="src/Dispatcher.cpp" alt="" coords="195,229,327,256"/>
+<area shape="rect" id="node7" href="$Message_8h.html" title="include/Message.h" alt="" coords="144,379,275,405"/>
+<area shape="rect" id="node8" href="$Handler_8h.html" title="include/Handler.h" alt="" coords="96,453,219,480"/>
+<area shape="rect" id="node10" href="$MsgWorkerThread_8cpp.html" title="src/MsgWorkerThread.cpp" alt="" coords="69,603,245,629"/>
+<area shape="rect" id="node13" href="$TaskWorkerThread_8cpp.html" title="src/TaskWorkerThread.cpp" alt="" coords="94,155,274,181"/>
+</map>
