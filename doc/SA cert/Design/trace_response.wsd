@@ -1,0 +1,41 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+
+box "BAM SoC"
+participant "Service A" as sa
+
+participant "NAD Manager" as nadm #GreenYellow
+participant "SomeIP IPC" as sip #BlanchedAlmond
+end box
+
+box "NAD SoC"
+participant "NAD Relay" as nadp #GreenYellow
+
+
+participant "Binder IPC" as bind #BlanchedAlmond
+
+participant "Service C" as sc
+
+end box
+
+== send request asynchronously ==
+sa ->> nadm: request 1
+
+
+
+note over sa
+there is no response to external component
+end note
+
+nadm ->> sip: request 1
+sip ->> nadp: request 1
+nadp ->> bind: request 1
+bind ->> sc: request 1
+
+
+
+@enduml

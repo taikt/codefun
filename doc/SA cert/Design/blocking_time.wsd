@@ -1,0 +1,93 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+box "BAM SoC"
+participant "Service A" as sa
+
+participant "NAD Manager" as nadm #GreenYellow
+participant "SomeIP" as sip #BlanchedAlmond
+end box
+
+box "NAD SoC"
+participant "NAD Relay" as nadp #GreenYellow
+
+
+participant "Binder IPC" as bind #BlanchedAlmond
+
+participant "Service C" as sc
+
+end box
+
+== send request synchronously ==
+sa -> nadm: send request 
+
+
+
+note over sa
+blocked time is same as end-to-end response time
+end note
+
+nadm -> sip: send request
+sip -> nadp: send request
+nadp -> bind: send request
+bind -> sc: send request
+sc -> sc: handle request
+sc --> bind:
+bind --> nadp:
+nadp --> sip:
+sip --> nadm:
+nadm --> sa:
+
+@enduml
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+box "BAM SoC"
+participant "Service A" as sa
+
+participant "NAD Manager" as nadm #GreenYellow
+participant "SomeIP" as sip #BlanchedAlmond
+end box
+
+box "NAD SoC"
+participant "NAD Relay" as nadp #GreenYellow
+
+
+participant "Binder IPC" as bind #BlanchedAlmond
+
+participant "Service C" as sc
+
+end box
+
+== send request asynchronously ==
+sa ->> nadm: send request 
+note over sa
+blocked time is duration that service A receives control back.
+end note
+nadm --> sa:
+
+
+
+nadm ->> sip: send request
+sip ->> nadp: send request
+nadp --> sip:
+sip --> nadm:
+nadp ->> bind: send request
+bind ->> sc: send request
+
+sc --> bind:
+bind --> nadp:
+sc -> sc: handle request
+sc --> bind: response data
+bind --> nadp: response data
+nadp --> sip: response data
+sip --> nadm: response data
+nadm --> sa: response data
+
+@enduml
