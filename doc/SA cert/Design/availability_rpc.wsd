@@ -8,7 +8,7 @@ participant "Main process" as main
 participant "Proxy" as pro #GoldenRod
 end box
 
-participant "IPC (SomeIP/Binder)" as ipc #BlanchedAlmond
+participant "SOME/IP" as ipc #Yellow
 
 Box "Service"
 participant "Sub" as stu #GoldenRod
