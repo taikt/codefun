@@ -1,0 +1,19 @@
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+
+participant "Thread 1" as th1
+participant "Thread 2" as th2
+
+th1 -> th1: create promise object
+th1 -> th1: fetch future object from promise object
+th1 ->> th2: create thread 2 and pass std::promise object
+th1 -> th1: Do some work
+th1 -> th1: blocked on std::future::get()
+th2 -> th2: set value in std::promise object
+th1 -> th1: std::future::get() return value set by std::promise object
+th1 -> th1: continue work
+
+@enduml

@@ -1,0 +1,221 @@
+
+'issue of disconnected
+
+@startuml
+!pragma teoz true
+autonumber
+autoactivate on
+Box "Client"
+
+participant "Proxy" as pro #GoldenRod
+end box
+
+participant "SOME/IP" as ipc #Yellow
+
+Box "Service"
+participant "Sub" as stu #GoldenRod
+end box
+
+== inialization RPC objects==
+stu -> ipc: register Stub object
+ipc --> stu:
+pro -> ipc: create Proxy object
+ipc --> pro:
+
+== Stub is up ==
+
+pro -> ipc: method1
+ipc -> stu: method1
+stu --> ipc:
+ipc --> pro:
+
+
+== Stub is down ==
+
+pro -> ipc: method2
+note over ipc
+cannot send request to Stub
+end note
+@enduml
+
+
+' synchronous method
+@startuml
+!pragma teoz true
+autonumber
+'autoactivate on
+
+Box "NAD Manager" 
+participant "Proxy" as prox #GreenYellow
+end box
+
+participant "SomeIP" as bin #Yellow
+
+Box "NAD Relay" 
+participant "Stub" as stub #GreenYellow
+end box
+
+participant "systemd(health_monitor)" as syst 
+== startup: initialization ==
+stub -> bin: register Stub
+
+prox -> bin: create Proxy
+
+== Remote service is connected ==
+prox -> bin: check service available
+
+bin -> stub: ping
+stub -> bin: pong
+bin --> prox: available
+
+alt service is available
+prox -> bin: send request
+bin -> stub: send request
+
+end 
+
+skinparam SequenceDividerBackgroundColor #PaleVioletRed
+ == Detect Failure: Remote service is disconnected == 
+
+loop #YellowGreen 
+prox -> bin: check service available
+bin -> stub: ping
+bin --> prox: unavailable
+
+end loop
+
+== Failure recovery ==
+syst -> stub: restart service \n(create new instance)
+stub -> bin: re-register Stub
+
+prox -> bin: check service available
+
+bin -> stub: ping
+stub -> bin: pong
+bin --> prox: available
+@enduml
+
+
+' asynchronous method
+
+@startuml
+!pragma teoz true
+autonumber
+'autoactivate on
+
+Box "NAD Manager" 
+participant "Proxy" as prox #GreenYellow
+end box
+
+participant "SOME/IP" as bin #Yellow
+
+Box "NAD Relay" 
+participant "Stub" as stub #GreenYellow
+end box
+
+participant "systemd(health_monitor)" as syst 
+
+== startup: initialization ==
+stub -> bin: register Stub
+prox -> bin: create Proxy
+
+prox -[#Red]> bin: register service availability 
+
+
+== Remote service is connected ==
+
+
+bin -> stub: ping
+stub -> bin: pong
+bin -[#Red]>> prox: on Available
+prox -> bin: send request
+bin -> stub: send request
+
+
+skinparam SequenceDividerBackgroundColor #PaleVioletRed
+ == Detect Failure: Remote service is disconnected == 
+
+bin -> stub: ping
+bin -[#Red]>> prox: on Unavailable
+prox -> prox: hold request
+
+== Failure recovery ==
+syst -> stub: restart service \n(create new instance)
+stub -> bin: re-register Stub
+bin -> stub: ping
+stub -> bin: pong
+
+
+bin -[#Red]>> prox: on available
+prox -> bin: send request
+bin -> stub: send request
+
+
+@enduml
+
+
+' detail via binder
+
+@startuml
+!pragma teoz true
+autonumber
+' autoactivate on
+
+Box "NAD Relay"
+participant "Proxy" as prox #GreenYellow
+end box
+
+Box "Binder"
+participant "Binder driver" as dri
+participant "Service Manager" as man
+end box 
+
+Box "other Service(NAD)"
+participant "Stub" as stub #GreenYellow
+end box
+
+== startup: initialization ==
+stub -> dri: register Stub 
+dri -> man: register Stub
+
+
+prox -> dri: create Proxy
+dri -> man: get service
+
+
+prox -[#Red]> dri: register service availability 
+dri -[#Red]> man: register service availability
+man -[#Red]> man: store client registration
+
+== service stub is down ==
+note over stub
+stub is down
+end note
+
+dri ->> man: on binder die
+man -[#Red]> man: check client registration
+man -[#Red]>> dri: service is unavailable
+dri -[#Red]>> prox: service is unavailable
+
+note over prox
+hold request
+end note
+
+== service stub is up ==
+note over stub
+stub is up
+end note
+
+stub -> dri: re-register Stub
+dri -> man: re-register Stub
+
+man -[#Red]> man: check client registration
+man -[#Red]>> dri: service is available
+dri -[#Red]>> prox: service is available
+prox -> dri: re-create proxy
+dri -> man: get service
+
+== send request ==
+prox -> dri: send request
+dri -> stub: send request
+@enduml
