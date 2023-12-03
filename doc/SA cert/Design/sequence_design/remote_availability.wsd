@@ -46,16 +46,16 @@ autonumber
 'autoactivate on
 
 Box "NAD Manager" 
-participant "Proxy" as prox #GreenYellow
+participant "Proxy" as prox #GoldenRod
 end box
 
 participant "SomeIP" as bin #Yellow
 
 Box "NAD Relay" 
-participant "Stub" as stub #GreenYellow
+participant "Stub" as stub #GoldenRod
 end box
 
-participant "systemd(health_monitor)" as syst 
+participant "systemd(health_monitor)" as syst #Green
 == startup: initialization ==
 stub -> bin: register Stub
 
@@ -77,7 +77,7 @@ end
 skinparam SequenceDividerBackgroundColor #PaleVioletRed
  == Detect Failure: Remote service is disconnected == 
 
-loop #YellowGreen 
+loop #LightGreen
 prox -> bin: check service available
 bin -> stub: ping
 bin --> prox: unavailable
@@ -104,16 +104,16 @@ autonumber
 'autoactivate on
 
 Box "NAD Manager" 
-participant "Proxy" as prox #GreenYellow
+participant "Proxy" as prox #GoldenRod
 end box
 
 participant "SOME/IP" as bin #Yellow
 
 Box "NAD Relay" 
-participant "Stub" as stub #GreenYellow
+participant "Stub" as stub #GoldenRod
 end box
 
-participant "systemd(health_monitor)" as syst 
+participant "systemd(health_monitor)" as syst #Green
 
 == startup: initialization ==
 stub -> bin: register Stub

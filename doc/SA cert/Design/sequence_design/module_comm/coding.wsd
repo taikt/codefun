@@ -1,0 +1,48 @@
+
+@startuml
+!pragma teoz true
+autonumber
+
+autoactivate on
+box "NAD Soc\n"
+
+    participant "Other service" as app
+    participant "Config Manager" as config
+
+    participant "Binder IPC" as bin 
+
+    participant "NAD Relay" as code_pro #99FF99
+   
+end box
+
+    
+
+box "BAM Soc\n"
+    participant "SOME/IP IPC" as sip 
+
+  
+    participant "NAD Manager" as nadm #99FF99
+  
+
+    participant "LibCod" as lib
+
+end box
+
+
+
+== set coding flag ==
+    loop 
+    nadm -> lib: getCodingFlag()
+    nadm <-- lib:
+    end loop
+ 
+    nadm ->> sip: setCodingData()
+    sip ->> code_pro: setCodingData()
+    code_pro ->> bin: setCoding()
+    bin ->> config: setCoding()
+    config ->> app: setCoding()
+
+
+@enduml
+
+

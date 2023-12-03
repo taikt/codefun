@@ -6,25 +6,24 @@ autoactivate on
 
 
 box "BAM SoC"
-participant "Service A" as sa
+participant "Service A" as sa #Green
 
 participant "NAD Manager" as nadm #GreenYellow
-participant "SomeIP IPC" as sip #BlanchedAlmond
+participant "SOME/IP" as sip #Yellow
 end box
 
 box "NAD SoC"
 participant "NAD Relay" as nadp #GreenYellow
 
 
-participant "Binder IPC" as bind #BlanchedAlmond
+participant "Binder" as bind #Yellow
 
-participant "Service C" as sc
+participant "Service C" as sc #Green
 
 end box
 
 == send request asynchronously ==
 sa ->> nadm: request 1
-
 
 
 note over sa
