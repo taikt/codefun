@@ -1,5 +1,0 @@
-Time taken: 430 ms
-Time taken: 465 ms
-Time taken: 804 ms
-Time taken: 820 ms
-Time taken: 1203 ms
