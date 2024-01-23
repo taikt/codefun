@@ -64,12 +64,13 @@ void TaskWorkerThread::start() {
 
 
     // start debug timer
+#if 0
     boost::shared_ptr< boost::asio::deadline_timer > timer(
         new boost::asio::deadline_timer( io_ )
     );
     timer->expires_from_now( boost::posix_time::seconds(1));
     timer->async_wait( boost::bind( &TaskWorkerThread::TimerHandler, this, _1, timer ) );
- 
+#endif
 }
 
 bool TaskWorkerThread::isShutdown() {
@@ -374,6 +375,7 @@ void TaskWorkerThread::TimerHandler( const boost::system::error_code & error, bo
     }
     else
     {
+
         cout << "[" << boost::this_thread::get_id()<< "] TimerHandler: running " << "\n";
         cout<<"********************\n";
         cout<<"dispatchers list\n";
