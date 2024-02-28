@@ -1,3 +1,4 @@
+// https://leetcode.com/problems/top-k-frequent-words/
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
@@ -7,9 +8,18 @@ struct obj {
     int val;
 };
 
+/*
 auto cmp = [](obj ob1, obj ob2){
     if (ob1.val <= ob2.val) return true;
     else return false;
+};
+*/
+class mycmp {
+public:
+    bool operator()(obj ob1, obj ob2){
+        if (ob1.val >= ob2.val) return true;
+        else return false;
+    }
 };
 
 int main() {
@@ -20,11 +30,10 @@ int main() {
     for (auto &w: a){
         cin>>w;
     }
-    priority_queue<obj, vector<obj>, decltype(cmp)> q;
+    //priority_queue<obj, vector<obj>, decltype(cmp)> q;
 
-
+    priority_queue<obj, vector<obj>, mycmp> q;
     for (auto w: a){
-        //cout<<w<<" ";
         q.push({w});
     }
 
@@ -33,7 +42,6 @@ int main() {
         q.pop();
         cout<<x.val<<" ";
     }
-
 
     return 0;
 }
