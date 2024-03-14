@@ -16,7 +16,7 @@ int main()
     //     (69)    (77)    (80)    (82)
 	set<int> test;
 	set<int>::iterator it;
-	test.insert(78);
+	test.insert(78); // O(logn)
 	test.insert(40);
 	test.insert(30);
 	test.insert(80);
