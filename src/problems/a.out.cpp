@@ -26,8 +26,6 @@ int count_divisor(int n) {
         while (n % prime == 0) {	
             count++;
             n /= prime;
-			//w(n);
-			//w(count);
         }
         result *= count + 1;
     }
