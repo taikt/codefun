@@ -133,4 +133,4 @@ all.config
 .vscode
 build
 .DS_Store
-a.out*
+a.out
