@@ -1,7 +1,7 @@
 #!/bin/sh
 
 find . -name "*.exe" -type f -delete
-find . -name "a.out a.out.cpp" -type f -delete
+find . -name "a.out" -type f -delete
 
 git pull
 git add *
