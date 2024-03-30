@@ -39,7 +39,6 @@
 *.symtypes
 *.tar
 *.xz
-a.out
 *.out
 *.exe
 tempCodeRunnerFile.cpp
@@ -49,7 +48,6 @@ modules.builtin
 tags
 !/**/
 !*.*
-a.out
 
 #
 # Top-level generic files
@@ -135,3 +133,4 @@ all.config
 .vscode
 build
 .DS_Store
+a.out*
