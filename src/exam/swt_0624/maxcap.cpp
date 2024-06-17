@@ -12,13 +12,12 @@ int dx[]={1,-1,0,0};
 int dy[]={0,0,1,-1};
 int get_edge(int &x, int &y){
     if (x==y) return 1;
-    int ed= pow(abs(x-y),2);
-    return ed;
+    return pow(abs(x-y),2);
 }
 int get_cap(pi s){
-    dp.resize(n,vector<int>(n,1e9));
+    dp.clear();
+    dp.resize(n,vector<int>(n,INT_MAX));
     int i=s.fi,j=s.se;
-    db(i);db(j);
     priority_queue<pii, vector<pii>, greater<pii>> q;
     dp[i][j]=0;
     q.push({0,{i,j}});
@@ -30,10 +29,11 @@ int get_cap(pi s){
             int ed=get_edge(a[cur.se.fi][cur.se.se],a[ni][nj]);
             if (dp[ni][nj] > cur.fi+ed){
                 dp[ni][nj]=cur.fi+ed;
-                q.push({dp[ni][nj],{ni,nj}});
+                q.push({cur.fi+ed,{ni,nj}});
             }
         }
     }
+    assert(dp[x][y]<INT_MAX);
     return dp[x][y];
 }
 void solve() {
@@ -44,17 +44,15 @@ void solve() {
     for (int j=0;j<n;j++)
     cin>>a[i][j];
     int ans=0;
-    
-    for (int j=0;j<=n-1;j++){
+   
+    for (int j=1;j<=n-2;j++){
         ans=max(ans,get_cap({0,j}));
         ans=max(ans,get_cap({n-1,j}));
     }
-    for (int i=0;i<=n-1;i++){
+    for (int i=1;i<=n-2;i++){
         ans=max(ans,get_cap({i,0}));
         ans=max(ans,get_cap({i,n-1}));
     }
-    
-    //ans=get_cap({2,4});
     cout<<ans;
 }
 
