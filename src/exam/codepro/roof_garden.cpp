@@ -35,3 +35,23 @@ int main(){
 	cout << ans << endl;	//	Output right answer
 	return 0;
 }
+
+
+line(59) -> a=1
+line(59) -> a=-1
+line(59) -> a=2
+array y
+line(61) -> a=-3
+line(61) -> a=-2
+line(61) -> a=3
+3
+
+dp array
+1 -1 
+-1 0 
+-1 1 
+-1 1 
+1 -1 
+1 -1 
+1 -1 
+-1 3
