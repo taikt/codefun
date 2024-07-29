@@ -40,7 +40,7 @@ ll count(int cur_set, int k,vector<vector<ll>>& dp){
 }
 void solve() {
     cin>>n>>m;
-    x.clear();y.clear();//dp.clear();
+    x.clear();y.clear();
     x.resize(n);
     y.resize(n);
     vector<vector<ll>> dp;

@@ -1,3 +1,5 @@
+// https://viblo.asia/p/gioi-thieu-mot-so-ham-tim-kiem-co-san-trong-stl-c-Do754OvLlM6
+
 #include <cstdio>
 #include <vector>
 #include <algorithm>
