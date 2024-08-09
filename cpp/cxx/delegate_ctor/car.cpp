@@ -38,4 +38,5 @@ car::car(float amount, int pass)
 
 car::~car()
 {
+	cout<<"invoke me!"<<endl;
 }
