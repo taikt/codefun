@@ -7,7 +7,7 @@ public:
   A() noexcept {
     cout<<"my starting"<<endl;
   }
-  
+
   ~A() { 
       cout<< "~A() hello" <<endl; 
     }
@@ -27,6 +27,7 @@ int main() {
   { throw; }
   */
   // test kill -9 id
-  f();
+  //f();
+  A a;
   while(1){}
 }
