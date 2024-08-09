@@ -3,7 +3,11 @@ using namespace std;
 
 class A {
 public:
-  A() noexcept = default;
+  //A() noexcept = default;
+  A() noexcept {
+    cout<<"my starting"<<endl;
+  }
+  
   ~A() { 
       cout<< "~A() hello" <<endl; 
     }
