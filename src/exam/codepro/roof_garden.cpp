@@ -36,22 +36,54 @@ int main(){
 	return 0;
 }
 
+/*
+#include<bits/stdc++.h>
 
-line(59) -> a=1
-line(59) -> a=-1
-line(59) -> a=2
-array y
-line(61) -> a=-3
-line(61) -> a=-2
-line(61) -> a=3
-3
+using namespace std;
+#define ll long long 
+int N;//Number of buildings
+int H[80010];//Height of buildings
+vector<long long> max_right(80010);
+void Input_Data(void){
+	cin >> N;
+	for (int i = 0; i < N; i++){
+		cin >> H[i];
+		max_right[i] = i;
+	}
+}
 
-dp array
-1 -1 
--1 0 
--1 1 
--1 1 
-1 -1 
-1 -1 
-1 -1 
--1 3
+int main(){
+	long long ans = 0;
+	Input_Data();		//	Input function
+	//vector<long long> right(N);
+	//int max_right = -1;
+	// for(int i : max_right) 
+	// 	cout << i << " ";
+	// cout << endl;
+	for(ll i = N - 2; i >= 0; --i) {
+		ll j = i + 1;
+		while(1) {
+			if(H[i] <= H[j]) {
+				ans += (ll)(j - i - 1);
+				max_right[i] = j;
+				break;
+			}
+			else {
+				if(j == max_right[j]) {
+					ans += (ll)(N - i - 1);
+					break;
+				}
+				j = max_right[j];
+			}
+		}
+	}
+	// for(int i : max_right) 
+	// 	cout << i << " ";
+	//	Write the code
+	
+	
+	cout << ans << endl;	//	Output right answer
+	return 0;
+}
+
+*/
