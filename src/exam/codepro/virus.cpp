@@ -1,3 +1,41 @@
+// https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/2
+// AC
+#include<bits/stdc++.h>
+#define int int64_t
+using namespace std;
+void solve() {
+	int n,m;
+	cin>>n>>m;
+	vector<int> a(n);
+	for(int &x:a) cin>>x;
+	vector<int> b(m);
+	for(int &x:b) cin>>x;
+	sort(b.begin(),b.end());
+	function<bool(int)> check=[&](int i){
+		vector<int> v;
+		for(int j=i;j<i+m;j++) v.push_back(a[j]);
+		sort(v.begin(),v.end());
+		int del=b[0]-v[0];
+		for(int k=0;k<m;k++){
+			if (del != b[k]-v[k]) return false;
+		}
+		return true;
+	};
+	int i=0,cnt=0;
+	while (i+m-1<n){
+		if (check(i)) cnt++;
+		i++;
+	}
+	cout<<cnt<<endl;
+	
+}
+
+int32_t main() {
+	solve();
+	return 0;
+}
+
+/*
 #include<bits/stdc++.h>
 using namespace std;
 bool check(vector<int>& x, vector<int>& y) {
@@ -31,3 +69,4 @@ int main() {
 	cout << cnt;
 	return 0;
 }
+*/

@@ -1,3 +1,43 @@
+// greedy method: AC
+// https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/4
+#include <bits/stdc++.h>
+#define db(x) cout<<#x<<": "<<x<<endl;
+#define int int64_t
+using namespace std;
+void solve() {
+	const int size=10;
+	int n;
+	cin>>n;
+	vector<int> a(size);
+	for(int &x:a) cin>>x;
+	vector<int> v={1,5,10,50,100,500,1000,3000,6000,12000};
+	int total=0;//tong full packets
+	for(int i=0;i<size;i++) total+= v[i]*a[i];
+	int cur=total;
+	cur-=n;//luong con lai can xoa (bo qua n)
+	for(int i=size-1; i>=0; i--){
+		if (cur>0){
+			//max cnt[i] <= a[i] that will remove cnt[i]*v[i]
+			int t=cur/v[i];
+			t=min(t,a[i]); // luong packet se xoa
+			a[i]=a[i]-t;// so packet con lai ko xoa
+			cur=cur-t*v[i];
+		}
+	}
+	int ans=0;
+	for(int &x:a) ans+=x;
+	cout<<ans<<endl;
+	for(auto &x:a){
+		cout<<x<<" ";
+	}
+}
+
+int32_t main() {
+    solve();
+    return 0;
+}
+
+/*
 #include <bits/stdc++.h>
 using namespace std;
 vector<int> cnt(10);
@@ -46,3 +86,4 @@ main() {
 	for(int i : res)
 		cout << i << " ";
 }
+*/
