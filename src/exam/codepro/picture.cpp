@@ -1,3 +1,73 @@
+// https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/6
+// adhoc: AC
+#include <bits/stdc++.h>
+#define int int64_t
+#define INF 20
+#define db(v) cout<<#v<<" "<<v<<endl;
+using namespace std;
+void solve(){
+	int n;
+	cin>>n;
+	vector<vector<int>> a(n,vector<int>(n));
+	map<int,vector<int>> m;
+	vector<bool> mark(10,false);
+	for(int i=0;i<n;i++){
+		string s;
+		cin>>s;
+		for(int j=0;j<n;j++) {
+			a[i][j]=s[j]-'0';
+			mark[a[i][j]]=true;
+		}
+	}
+	vector<int> v={INF,INF,-INF,-INF};
+	for (int i=0;i<=9;i++){
+		m[i]=v;
+	}
+	
+	for (int i=0;i<n;i++)
+		for (int j=0;j<n;j++){
+			//m[a[i][j]] => v[0], v[1], v[2], v[3]
+			// v[0] v[1] hang cot cua left one
+			// v[2] v[3] hang cot cua right one
+			// i<v[0]: v[0]=i
+			// j<v[1]: v[1]=j
+			// i>v[2]: v[2]=i
+			// j>v[3]: v[3]=j
+			if (a[i][j]==0) continue;
+			vector<int> v=m[a[i][j]];
+			v[0]=min(i,v[0]);
+			v[1]=min(j,v[1]);
+			v[2]=max(i,v[2]);
+			v[3]=max(j,v[3]);
+			m[a[i][j]] = v;
+		}
+	
+	for (int i=0;i<n;i++)
+		for (int j=0;j<n;j++){
+			//tim thay toa do [i,j] trong map cua index khac 
+			int cur=a[i][j];
+			if (cur==0) continue;
+			for (int k=1;k<=9;k++){
+				vector<int> v=m[k];
+				if (k!= cur){
+					if (i>=v[0] && i<=v[2] && j>=v[1] && j<=v[3]) {
+						mark[cur]=false;
+						break;
+					}
+				}
+			}
+		}
+	int cnt=0;
+	for(int i=1;i<=9;i++)
+		if (mark[i]) cnt++;
+	cout<<cnt;
+}
+int32_t main() {
+	solve();
+	return 0;
+}
+
+/*
 #include <bits/stdc++.h>
 using namespace std;
 #define pii pair<int, int>
@@ -50,3 +120,4 @@ int main() {
 	//for(string &i : s) cout << i;
 	return 0;
 }
+*/
