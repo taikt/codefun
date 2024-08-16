@@ -1,3 +1,38 @@
+// greedy method: AC
+#include <bits/stdc++.h>
+#define int int64_t
+#define db(x) cout<<#x<<":"<<x<<endl;
+using namespace std;
+void solve(){
+	int n;
+	cin>>n;
+	vector<int> a(n);
+	for(auto &x: a) cin>>x;
+	int up=0,down=0,sum=a[0],i=0;
+	
+	while(i<n){
+		while(a[i]>=a[i+1] && i<n-1){
+			i++;
+		}
+		down=i;
+		//db(down);
+		while(a[i]<a[i+1] && i<n-1){
+			i++;
+		}
+		up=i;
+		//db(up);
+		sum=sum-a[down];
+		sum=sum+a[up];
+		i++;
+	}
+	cout<<sum;
+}
+
+int32_t main() {
+	solve();
+	return 0;
+}
+/*
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -20,3 +55,4 @@ int main(){
 	cout << max(eat_even, eat_odd) << endl;	//	Output answer
 	return 0;
 }
+*/
