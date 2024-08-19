@@ -1,3 +1,4 @@
+// Monostack: AC
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -14,8 +15,8 @@ void Input_Data(void){
 
 int main(){
 	long long ans = 0;
-	Input_Data();		//	Input function
-	//	Write the code
+	Input_Data();		
+	//	monostack: giam dan
 	stack<int> q;
 	map<int,int> mask;
 	for (int i=0;i<=N;i++){
@@ -32,7 +33,7 @@ int main(){
 		}
 	}
 	
-	cout << ans << endl;	//	Output right answer
+	cout << ans << endl;	
 	return 0;
 }
 

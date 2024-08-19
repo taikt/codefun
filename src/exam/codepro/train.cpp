@@ -1,3 +1,81 @@
+// bfs: AC
+#include <bits/stdc++.h>
+#define int int64_t
+using namespace std;
+int n,m;
+int ret=1e9;
+vector<vector<int>> a;
+queue<vector<int>> q2; // i,j,distance
+int dx[]={0,0,-1,1};
+int dy[]={1,-1,0,0};
+#define db(x) cout<<#x<<"="<<x<<endl;
+// loang phan vung 1 dau tien: gan gia tri 2
+// day cac gia tri 1 vao queue 2
+void bfs(int i, int j){
+	queue<pair<int,int>> q;
+	q.push({i,j});
+	vector<vector<bool>> vi(n,vector<bool>(m));
+	vi[i][j]=true;
+	while(!q.empty()){
+		auto cur=q.front();
+		q.pop();
+		q2.push({cur.first,cur.second,0});
+		a[cur.first][cur.second]=2;
+		for(int k=0;k<4;k++){
+			int ni=cur.first+dx[k], nj=cur.second+dy[k];
+			if (ni<0 || ni>=n || nj<0 || nj>=m || a[ni][nj]==0 || vi[ni][nj]) continue;
+			q.push({ni,nj});
+			vi[ni][nj]=true;
+		}
+	}
+}
+// bfs tu queue 2
+void second_bfs(){
+	vector<vector<bool>> vi(n,vector<bool>(m));
+	while(!q2.empty()){
+		auto cur=q2.front();
+		q2.pop();
+		if (vi[cur[0]][cur[1]]) continue;
+		vi[cur[0]][cur[1]]=true;
+		if (a[cur[0]][cur[1]]==1){
+			ret=cur[2];
+			return;
+		}
+		for(int k=0;k<4;k++){
+			int ni=cur[0]+dx[k], nj=cur[1]+dy[k];
+			if (ni<0 || ni>=n || nj<0 || nj>=m || a[ni][nj]==2 || vi[ni][nj]) continue;
+			q2.push({ni,nj,cur[2]+1});
+		}
+	}
+}
+void solve(){
+	bool exit=false;
+	for(int i=0;i<n;i++){
+		for(int j=0;j<m;j++){
+			if (a[i][j]==1) {
+				bfs(i,j);
+				exit=true;
+				break;
+			}
+		}
+		if (exit) break;
+	}
+	//db(q2.size());
+	second_bfs();
+	cout<<ret-1<<endl;
+}
+int32_t main() {
+	cin>>n>>m;
+	a.resize(n,vector<int>(m));
+	for(int i=0;i<n;i++){
+		for (int j=0;j<m;j++)
+			cin>>a[i][j];
+	}
+	solve();
+	return 0;
+}
+
+/*
 #include<bits/stdc++.h>
 using namespace std;
 const int nax = 55;
@@ -82,3 +160,4 @@ int main() {
     cout << res << endl;
     return 0;
 }
+*/
