@@ -48,3 +48,39 @@ int main() {
 	test_case();
 	return 0;
 }
+
+/*
+// TLE
+#include <bits/stdc++.h>
+using namespace std;
+string s,cmd;
+void solve(){
+	int n=s.size(),curp;
+	curp=n;
+	for(int i=0;i<cmd.size();i++){
+		char x=cmd[i];
+		if (x=='L'){
+			if (curp>0) curp--;
+		}
+		else if (x=='R'){
+			if (curp<n) curp++;
+		}
+		else if (x=='B'){
+			if (curp>0) {
+				s.erase(curp,1);
+			}
+		} else {
+			string tmp;
+			tmp+=x;
+			s.insert(curp,tmp);
+			curp++;
+		}
+	}
+	cout<<s<<endl;
+}
+int main() {
+	cin>>s>>cmd;
+	solve();
+	return 0;
+}
+*/
