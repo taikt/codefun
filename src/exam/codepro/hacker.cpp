@@ -1,4 +1,89 @@
 // https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/13
+// stack: AC
+#include <bits/stdc++.h>
+using namespace std;
+stack<char> s1,s2;
+string S,cmd;
+void solve() {
+	for (int i=0;i<S.size();i++) s1.push(S[i]);
+	
+	for (int i=0;i<cmd.size();i++){
+		char x=cmd[i];
+		if (x=='L'){
+			if (!s1.empty()){
+				s2.push(s1.top());
+				s1.pop();
+			}
+		} else if (x=='R'){
+			if (!s2.empty()){
+				s1.push(s2.top());
+				s2.pop();
+			}
+		} else if (x=='B'){
+			if (!s1.empty()){
+				s1.pop();
+			}
+		} else {
+			s1.push(x);
+		}
+	}
+	
+	string ans;
+	while(!s1.empty()){
+		ans+=s1.top();
+		s1.pop();
+	}
+	reverse(ans.begin(),ans.end()); // dao stack dau tien
+	while(!s2.empty()){ // giu nguyen thu tu stack sau
+		ans+=s2.top();
+		s2.pop();
+	}
+	cout<<ans<<endl;
+}
+int main() {
+	cin>>S>>cmd;
+	solve();
+	return 0;
+}
+
+/*
+// TLE
+#include <bits/stdc++.h>
+using namespace std;
+string s,cmd;
+void solve(){
+	int n=s.size(),curp;
+	curp=n;
+	for(int i=0;i<cmd.size();i++){
+		char x=cmd[i];
+		if (x=='L'){
+			if (curp>0) curp--;
+		}
+		else if (x=='R'){
+			if (curp<n) curp++;
+		}
+		else if (x=='B'){
+			if (curp>0) {
+				s.erase(curp,1);
+			}
+		} else {
+			string tmp;
+			tmp+=x;
+			s.insert(curp,tmp);
+			curp++;
+		}
+	}
+	cout<<s<<endl;
+}
+int main() {
+	cin>>s>>cmd;
+	solve();
+	return 0;
+}
+*/
+
+/*
+// https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/13
 #include <bits/stdc++.h>
 using namespace std;
 void test_case() {
@@ -48,39 +133,5 @@ int main() {
 	test_case();
 	return 0;
 }
-
-/*
-// TLE
-#include <bits/stdc++.h>
-using namespace std;
-string s,cmd;
-void solve(){
-	int n=s.size(),curp;
-	curp=n;
-	for(int i=0;i<cmd.size();i++){
-		char x=cmd[i];
-		if (x=='L'){
-			if (curp>0) curp--;
-		}
-		else if (x=='R'){
-			if (curp<n) curp++;
-		}
-		else if (x=='B'){
-			if (curp>0) {
-				s.erase(curp,1);
-			}
-		} else {
-			string tmp;
-			tmp+=x;
-			s.insert(curp,tmp);
-			curp++;
-		}
-	}
-	cout<<s<<endl;
-}
-int main() {
-	cin>>s>>cmd;
-	solve();
-	return 0;
-}
 */
+
