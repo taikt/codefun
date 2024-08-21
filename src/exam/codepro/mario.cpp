@@ -1,3 +1,4 @@
+// https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/5
 // greedy method: AC
 #include <bits/stdc++.h>
 #define int int64_t

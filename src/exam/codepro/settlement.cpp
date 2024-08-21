@@ -33,7 +33,7 @@ int32_t main() {
 	return 0;
 }
 
-/*
+
 // Dynamic Programming
 // AC
 #include<bits/stdc++.h>
@@ -64,7 +64,7 @@ int32_t main() {
 	solve();
 	return 0;
 }
-*/
+
 
 /*
 // prefix sum method: O(n^2): TLE
