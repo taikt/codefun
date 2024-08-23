@@ -1,6 +1,11 @@
 --Practice
 Cycle and topological sort
 
-https://leetcode.com/problems/alien-dictionary/description/
+
+// detect cycle
 https://leetcode.com/problems/course-schedule/description/
+
+// detect cycle and find a topo sort
 https://leetcode.com/problems/course-schedule-ii/description/
+
+https://leetcode.com/problems/alien-dictionary/description/
