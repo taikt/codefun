@@ -1,0 +1,12 @@
+// pattern
+
+try(i)
+ kiem tra ket qua hien tai (dieu kien bien)
+ for (moi candidate)
+    cat tia: prunning
+    chonj ung vien, update trang thai moi
+    try(i+1)
+    remove ung vien, hoi phuc trang thai cu
+
+// practice
+https://leetcode.com/problems/remove-invalid-parentheses/description/
