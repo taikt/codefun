@@ -1,0 +1,38 @@
+Problem:
+cho ma trận vuông kích thước n*n, gồm các giá trị 0, 1 tại mỗi ô.
+Chia ma trận thành các ma trận con có kích thước k*k (điều kiện k>=2 và n chia hết cho k).
+Với 2 ma trận con liền nhau X,Y. X có thể kết nối Y nếu giá trị biên của X và Y bằng nhau.
+Ví dụ với mọi vị trí ở cột biên j của ma trận X, và cột j+1 của ma trận Y, thỏa mãn điều kiện:
+X[i][j]=Y[i][j+1].
+Với mỗi cách chia k, tính số ma trận kết nối tính xuất phát từ ma trận con top-left.
+
+Cần tính số ma trận kết nối lớn nhất cho k cách chia trên.
+
+Constraint:
+n<=50
+
+Input:
+dòng đầu tiên là n (size ma trận)
+mỗi dòng trong n dòng tiếp theo là giá trị ma trận.
+
+Output:
+Tính số ma trận kết nối lớn nhất
+
+Ví dụ
+Input:
+6
+1 1 0 1 0 1
+1 0 1 1 0 1
+1 0 0 0 1 1
+1 0 0 1 1 0
+1 1 1 1 1 0
+0 0 1 0 1 1
+
+Output
+3
+
+Giải thich:
+Nếu chia k=2: số ma trận con kết nối là 3
+Nếu chia k=3: số ma trận con kết nối là 0
+
+

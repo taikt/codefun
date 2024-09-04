@@ -1,5 +1,6 @@
 // https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/2
 // AC
+// O(n*m)=O(1e5)
 #include<bits/stdc++.h>
 #define int int64_t
 using namespace std;

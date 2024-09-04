@@ -1,6 +1,38 @@
 // https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/1
 // https://leetcode.com/problems/maximum-subarray/description/
 
+// Dynamic Programming: O(n)
+// AC
+#include<bits/stdc++.h>
+#define int int64_t
+#define INF 1e9
+using namespace std;
+
+void solve() {
+	int n;
+	cin>>n;
+	vector<int> a(n);
+	for(int &x:a) cin>>x;
+	vector<int> dp(n,INF);
+	dp[0]=a[0];
+	function<int(int)> helper=[&](int i){
+		int ans=-INF;
+		if(dp[i]!= INF) return dp[i];
+		ans=max(a[i],helper(i-1)+a[i]);
+		return dp[i]=ans;
+	};
+	int sum=-INF;
+	for(int i=0;i<n;i++) sum=max(sum,helper(i));
+	cout<<sum;
+	
+}
+
+int32_t main() {
+	solve();
+	return 0;
+}
+
+
 // sliding window: O(n)
 // AC
 #include<bits/stdc++.h>
@@ -34,36 +66,6 @@ int32_t main() {
 }
 
 
-// Dynamic Programming
-// AC
-#include<bits/stdc++.h>
-#define int int64_t
-#define INF 1e9
-using namespace std;
-
-void solve() {
-	int n;
-	cin>>n;
-	vector<int> a(n);
-	for(int &x:a) cin>>x;
-	vector<int> dp(n,INF);
-	dp[0]=a[0];
-	function<int(int)> helper=[&](int i){
-		int ans=-INF;
-		if(dp[i]!= INF) return dp[i];
-		ans=max(a[i],helper(i-1)+a[i]);
-		return dp[i]=ans;
-	};
-	int sum=-INF;
-	for(int i=0;i<n;i++) sum=max(sum,helper(i));
-	cout<<sum;
-	
-}
-
-int32_t main() {
-	solve();
-	return 0;
-}
 
 
 /*

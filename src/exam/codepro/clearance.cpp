@@ -1,5 +1,7 @@
 // https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/12
 // prefix sum + permutation: AC
+
+// O(m*m!)=O(9*9!)=1e7
 #include <bits/stdc++.h>
 #define db(x) cout<<#x<<"="<<x<<endl;
 using namespace std;
@@ -8,6 +10,8 @@ int n,m;
 void solve(){
 	// xay dung bang prefix
 	// prefix[x][i]: so phan tu x tu vi tri 0 toi vi tri i
+	// Note: binh thuong prefix dung tinh sum trong doan [i,j], 
+	// o bai toan nay, prefix la tinh so lan xuat hien 1 phan tu trong doan [i,j]
 	vector<vector<int>> prefix(10, vector<int>(n,0));
 	prefix[a[0]][0]=1;
 	for (int i=1;i<=m;i++){ // i chi so product hien tai
@@ -31,8 +35,8 @@ void solve(){
 			// tong so 1 la 3, tong so 2 la 4
 			// vd (1 2)
 			// 1 1 1 2 2 2 2
-			// ans = tong so 1 - so luong 1 trong doan [0,2]
-			//     + tong so 2 - so luong 2 trong doan [3,6]
+			// ans = tong so 1 - so luong 1 trong doan [0,2] (2: tong so luong 1 -1)
+			//     + tong so 2 - so luong 2 trong doan [3,6] (3: 2(previous end)+1, 6: 2(previous end) + tong so luong 2)
 			end+=prefix[v[i]][n-1];
 			int beg=0;
 			if (a[start]==v[i]) beg=1;
