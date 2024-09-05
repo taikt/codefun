@@ -23,6 +23,8 @@ n <= 5000 -> O(n^2)
 n <= 10^6 -> O(nlogn) or O(n)
 n > 10^6  -> O(1) or O(logn)
 
+(note: logn: trong binary search,set, priority queue... là logarit co so 2)
+
 https://www.geeksforgeeks.org/knowing-the-complexity-in-competitive-programming/
 
 int(32bit to present a number): -2.10^9 - 2.10^9

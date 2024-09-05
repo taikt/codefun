@@ -1,3 +1,11 @@
+/*
+5 2 2
+0 0 0 0 0
+0 1 1 2 0
+0 1 4 4 0
+0 3 2 1 0
+0 0 0 0 0
+*/
 #include <bits/stdc++.h>
 #define db(v) cout<<"line("<<__LINE__<<") -> "<<#v<<"="<<v<<endl
 #define pi pair<int,int>

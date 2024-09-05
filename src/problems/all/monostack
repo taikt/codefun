@@ -1,0 +1,19 @@
+--practice
+https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/9
+https://leetcode.com/problems/remove-duplicate-letters/description/
+https://leetcode.com/problems/remove-k-digits/description/
+
+/*
+https://leetcode.com/problems/remove-duplicate-letters/editorial/
+
+Time complexity : O(N). Although there is a loop inside a loop, the time complexity is still O(N). This is because the inner while loop is bounded by the total number of elements added to the stack (each time it fires an element goes). This means that the total amount of time spent in the inner loop is bounded by O(N), giving us a total time complexity of O(N)
+*/
+
+partern: O(n)
+for(int i=0;i<n;i++){
+    while(!q.empty() && q[q.top()]>= a[i]){ // stack tang dan
+        mark[q.top()]=i;//danh dau
+        q.pop();
+    }
+    push(i);
+}

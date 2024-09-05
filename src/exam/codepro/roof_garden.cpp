@@ -1,5 +1,9 @@
 // https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/9
 // Monostack: AC
+// O(n)
+// check why time complexity O(n) in below
+// https://leetcode.com/problems/remove-duplicate-letters/editorial/
+
 #include <bits/stdc++.h>
 using namespace std;
 
