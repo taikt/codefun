@@ -1,0 +1,20 @@
+batch 3/2024:
+- b1: brute force tren matrix
+- b2: bfs (so thanh phan lien thong)
+- b3: mono stack
+https://leetcode.com/problems/largest-rectangle-in-histogram
+
+batch 2/2024:
+- b1: xoan oc tren matrix
+- b2: dijkstra (max capacity)
+- b3: bfs + permutation 
+
+batch 1/2024:
+- b1: xoay tren matrix (dao chieu tu ngoai vao theo layer)
+- b2: queue/stack
+- b3: bfs tren matrix - tim max connection cua cac ma tran con (max_connection)
+
+batch 5/2023:
+- b1: encode/decode bitmask tren matrix
+- b2: slide window (chemical composition) 
+- b3: duyet duong di(adhoc - soil)
