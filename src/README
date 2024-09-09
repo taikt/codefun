@@ -1,3 +1,9 @@
+"
+- Neu doc loi giai editor => phai code lai >=3 lan
+- Tu code moi nho, doc code se quen
+- Tat ca comment phai bang tieng viet
+"
+
 number of elements on vector/array: <= x.10^8
 https://stackoverflow.com/questions/3813124/c-vector-max-size
 (10^9 size for 1-d vector of bool is ok)
