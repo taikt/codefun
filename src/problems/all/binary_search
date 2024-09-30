@@ -5,3 +5,7 @@ https://vnoi.info/wiki/algo/basic/binary-search.md
 2. practice
 https://www.hackerrank.com/contests/swpct-batch-5-pretest-2/challenges/ship-packages
 
+
+pattern:
+max(min(fi))
+min(max(fi))

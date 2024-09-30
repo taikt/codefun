@@ -1,5 +1,23 @@
 --Practice
+
 https://leetcode.com/problems/sliding-window-maximum/
+https://leetcode.com/problems/count-substrings-that-can-be-rearranged-to-contain-a-string-ii/
+
+int fn(vector<int>& a){
+    int l=0,r=0;
+    n=a.size();
+    while(l<=n){
+        while(thoa_man_dk_tang_cua_so){
+            r++;// tang cua so sang phai
+        }
+        // kiem tra ket qua
+
+        l++; // dich cua so trai
+        //update trang thai khi dich cua so trai
+    }
+
+}
+
 
 int fn(vector<int>& arr) {
     int left = 0, ans = 0, curr = 0;

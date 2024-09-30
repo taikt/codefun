@@ -9,6 +9,7 @@ try(i)
     remove ung vien, hoi phuc trang thai cu
 
 // practice
+https://leetcode.com/problems/unique-paths-iii/
 https://leetcode.com/problems/remove-invalid-parentheses/description/
 
 int backtrack(STATE curr, OTHER_ARGUMENTS...) {
@@ -26,3 +27,12 @@ int backtrack(STATE curr, OTHER_ARGUMENTS...) {
 
     return ans;
 }
+
+// Phan tich do phuc tap thoi gian
+https://www.naukri.com/code360/library/recursion-backtracking-time-complexity
+
+Neu ham de qui goi lai ham no K lan, va so lan tham Node tu dau toi ket thuc de qui cua moi nghiem la N (chieu sau de qui)
+=> do phuc tap K^N
+Ly giai:
+tong so node cua tree day du = K^N-1 - moi node co K children, tong chieu sau N - so node tu root toi node la)
+Nhu vay se tham (k^N-1) node => thoi gian xu ly tai moi node la hang so => tong time la O(K^N -1) = O(K^N)

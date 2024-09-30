@@ -1,0 +1,1 @@
+Timestamp                     User        Average query/sec        Total average query/sec       
