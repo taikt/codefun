@@ -1,8 +1,69 @@
+-- Theory
+https://www.geeksforgeeks.org/window-sliding-technique/
+https://usaco.guide/gold/sliding-window?lang=cpp
+
 --Practice
 
 https://leetcode.com/problems/sliding-window-maximum/
 https://leetcode.com/problems/count-substrings-that-can-be-rearranged-to-contain-a-string-ii/
 
+* Fixed window side:
+l=0, r=0
+// khoi tao cua so size k
+while(r<k-1){
+    // add a[r]
+    r++;
+}
+
+while(l<n && r<n){
+    // add a[r]
+    // kiem tra ket qua
+    // update trang thai khi tang left
+    r++;
+    l++;
+}
+
+
+
+* Variable window side:
+
+Pattern 1
+int fn(vector<int>& arr) {
+    int left = 0, ans = 0, curr = 0;
+
+    for (int right = 0; right < arr.size(); right++) {
+        // do logic here to add arr[right] to curr
+
+        while (nghiem khong thoa man) {
+            // remove arr[left] from curr
+            left++;
+        }
+
+        // update ket qua
+    }
+
+    return ans;
+}
+
+Pattern 2
+int fn(vector<int>& arr) {
+    int left = 0, ans = 0, curr = 0;
+
+    for (int right = 0; right < arr.size(); right++) {
+        // do logic here to add arr[right] to curr
+
+        while (nghiem thoa man) {
+            // update ket qua
+
+            // remove arr[left] from curr
+            left++;
+        }
+    }
+
+    return ans;
+}
+
+Pattern 3
 int fn(vector<int>& a){
     int l=0,r=0;
     n=a.size();
@@ -18,20 +79,3 @@ int fn(vector<int>& a){
 
 }
 
-
-int fn(vector<int>& arr) {
-    int left = 0, ans = 0, curr = 0;
-
-    for (int right = 0; right < arr.size(); right++) {
-        // do logic here to add arr[right] to curr
-
-        while (WINDOW_CONDITION_BROKEN) {
-            // remove arr[left] from curr
-            left++;
-        }
-
-        // update ans
-    }
-
-    return ans;
-}
