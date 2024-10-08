@@ -2,6 +2,12 @@
 https://www.geeksforgeeks.org/window-sliding-technique/
 https://usaco.guide/gold/sliding-window?lang=cpp
 
+--slide window vs two pointer
+https://stackoverflow.com/questions/64078162/is-two-pointer-problem-same-as-sliding-window
+slide window: use all elements in a window
+two pointer: compare value between two pointers
+
+
 --Practice
 
 https://leetcode.com/problems/sliding-window-maximum/

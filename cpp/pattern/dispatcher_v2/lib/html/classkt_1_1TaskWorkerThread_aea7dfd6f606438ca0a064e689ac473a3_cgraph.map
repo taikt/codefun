@@ -1,9 +1,0 @@
-<map id="kt::TaskWorkerThread::start" name="kt::TaskWorkerThread::start">
-<area shape="rect" id="node2" href="$classkt_1_1TaskWorkerThread.html#ad8be80b5e071d734de033ae7e4cb0d6d" title="kt::TaskWorkerThread\l::MainProcessTasks" alt="" coords="205,89,357,131"/>
-<area shape="rect" id="node8" href="$classkt_1_1TaskWorkerThread.html#a71c9eba57318f15f94ecb8acc528dfed" title="kt::TaskWorkerThread\l::TimerHandler" alt="" coords="205,155,357,196"/>
-<area shape="rect" id="node3" href="$classkt_1_1TaskWorkerThread.html#a86ee4c4f849fcf4a7c475a1c43ff8499" title="kt::TaskWorkerThread\l::invokeTask" alt="" coords="405,89,557,131"/>
-<area shape="rect" id="node6" href="$classkt_1_1TaskWorkerThread.html#a1853207dab34c70293017f898cb6ec96" title="kt::TaskWorkerThread\l::is_active_dispatcher" alt="" coords="837,9,989,51"/>
-<area shape="rect" id="node7" href="$classkt_1_1TaskWorkerThread.html#a4628fd89b545c4c0c6de33a004c23a5a" title="kt::TaskWorkerThread\l::remove_elapsed_dispatchers" alt="" coords="813,119,1012,160"/>
-<area shape="rect" id="node4" href="$classkt_1_1TaskWorkerThread.html#a53dcc6b42d021883c993b12d2d5e3e36" title="kt::TaskWorkerThread\l::has_active_dispatcher" alt="" coords="605,24,765,65"/>
-<area shape="rect" id="node5" href="$classkt_1_1TaskWorkerThread.html#abd91c9fd8489bc865a696c36080f2432" title="kt::TaskWorkerThread\l::WorkerProcessTasks" alt="" coords="607,89,763,131"/>
-</map>

@@ -1,7 +1,0 @@
-<map id="kt::TaskWorkerThread::MainProcessTasks" name="kt::TaskWorkerThread::MainProcessTasks">
-<area shape="rect" id="node2" href="$classkt_1_1TaskWorkerThread.html#a86ee4c4f849fcf4a7c475a1c43ff8499" title="kt::TaskWorkerThread\l::invokeTask" alt="" coords="205,89,357,131"/>
-<area shape="rect" id="node5" href="$classkt_1_1TaskWorkerThread.html#a1853207dab34c70293017f898cb6ec96" title="kt::TaskWorkerThread\l::is_active_dispatcher" alt="" coords="637,9,789,51"/>
-<area shape="rect" id="node6" href="$classkt_1_1TaskWorkerThread.html#a4628fd89b545c4c0c6de33a004c23a5a" title="kt::TaskWorkerThread\l::remove_elapsed_dispatchers" alt="" coords="613,119,812,160"/>
-<area shape="rect" id="node3" href="$classkt_1_1TaskWorkerThread.html#a53dcc6b42d021883c993b12d2d5e3e36" title="kt::TaskWorkerThread\l::has_active_dispatcher" alt="" coords="405,24,565,65"/>
-<area shape="rect" id="node4" href="$classkt_1_1TaskWorkerThread.html#abd91c9fd8489bc865a696c36080f2432" title="kt::TaskWorkerThread\l::WorkerProcessTasks" alt="" coords="407,89,563,131"/>
-</map>
