@@ -35,6 +35,7 @@ while(l<n && r<n){
 * Variable window side:
 
 Pattern 1
+// https://leetcode.com/problems/arithmetic-slices/
 int fn(vector<int>& arr) {
     int left = 0, ans = 0, curr = 0;
 
