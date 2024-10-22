@@ -19,7 +19,7 @@ Time complexity : O(N). Although there is a loop inside a loop, the time complex
 
 partern: O(n)
 for(int i=0;i<n;i++){
-    while(!q.empty() && q[q.top()]>= a[i]){ // stack tang dan
+    while(!q.empty() && a[q.top()]>= a[i]){ // stack tang dan
         mark[q.top()]=i;//danh dau
         q.pop();
     }
@@ -40,4 +40,15 @@ int fn(vector<int>& arr) {
 
         stack.push(num);
     }
+}
+
+// dang 2 cua monostack (tham lam): ko phai tim so lon hon, nho hon gan nhat
+// https://leetcode.com/problems/smallest-subsequence-of-distinct-characters/
+partern: O(n)
+for(int i=0;i<n;i++){
+    while(!q.empty() && a[q.top()]>= a[i] && dk_them){ // stack tang dan
+        //update thay doi(tac dong dk_them)
+        q.pop();
+    }
+    push(i);
 }
