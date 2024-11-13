@@ -1,5 +1,5 @@
 // https://codepro.lge.com/exam/19/overseas-questions-for-previous-test/quiz/1
-
+// AC
 int CalLargestBlock(int id_ignore){
 	int max_block_size = 0;
 	int cur_size = 1;
