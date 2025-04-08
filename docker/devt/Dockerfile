@@ -12,7 +12,7 @@ FROM alpine:latest
 # Thêm repository Alpine 3.9 để cài MongoDB
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.9/main" >> /etc/apk/repositories && \
     echo "http://dl-cdn.alpinelinux.org/alpine/v3.9/community" >> /etc/apk/repositories && \
-    apk update && apk add --no-cache \
+    apk update && apk add \
     openssh-server \
     nodejs \
     npm \
@@ -20,6 +20,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.9/main" >> /etc/apk/repositori
     gcc \
     g++ \
     libstdc++ \
+    python3 \
     && rm -rf /var/cache/apk/* \
     && mkdir /var/run/sshd \
     && mkdir -p /data/db \
