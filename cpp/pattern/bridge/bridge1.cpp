@@ -1,8 +1,7 @@
 // https://sourcemaking.com/design_patterns/bridge/cpp/1
 
-#include <iostream.h>
-#include <iomanip.h>
-#include <string.h>
+#include <bits/stdc++.h>
+using namespace std;
 
 class TimeImp {
   public:
@@ -11,7 +10,7 @@ class TimeImp {
         min_ = min;
     }
     virtual void tell() {
-        cout << "time is " << setw(2) << setfill(48) << hr_ << min_ << endl;
+        cout << "time is " << hr_ << min_ << endl;
     }
   protected:
     int hr_, min_;
@@ -45,7 +44,7 @@ class ZuluTimeImp: public TimeImp {
 
     /* virtual */
     void tell() {
-        cout << "time is " << setw(2) << setfill(48) << hr_ << min_ << zone_ <<
+        cout << "time is " << hr_ << min_ << zone_ <<
           endl;
     }
   protected:
