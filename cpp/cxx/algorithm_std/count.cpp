@@ -5,7 +5,6 @@
 #include <cstdio>
 using namespace std;
 
-
 int main() {
 	int arr[] = {1,3,4,6,3};
 	int x = count(arr,arr+5,3); // dem xuat hien thanh phan 3 trong mang
