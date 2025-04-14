@@ -20,4 +20,3 @@ cd /app/my-app || {
     exit 1
 }
 npm start &
-tail -f /dev/null
