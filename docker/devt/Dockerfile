@@ -29,7 +29,7 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.9/main" >> /etc/apk/repositori
 
 # Sao chép Node.js và project React từ node-builder
 COPY --from=node-builder /usr/local /usr/local/
-#COPY --from=node-builder /app/my-app /app/my-app
+#COPY --from=node-builder /app/my-app /app/my-app (ignore neu copy code tu host, can map volumn tren host truoc)
 COPY start.sh /start.sh
 # Cấu hình SSH
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
