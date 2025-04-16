@@ -5,5 +5,6 @@ find . -name "a.out" -type f -delete
 
 git pull
 git add -u .
+git add *
 git commit -m 'update'
 git push
