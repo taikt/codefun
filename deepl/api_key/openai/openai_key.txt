@@ -1,1 +1,2 @@
+# https://platform.openai.com/settings/organization/api-keys
 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

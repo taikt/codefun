@@ -1,3 +1,7 @@
+# build docker from specific file name
+# docker build -t <image_name>:<tag> -f <path_to_dockerfile> <context_path>
+# e.g docker build -t devmac -f dockerfile_mac .
+
 # Stage 1: Build stage cho Node.js và React
 FROM node:20 AS node-builder
 WORKDIR /app
@@ -21,9 +25,16 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     curl \
     lsb-release \
-    bash-completion \ 
+    bash-completion \
+    python3-venv \ 
     && rm -rf /var/lib/apt/lists/*
 
+#build requests trong moi truong ao tai /opt/venv
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir requests
+
+    
 RUN curl -fsSL https://raw.githubusercontent.com/docker/cli/master/contrib/completion/bash/docker -o /etc/bash_completion.d/docker \
     && echo 'source /etc/bash_completion.d/docker' >> /etc/bash.bashrc
 
