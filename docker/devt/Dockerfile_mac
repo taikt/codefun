@@ -1,0 +1,80 @@
+# Stage 1: Build stage cho Node.js và React
+FROM node:20 AS node-builder
+WORKDIR /app
+
+RUN npm rm -g create-react-app
+RUN npm install -g create-react-app
+RUN npx create-react-app react-app
+
+# Stage 2: Runtime stage - Image cuối cùng
+FROM ubuntu:latest
+
+# Cài đặt các gói cần thiết
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    nodejs \
+    npm \
+    gcc \
+    g++ \
+    python3 \
+    wget \
+    gnupg \
+    curl \
+    lsb-release \
+    bash-completion \ 
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://raw.githubusercontent.com/docker/cli/master/contrib/completion/bash/docker -o /etc/bash_completion.d/docker \
+    && echo 'source /etc/bash_completion.d/docker' >> /etc/bash.bashrc
+
+#RUN curl -fsSL https://raw.githubusercontent.com/mongodb/mongo/master/etc/bash_completion.d/mongo -o /etc/bash_completion.d/mongo \
+#    && echo 'source /etc/bash_completion.d/mongo' >> /etc/bash.bashrc
+
+# Cài đặt MongoDB 8.0 cho Ubuntu 22.04 (Jammy)
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | \
+    tee /usr/share/keyrings/mongodb.asc > /dev/null && \
+    echo "deb [signed-by=/usr/share/keyrings/mongodb.asc] https://repo.mongodb.org/apt/ubuntu $(lsb_release -c | awk '{print $2}')/mongodb-org/8.0 multiverse" | \
+    tee /etc/apt/sources.list.d/mongodb-org-8.0.list && \
+    apt-get update && \
+    apt-get install -y mongodb-org && \
+    rm -rf /var/lib/apt/lists/*
+
+# Tạo thư mục dữ liệu cho MongoDB và cấp quyền
+RUN mkdir -p /data/db && \
+    chown -R mongodb:mongodb /data/db
+
+# Sao chép Node.js từ node-builder
+COPY --from=node-builder /usr/local /usr/local/
+# Sao chép project React từ node-builder vào một thư mục tạm
+COPY --from=node-builder /app/react-app /app/react-app-default
+
+# Cấu hình SSH
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Thiết lập thư mục làm việc
+WORKDIR /app
+
+# Mở các port cần thiết
+EXPOSE 22 27017 3000
+
+RUN mkdir -p /app/react-app
+
+# Tạo script khởi động
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'mongod --fork --logpath /var/log/mongod.log || { echo "Failed to start MongoDB"; exit 1; }' >> /start.sh && \
+    echo '/usr/sbin/sshd -D &' >> /start.sh && \
+    echo '# Kiểm tra nếu thư mục /app/react-app từ volume mount rỗng hoặc không tồn tại' >> /start.sh && \
+    echo 'if [ ! -d "/app/react-app/node_modules" ] || [ -z "$(ls -A /app/react-app 2>/dev/null)" ]; then' >> /start.sh && \
+    echo '  echo "No source found in /app/react-app, copying from /app/react-app-default"' >> /start.sh && \
+    echo '  cp -r /app/react-app-default/* /app/react-app/' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo 'cd /app/react-app || { echo "Cannot change to /app/react-app directory"; exit 1; }' >> /start.sh && \
+    echo 'npm start &' >> /start.sh && \
+    echo 'tail -f /dev/null' >> /start.sh && \
+    chmod +x /start.sh
+# de su dung tab, mo docker bang bash
+# docker exec -it <container_id> bash 
+RUN echo 'source /etc/bash_completion' >> /etc/bash.bashrc
+
+# Chạy script khởi động
+CMD ["/start.sh"]
