@@ -23,9 +23,6 @@ TaskWorkerThread::~TaskWorkerThread() {
     shutdown_ = true;
     is_dispatching_ = false;
 
-    //if (thread_.joinable()) {
-    //    thread_.join();
-    //}
     try {
         std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
         for (const auto& its_dispatcher : dispatchers_) {
@@ -55,22 +52,12 @@ void TaskWorkerThread::start() {
         dispatchers_[its_main_dispatcher->get_id()] = its_main_dispatcher;
     }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 1; i++) {
         std::shared_ptr<std::thread> its_thread = std::make_shared<std::thread>([this, i] {
                                         io_.run();
                                         });
         io_threads_.insert(its_thread);
     }
-
-
-    // start debug timer
-#if 0
-    boost::shared_ptr< boost::asio::deadline_timer > timer(
-        new boost::asio::deadline_timer( io_ )
-    );
-    timer->expires_from_now( boost::posix_time::seconds(1));
-    timer->async_wait( boost::bind( &TaskWorkerThread::TimerHandler, this, _1, timer ) );
-#endif
 }
 
 bool TaskWorkerThread::isShutdown() {
@@ -84,14 +71,12 @@ void TaskWorkerThread::MainProcessTasks() {
     cout<<"start task main thread: "<<id_<<"\n";
     LOGI("start task main thread:%llu",id_);
     while (!shutdown_) {
-        //auto tq = jobQueue_.lock();
-        //if (tq && !tq->isShutdown()) {
         if (!jobQueue_->isShutdown()) {
-            //cout<<"[task thread] try pop task\n";
+          
             auto task = jobQueue_->popTask();
-            //cout<<"[task thread] get a task\n";
+           
             if (task.valid()) {
-                //cout<<"invoke task\n";
+             
                 invokeTask(task);
             } else {
                 //cout<<"[task thread] task invalid\n";
