@@ -82,3 +82,21 @@ History log:
         tested for task executor but not for message executor.
         test_app: main_longtask.cpp working, main_test.cpp, main.cpp to be reworked later.
 
+
+21.8.2025: refactoring
+Event loop voi 1 thread, 
+-> (1) ho tro future, promise (error handling support)
+-> (2) Ho tro delay task, timer
+-> (3) detect CPU-bound task
+-> (4) run cpu-bound task in separate thread
+
+TODO: read and write file,pipe async
+>cancel task (if not running) 
+
+(1) handle error function vs capture exception(thrown)
+
+(2) Su dung co the timer moi dua tren boost (chay tren main thread, cac callback day vao hang doi cua io_context, chay tuan tu cb, boost su dung timerfd
+-> https://grok.com/chat/4f5906ed-712c-4dc3-88af-3066ad4a10d6
+
+(4) timing_func run on separate thread, report_func run on event loop
+http://nikhilm.github.io/uvbook/threads.html#id1
