@@ -1,0 +1,14 @@
+apt-get update && apt-get install -y \
+    ninja-build \
+    build-essential \
+    cmake \
+    clang \
+    git \
+    python3 \
+    libstdc++-12-dev \
+    zlib1g-dev
+
+    apt-get update && apt-get install -y ninja-build     
+    build-essential     cmake     
+    clang     git     python3     
+    libstdc++-12-dev     zlib1g-dev
