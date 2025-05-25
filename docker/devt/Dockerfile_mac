@@ -2,6 +2,10 @@
 # docker build -t <image_name>:<tag> -f <path_to_dockerfile> <context_path>
 # e.g docker build -t devmac -f dockerfile_mac .
 
+# mapping volume
+# Host: /Users/taikt/code/codefun
+# Container: /app/codefun
+
 # Stage 1: Build stage cho Node.js và React
 FROM node:20 AS node-builder
 WORKDIR /app
