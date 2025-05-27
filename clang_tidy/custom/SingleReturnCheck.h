@@ -2,6 +2,7 @@
 #define CLANG_TIDY_CUSTOM_SINGLERETURNCHECK_H
 
 #include "clang-tidy/ClangTidyCheck.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
 
 namespace clang::tidy::custom {
 
