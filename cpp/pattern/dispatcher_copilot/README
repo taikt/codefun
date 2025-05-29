@@ -93,4 +93,3 @@ TODO: read and write file,pipe async
 
 (4) timing_func run on separate thread, report_func run on event loop
 http://nikhilm.github.io/uvbook/threads.html#id1
-

@@ -5,10 +5,14 @@ ninja -j4
 ./bin/clang-tidy --list-checks
 ./bin/clang-tidy ../src/main.cpp -p ../build-test
 ./bin/clang-tidy --checks=-*,custom-SingleReturnCheck ./src/main.cpp -p ../build-test
+./bin/clang-tidy --checks=-*,custom-SwitchBreakCheck ./../clang-tools-extra/clang-tidy/custom/test.cpp
+
 
 build vscode extension
-
 PS C:\Users\tai2.tran\lgedv-checker\lgedv-checker> npm run compile
 PS C:\Users\tai2.tran\lgedv-checker\lgedv-checker> vsce package
 PS C:\Users\tai2.tran\lgedv-checker\lgedv-checker> vsce publish
 PS C:\Users\tai2.tran\lgedv-checker\lgedv-checker> scp lgedv-checker-0.0.2.vsix worker@tai2-tran-tsu-my26-taikt.vbee.lge.com:/home/worker/
+
+sudo cp /home/worker/src/llvm-project/build/bin/clang-tidy /usr/local/bin/
+clang-tidy --checks=-*,custom-* DAQApplication.cpp
