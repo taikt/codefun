@@ -1,9 +1,9 @@
 {
   "name": "lgedv-code-checker",
-  "icon":"src/icon.svg",
+  "icon":"src/icon2.png",
   "publisher": "tai2.tran@lge.com",
-  "displayName": "LGEDV_code_checker",
-  "description": "check code violation",
+  "displayName": "LGEDV Code Checker",
+  "description": "Check C++ Vulnerability",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.100.0"
