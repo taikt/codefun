@@ -31,6 +31,8 @@ FIhyEDH4hyvE8B26bKwYc7brGiZwUQjyY4qwLR2TM9p8WpQkY8QtJQQJ99BFACAAAAArP9ilAAASAZDO
 account: tai2.tran@lge.com, LGE PC pw
 publisher: taikt123
 
+# delete publisher: 
+vsce delete-publisher publisher_id
 
 # change cmake, python version on vbee containter (optional)
 sudo unlink /usr/bin/cmake
@@ -50,6 +52,7 @@ sudo curl -fsSL https://ollama.com/install.sh | sh
 
 # Download open-source model
 ollama pull qwen3:8b
+ollama serve &
 # Run a model
 ollama run qwen3:8b 
 

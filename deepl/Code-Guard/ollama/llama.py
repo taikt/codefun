@@ -4,14 +4,14 @@ from pathlib import Path
 from ollama import AsyncClient
 
 def is_cpp_file(filename):
-    """Kiểm tra xem file có phải là file C++ không."""
+    """Check if the file is a C++ file."""
     cpp_extensions = {'.cpp', '.h', '.hpp', '.cxx', '.cc'}
     return Path(filename).suffix.lower() in cpp_extensions
 
 
 async def analyze_with_ollama(file_path, content, output_file):
     """
-    Gửi nội dung file tới mô hình qwen3 qua ollama để phân tích lỗi và ghi kết quả vào file.
+    Send the file content to the qwen3 model via ollama for error analysis and write the results to a file.
     """
     # Add line numbers to the content
     lines = content.splitlines()
@@ -27,7 +27,7 @@ async def analyze_with_ollama(file_path, content, output_file):
         f"{numbered_content}\n/no_think"
     )
 }
-    print(f"\nĐang phân tích {file_path} với Ollama (qwen3:8b)...")
+    print(f"\nAnalyzing {file_path} with Ollama (qwen3:8b)...")
     try:
         with open(output_file, 'a', encoding='utf-8') as f:
             f.write(f"\n=== Ollama Analysis for {file_path} ===\n")
@@ -38,21 +38,21 @@ async def analyze_with_ollama(file_path, content, output_file):
             f.write(content + "\n")
             print(content)
     except Exception as e:
-        error_msg = f"Lỗi khi phân tích {file_path} với Ollama: {str(e)}\n"
+        error_msg = f"Error analyzing {file_path} with Ollama: {str(e)}\n"
         with open(output_file, 'a', encoding='utf-8') as f:
             f.write(error_msg)
         print(error_msg)
 
 async def scan_directory(source_dir, output_file):
     """
-    Quét tất cả file trong thư mục source, phân tích bằng Clang, Clang-Tidy, Cppcheck và Ollama, ghi kết quả vào file.
+    Scan all files in the source directory, analyze with Clang, Clang-Tidy, Cppcheck, and Ollama, and write results to a file.
     """
     source_path = Path(source_dir)
     if not source_path.exists() or not source_path.is_dir():
-        print(f"Lỗi: Thư mục '{source_dir}' không tồn tại hoặc không phải thư mục.")
+        print(f"Error: Directory '{source_dir}' does not exist or is not a directory.")
         return
 
-    print(f"Đang quét thư mục: {source_dir}")
+    print(f"Scanning directory: {source_dir}")
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write("C++ Code Analysis Report\n")
         f.write("=" * 30 + "\n")
@@ -67,12 +67,12 @@ async def scan_directory(source_dir, output_file):
                 await analyze_with_ollama(file_path, content, output_file)
                 
             except Exception as e:
-                error_msg = f"Lỗi khi đọc file {file_path}: {str(e)}\n"
+                error_msg = f"Error reading file {file_path}: {str(e)}\n"
                 with open(output_file, 'a', encoding='utf-8') as f:
                     f.write(error_msg)
                 print(error_msg)
 
 if __name__ == "__main__":
-    source_directory = "cpp_test"
+    source_directory = "./"
     output_file = "analysis_report.txt"
     asyncio.run(scan_directory(source_directory, output_file))
