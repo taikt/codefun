@@ -1,0 +1,17 @@
+@startuml
+autonumber
+actor "User" as User
+participant "CodeGuard" as CodeGuard #Green
+
+participant "Azure Cloud\n Github Copilot" as Azure
+participant "Copilot AI Model (Codex)" as Codex
+
+User -> CodeGuard: request code analysic 
+CodeGuard -[#red]> Azure: Send request via HTTPS (prompt)\n (REST API)
+Azure -> Codex: Process request with Codex AI model
+Codex --> Azure: Generate code suggestions or completions
+Azure --> CodeGuard: Return code competions or suggestions
+CodeGuard --> User: Show code completions or suggestions in editor
+
+
+@enduml

@@ -1,7 +1,7 @@
 # MISRA-C++:2008 Rule Guidelines (LG Priority: High)
 
 ### Rule 6-4-2
-**Definition**: All if â€¦ else if constructs shall be terminated with an else clause.
+**Definition**: All if … else if constructs shall be terminated with an else clause.
 **Exception**: None
 
 ### Rule 6-5-1

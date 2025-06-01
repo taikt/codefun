@@ -1,0 +1,21 @@
+@startuml
+autonumber
+actor "User" as User
+participant "CodeGuard" as CodeGuard #Green
+participant "GitHub Copilot Extension" as CopilotExt
+participant "Azure Cloud" as Azure
+participant "Copilot AI Model (Codex)" as Codex
+
+User -[#red]> CodeGuard: request code analysic (right click command)
+CodeGuard -[#red]> CodeGuard: prepare prompt automatically
+CodeGuard -[#red]> CopilotExt: Guide Copilot to parse Markdown files
+CodeGuard --[#red]> User: response defined prompt (copy to clipboard) 
+User -> CopilotExt: Send prompt via Chatbox (copy paste from clipboard)
+CopilotExt -> Azure: Send request via HTTPS (prompt)
+Azure -> Codex: Process request with Codex AI model
+Codex --> Azure: Generate code suggestions or completions
+Azure --> CopilotExt: Return suggestions
+CopilotExt --> User: Show code completions or suggestions in editor
+
+
+@enduml
