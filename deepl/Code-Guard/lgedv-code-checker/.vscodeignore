@@ -4,7 +4,7 @@ src/**
 !src/LGEDVRuleGuide.md
 !src/Misracpp2008Guidelines_High_en.md
 !src/StaticGuidelines_High_en.md
-!src/icon2.png
+!src/icon.png
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md

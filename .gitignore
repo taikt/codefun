@@ -134,3 +134,4 @@ all.config
 build
 .DS_Store
 a.out
+*.vsix

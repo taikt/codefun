@@ -2,66 +2,48 @@ C++ Static Vulnerability Report
 Source File: /home/worker/src/extension/lgedv-code-checker/src/test.cpp
 
 === Clang-Tidy (LGEDV Rules) ===
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:9:5: warning: LGEDV_CRCL_0003: Function 'multipleReturns' has multiple return points [custom-SingleReturnCheck]
-    9 |     return 0; // Second return
-      |     ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:13:5: warning: LGEDV_CRCL_0003: Function 'multipleReturns' has multiple return points [custom-SingleReturnCheck]
-   13 |     return a; // First return
-      |     ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:16:5: warning: LGEDV_CRCL_0003: Function 'multipleReturns' has multiple return points [custom-SingleReturnCheck]
-   16 |     return -a; // Second return
-      |     ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:34:5: warning: LGEDV_CRCL_0013: Each case in switch statement must end with a break statement [custom-SwitchBreakCheck]
-   34 |     case 4:
-      |     ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:36:5: warning: LGEDV_CRCL_0013: Each case in switch statement must end with a break statement [custom-SwitchBreakCheck]
-   36 |     default:
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:5:9: warning: LGEDV_CRCL_0013: Each case in switch statement must end with a break statement [custom-SwitchBreakCheck]
+    5 |         case 1:
+      |         ^
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:10:9: warning: LGEDV_CRCL_0013: Each case in switch statement must end with a break statement [custom-SwitchBreakCheck]
+   10 |         case 3:
+      |         ^
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:17:5: warning: LGEDV_CRCL_0003: Function 'processNumber' has multiple return points [custom-SingleReturnCheck]
+   17 |     return value; 
       |     ^
 
 Errors:
-378 warnings generated.
-Suppressed 373 warnings (372 in non-user code, 1 with check filters).
+375 warnings generated.
+Suppressed 372 warnings (372 in non-user code).
 
 
 === Cppcheck Analysis ===
 Checking /home/worker/src/extension/lgedv-code-checker/src/test.cpp ...
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:17:3: error: Found an exit path from function with non-void return type that has missing return statement [missingReturn]
-  }
-  ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:12:9: style: Condition 'a>0' is always true [knownConditionTrueFalse]
-  if (a > 0) {
-        ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:11:11: note: Assignment 'a=1', assigned value is 1
-  int a = 1;
-          ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:12:9: note: Condition 'a>0' is always true
-  if (a > 0) {
-        ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:9:5: error: Memory leak: ptr [memleak]
-    return 0; // Second return
-    ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:13:5: error: Memory leak: ptr [memleak]
-    return a; // First return
-    ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:16:5: error: Memory leak: ptr [memleak]
-    return -a; // Second return
-    ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:19:1: error: Memory leak: ptr [memleak]
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:21:1: error: Memory leak: ptr [memleak]
 }
 ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:4:9: style: Variable 'ptr' can be declared as pointer to const [constVariablePointer]
-  int * ptr = new int(5);
-        ^
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:3:0: style: The function 'multipleReturns' is never used. [unusedFunction]
-int multipleReturns() {
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:20:10: style: Variable 'ptr' can be declared as pointer to const [constVariablePointer]
+    int* ptr = new int(42);
+         ^
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:20:14: style: Variable 'ptr' is assigned a value that is never used. [unreadVariable]
+    int* ptr = new int(42);
+             ^
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:20:10: style: Variable 'ptr' is allocated memory that is never used. [unusedAllocatedMemory]
+    int* ptr = new int(42);
+         ^
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:19:0: style: The function 'leakMemory' is never used. [unusedFunction]
+void leakMemory() {
 ^
 nofile:0:0: information: Active checkers: 161/592 (use --checkers-report=<filename> to see details) [checkersReport]
 
 
 
 === Clang Static Analyzer ===
-/home/worker/src/extension/lgedv-code-checker/src/test.cpp:11:11: warning: Potential leak of memory pointed to by 'ptr' [cplusplus.NewDeleteLeaks]
-   11 |   int a = 1;
-      |           ^
-1 warning generated.
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:20:10: warning: Value stored to 'ptr' during its initialization is never read [deadcode.DeadStores]
+   20 |     int* ptr = new int(42); 
+      |          ^~~   ~~~~~~~~~~~
+/home/worker/src/extension/lgedv-code-checker/src/test.cpp:21:1: warning: Potential leak of memory pointed to by 'ptr' [cplusplus.NewDeleteLeaks]
+   21 | }
+      | ^
+2 warnings generated.
 

@@ -1,10 +1,10 @@
 {
-  "name": "lgedv-code-checker",
-  "icon":"src/icon2.png",
-  "publisher": "tai2.tran@lge.com",
-  "displayName": "LGEDV Code Checker",
+  "name": "lgedv-code-guard",
+  "icon":"src/icon.png",
+  "publisher": "TranAnhTai-LGE",
+  "displayName": "LGEDV Code Guard",
   "description": "Check C++ Vulnerability",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.100.0"
   },
@@ -22,11 +22,11 @@
     "commands": [
       {
         "command": "lgedv.checkStaticAll",
-        "title": "LGEDVChecker-detect C++ Vulnerability by static tool"
+        "title": "LGEDV-CodeGuard by static analysis"
       },
       {
         "command": "lgedv.checkCppVulnByCopilot",
-        "title": "LGEDVChecker-detect C++ Vulnerability by Copilot"
+        "title": "LGEDV-CodeGuard by Copilot"
       }
     ],
     "menus": {
