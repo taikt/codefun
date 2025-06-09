@@ -18,14 +18,14 @@ std::packaged_task<void()> JobQueue::popTask() {
     std::packaged_task<void()> pt;
     //LOGI("[thread:%llu]Jobqueue: pop task: current queue size=%d",id_,queue_.size());
 
-    /*
+    
     std::unique_lock<std::mutex> lock{task_mtx_};
     auto isWait = [this]() { return shutdown_ || !queue_.empty(); };
     if (!isWait()) {
       
         task_cv_.wait(lock, isWait);
     }
-    */
+    
     if (!queue_.empty()) {
         //LOGI("Jobqueue: queue not empty");
         pt = std::move(queue_.front());
@@ -58,7 +58,7 @@ void JobQueue::shutdown() {
     std::lock_guard<std::mutex> lk{task_mtx_}; // TODO: check lock msg too
     queue_.clear();
     shutdown_ = true;
-    msg_cv_.notify_all();
+  
 	task_cv_.notify_all();
 }
 

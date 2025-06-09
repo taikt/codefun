@@ -91,7 +91,7 @@ auto JobQueue::pushTaskTo(F task, Args &&... args) -> std::future<decltype(task(
         //LOGI("queue task");
         queue_.emplace_back(std::move(pkgedTask));
     }
-    //task_cv_.notify_one();
+    task_cv_.notify_one();
     mTaskExecutor->dispatcher_condition_.notify_one();
    
     return future;

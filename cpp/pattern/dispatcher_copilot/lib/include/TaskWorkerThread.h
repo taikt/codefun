@@ -34,15 +34,9 @@ class TaskWorkerThread {
  private:
     // process tasks
     void MainProcessTasks();
-    void WorkerProcessTasks();
-    void invokeTask(std::packaged_task<void()>& task);
-    bool has_active_dispatcher();
-    bool is_active_dispatcher(const std::thread::id &_id);
-    void remove_elapsed_dispatchers();
-    void TimerHandler( const boost::system::error_code & error, boost::shared_ptr< boost::asio::deadline_timer > timer);
-    
-   
 
+    void invokeTask(std::packaged_task<void()>& task);
+    
     // weak_ptr for the JobQueue, if task queue is not accessible there is no need to execute
     // tasks
     // std::weak_ptr<JobQueue> jobQueue_;
@@ -55,8 +49,6 @@ class TaskWorkerThread {
     // Thread to run the tasks on
     std::thread thread_;
 
-    // Dispatching
-    std::atomic<bool> is_dispatching_;
     // Dispatcher threads
     std::map<std::thread::id, std::shared_ptr<std::thread>> dispatchers_;
 
@@ -64,11 +56,6 @@ class TaskWorkerThread {
     std::shared_ptr<boost::asio::io_service::work> work_;
     std::set<std::shared_ptr<std::thread> > io_threads_;
   
-    bool concurrent_ = true;
-    uint expiredtime_ = DEFAULT_EXPIRED_TIME;
-    uint maxPoolSize_ = DEFAULT_MAX_POOLSIZE;
-
-    
     int ID_;
 };
 
