@@ -1,0 +1,21 @@
+@startuml
+autonumber
+actor "User" as User
+participant "CodeGuard extension" as CodeGuard #Green
+participant "GitHub Copilot" as CopilotExt
+participant "Azure Cloud" as Azure
+participant "AI Model" as Codex
+
+CopilotExt -> CopilotExt: read Markdown files (insert manually) 
+User -> CodeGuard: check C++ violoation by AI
+CodeGuard -> CodeGuard: create reusable template prompt
+CodeGuard --> User: response defined prompt (copy to clipboard) 
+User -> CopilotExt: Send prompt (paste from clipboard)
+CopilotExt -> Azure: Send request via HTTPS (prompt)
+Azure -> Codex: Process request with AI model
+Codex --> Azure: Generate vilolations response
+Azure --> CopilotExt: Return vilolations response
+CopilotExt --> User: Show vilolations response
+
+
+@enduml

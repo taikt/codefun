@@ -1,0 +1,25 @@
+@startuml
+autonumber
+actor "User" as User
+participant "GitHub Copilot" as CopilotExt
+participant "CodeGuard\n(MCP server)" as mcp #Green
+participant "Remote service" as service #IndianRed
+participant "Azure Cloud" as Azure
+participant "Copilot AI Model (Codex)" as Codex
+
+User -[#red]> CopilotExt: fetch Misra C++ rules
+CopilotExt -[#red]> mcp: tool_call("fetch_misra_rules")
+mcp -[#red]> service: download Misra C++ rules 
+service --[#red]> mcp: response Misra C++ rules 
+mcp --[#red]> CopilotExt: response Misra C++ rules (markdown file)
+CopilotExt -[#red]> CopilotExt: understand context of rules
+CopilotExt --> User: 
+User -> CopilotExt: request find Misra C++ violations
+CopilotExt -> Azure: Send request via HTTPS (prompt)
+Azure -> Codex: Process request with Codex AI model
+Codex --> Azure: Generate response
+Azure --> CopilotExt: Return response with Misra C++ violations
+CopilotExt --> User: Show Misra C++ violations
+
+
+@enduml
