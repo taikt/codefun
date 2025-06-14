@@ -24,7 +24,7 @@ TaskWorkerThread::~TaskWorkerThread() {
    
 
     try {
-        std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
+        //std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
         for (const auto& its_dispatcher : dispatchers_) {
             if (its_dispatcher.second->joinable()) {
                 its_dispatcher.second->detach();
@@ -45,7 +45,7 @@ void TaskWorkerThread::start() {
     //thread_ = std::thread{[=] { MainProcessTasks(); }};
     
     {
-        std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
+        //std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
       
         auto its_main_dispatcher = std::make_shared<std::thread>(
                 std::bind(&TaskWorkerThread::MainProcessTasks, this));

@@ -87,8 +87,7 @@ RUN echo '#!/bin/bash' > /start.sh && \
     echo 'npm start &' >> /start.sh && \
     echo 'tail -f /dev/null' >> /start.sh && \
     chmod +x /start.sh
-# de su dung tab, mo docker bang bash
-# docker exec -it <container_id> bash 
+
 RUN echo 'source /etc/bash_completion' >> /etc/bash.bashrc
 
 # Chạy script khởi động

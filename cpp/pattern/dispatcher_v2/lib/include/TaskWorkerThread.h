@@ -64,7 +64,7 @@ class TaskWorkerThread {
     // Dispatcher threads that are running
     std::set<std::thread::id> running_dispatchers_;
     // Mutex to protect access to dispatchers_ & elapsed_dispatchers_
-    std::mutex dispatcher_mutex_;
+    //std::mutex dispatcher_mutex_;
     mutable std::mutex handlers_mutex_;
    
 
