@@ -11,8 +11,7 @@
 #include <memory>
 #include <mutex>
 #include <deque>
-#include "Message.h"
-#include "TaskWorkerThread.h"
+//#include "TaskWorkerThread.h"
 #include "Log.h"
 
 #include <iostream>
@@ -21,6 +20,7 @@ using namespace std;
 
 
 namespace kt {
+class TaskWorkerThread;
 class JobQueue {
  public:
     JobQueue();
@@ -30,18 +30,12 @@ class JobQueue {
         return pushTaskTo(std::forward<F>(task), std::forward<Args>(args)...);
     }
 
-    bool pushMessage(const std::shared_ptr<Message>& message);
-
     std::packaged_task<void()> popTask();
-    std::shared_ptr<Message> popMessage();
+ 
 
     void shutdown();
     bool isShutdown();
 
-    int getMsgQueueSize() {
-        std::lock_guard<std::mutex> lock{msg_mtx_};
-        return msg_queue.size();
-    }
 
     int getTaskQueueSize() {
         std::lock_guard<std::mutex> lock{task_mtx_};
@@ -59,8 +53,7 @@ class JobQueue {
     // queue of tasks
     std::deque<std::packaged_task<void()>> queue_;
 
-    // queue of messages
-    std::deque<std::shared_ptr<Message>> msg_queue;
+   
 
     std::mutex task_mtx_;
     std::condition_variable task_cv_;

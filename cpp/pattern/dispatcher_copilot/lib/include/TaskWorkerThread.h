@@ -9,6 +9,9 @@
 #include "JobQueue.h"
 #include <memory>
 #include "Log.h"
+#include <boost/asio.hpp>
+#include <set>
+#include <map>
 
 #define DEFAULT_EXPIRED_TIME 1000 //ms
 #define DEFAULT_MAX_POOLSIZE 4

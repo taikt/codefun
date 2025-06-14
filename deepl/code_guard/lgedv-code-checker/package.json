@@ -4,7 +4,7 @@
   "publisher": "TranAnhTai-LGE",
   "displayName": "LGEDV Code Guard",
   "description": "Check C++ Vulnerability",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.100.0"
   },

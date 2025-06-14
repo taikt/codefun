@@ -21,7 +21,7 @@ TaskWorkerThread::TaskWorkerThread(std::shared_ptr<JobQueue> taskQueue)
 TaskWorkerThread::~TaskWorkerThread() {
 
     shutdown_ = true;
-    is_dispatching_ = false;
+   
 
     try {
         std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
@@ -41,12 +41,12 @@ TaskWorkerThread::~TaskWorkerThread() {
 }
 
 void TaskWorkerThread::start() {
-    is_dispatching_ = true;
+   
     //thread_ = std::thread{[=] { MainProcessTasks(); }};
     
     {
         std::lock_guard<std::mutex> its_lock(dispatcher_mutex_);
-        is_dispatching_ = true;
+      
         auto its_main_dispatcher = std::make_shared<std::thread>(
                 std::bind(&TaskWorkerThread::MainProcessTasks, this));
         dispatchers_[its_main_dispatcher->get_id()] = its_main_dispatcher;

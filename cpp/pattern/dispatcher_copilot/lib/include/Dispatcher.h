@@ -11,9 +11,7 @@
 
 #include "JobQueue.h"
 #include "TaskWorkerThread.h"
-#include "MsgWorkerThread.h"
-#include "Handler.h"
-#include "Message.h"
+
 #include "Log.h"
 
 #include <iostream>
@@ -22,7 +20,6 @@ using namespace std;
 
 namespace kt {
 
-class MsgWorkerThread;
 class TaskWorkerThread;
 
 class Dispatcher {
@@ -31,11 +28,10 @@ class Dispatcher {
     ~Dispatcher();
     template <typename F, typename... Args>
     auto deliverTask(F task, Args &&... args) -> std::future<decltype(task(args...))>;
-    bool deliverMessage(const std::shared_ptr<Message>& message);
 
     void shutdown();
     bool isShutdown() const;
-    void setMessageHandler(std::shared_ptr<Handler>& handler);
+
     void enableTaskConcurrency(bool m_concurrent);
     void setExpiredTaskTime(uint m_expiredtime); //ms
     void setMaxTaskPoolSize(uint m_maxPoolSize);
@@ -46,12 +42,8 @@ class Dispatcher {
  private:
     // Queue of tasks
     std::shared_ptr<JobQueue> jobQueue_ = nullptr;
-    std::unique_ptr<MsgWorkerThread> msgExecutor_;
     //std::unique_ptr<TaskWorkerThread> taskExecutor_;
     std::shared_ptr<TaskWorkerThread> taskExecutor_;
-    
-   
-    std::shared_ptr<Handler> handler_;
 
 };
 

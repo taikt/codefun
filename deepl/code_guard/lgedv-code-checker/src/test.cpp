@@ -18,6 +18,11 @@ int processNumber(int value) {
 }
 void leakMemory() {
     int* ptr = new int(42); 
+    for (int i = 0; i < 1000000; ++i) {
+        int* ptr = new int(i); // Memory leak here
+        // Do something with ptr
+        delete ptr; // Uncomment this line to avoid memory leak
+    }
 }
 
 int main() {

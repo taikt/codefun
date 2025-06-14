@@ -2,9 +2,11 @@
 https://www.mermaidchart.com/app/dashboard
 https://www.svg2png.com/
 
-# clang-tidy custom check
-apt-get update && apt-get install -y ninja-build build-essential cmake clang git python3 libstdc++-12-dev zlib1g-dev
+# install clang-tidy, cppcheck, clang, npm, typescript
+sudo apt-get update && apt-get install -y ninja-build build-essential cmake clang git python3 libstdc++-12-dev zlib1g-dev cppcheck clang && sudo apt-get install npm && sudo npm install -g vsce && sudo npm install typescript -g
 
+
+# build clang-tidy 
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release   -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra"   -DLLVM_TARGETS_TO_BUILD="X86"   -DCMAKE_CXX_FLAGS="-O2" ../llvm
 
 ninja -j4
@@ -18,8 +20,6 @@ sudo cp /home/worker/src/llvm-project/build/bin/clang-tidy /usr/local/bin/
 clang-tidy --checks=-*,custom-* DAQApplication.cpp
 
 # build vscode extension
-sudo apt-get install npm
-sudo npm install -g vsce
 npm run compile
 vsce package
 
@@ -45,8 +45,6 @@ sudo unlink /usr/bin/python
 sudo ln -s /usr/local/bin/python3 /usr/bin/python
 cd --
 
-# install cppcheck, Ollama
-sudo apt install -y clang clang-tidy cppcheck
 # Install Ollama
 sudo curl -fsSL https://ollama.com/install.sh | sh
 
@@ -56,6 +54,7 @@ ollama serve &
 # Run a model
 ollama run qwen3:8b 
 
+# install virtual env
 sudo apt update
 sudo apt install python3
 python3 -m venv ~/src/dl/ollama_env

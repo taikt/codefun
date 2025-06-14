@@ -32,9 +32,6 @@ bool Dispatcher::isShutdown() const {
     return jobQueue_->isShutdown();
 }
 
-bool Dispatcher::deliverMessage(const std::shared_ptr<Message>& message) {
-    return jobQueue_->pushMessage(message);
-}
 
 void Dispatcher::startTaskThreadPool() {
     taskExecutor_->start();
