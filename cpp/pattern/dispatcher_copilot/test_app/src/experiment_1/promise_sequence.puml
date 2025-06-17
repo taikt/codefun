@@ -1,0 +1,140 @@
+@startuml
+' Sequence: resolve
+actor User
+participant "Promise<T>" as Promise
+participant "EventLoop" as EventLoop
+participant "then_callbacks_" as ThenCB
+
+User -> Promise: resolve(value)
+Promise -> EventLoop: enqueue(resolve task)
+EventLoop -> Promise: [thread] set state = Resolved, value = value
+Promise -> ThenCB: move then_callbacks_ (lấy các callback)
+loop for each then_callback
+    Promise -> EventLoop: enqueue(then_callback)
+end
+@enduml
+
+@startuml
+' Sequence: reject
+actor User
+participant "Promise<T>" as Promise2
+participant "EventLoop" as EventLoop2
+participant "catch_callbacks_" as CatchCB
+
+User -> Promise2: reject(exception_ptr)
+Promise2 -> EventLoop2: enqueue(reject task)
+EventLoop2 -> Promise2: [thread] set state = Rejected, exception_ = e
+Promise2 -> CatchCB: move catch_callbacks_ (lấy các callback)
+alt có catch_callbacks_
+    loop for each catch_callback
+        Promise2 -> EventLoop2: enqueue(catch_callback)
+    end
+else không có catch_callbacks_
+    Promise2 -> Promise2: propagate_rejection() (gọi reject cho next_promise_)
+end
+@enduml
+
+@startuml
+' Sequence: catch exception in then
+actor User
+participant "Promise<T>" as Promise3
+participant "EventLoop" as EventLoop3
+participant "then_callbacks_" as ThenCB3
+participant "catch_callbacks_" as CatchCB3
+
+User -> Promise3: resolve(value)
+Promise3 -> EventLoop3: enqueue(resolve task)
+EventLoop3 -> Promise3: [thread] set state = Resolved, value = value
+Promise3 -> ThenCB3: move then_callbacks_ (lấy các callback)
+Promise3 -> EventLoop3: enqueue(then_callback)
+EventLoop3 -> Promise3: [thread] thực thi then_callback
+alt then_callback throw exception
+    Promise3 -> Promise3: reject(exception_ptr)
+    Promise3 -> EventLoop3: enqueue(reject task)
+    EventLoop3 -> Promise3: set state = Rejected, exception_ = e
+    Promise3 -> CatchCB3: move catch_callbacks_ (lấy các callback)
+    alt có catch_callbacks_
+        loop for each catch_callback
+            Promise3 -> EventLoop3: enqueue(catch_callback)
+        end
+    else không có catch_callbacks_
+        Promise3 -> Promise3: propagate_rejection() (gọi reject cho next_promise_)
+    end
+end
+@enduml
+
+
+@startuml PromiseComponentSequence
+actor User
+participant "Promise<T>" as Promise
+participant "then_callbacks_" as ThenCB
+participant "catch_callbacks_" as CatchCB
+participant "EventLoop" as EventLoop
+
+== Resolve flow ==
+User -> Promise: resolve(value)
+Promise -> EventLoop: enqueue(resolve task)
+EventLoop -> Promise: [thread] set state = Resolved, value = value
+Promise -> ThenCB: move then_callbacks_
+loop for each then_callback
+    Promise -> EventLoop: enqueue(then_callback)
+end
+
+== Reject flow ==
+User -> Promise: reject(exception_ptr)
+Promise -> EventLoop: enqueue(reject task)
+EventLoop -> Promise: [thread] set state = Rejected, exception_ = e
+Promise -> CatchCB: move catch_callbacks_
+alt có catch_callbacks_
+    loop for each catch_callback
+        Promise -> EventLoop: enqueue(catch_callback)
+    end
+else không có catch_callbacks_
+    Promise -> Promise: propagate_rejection()
+end
+
+== Exception in then ==
+User -> Promise: resolve(value)
+Promise -> EventLoop: enqueue(resolve task)
+EventLoop -> Promise: [thread] set state = Resolved, value = value
+Promise -> ThenCB: move then_callbacks_
+Promise -> EventLoop: enqueue(then_callback)
+EventLoop -> Promise: [thread] thực thi then_callback
+alt then_callback throw exception
+    Promise -> Promise: reject(exception_ptr)
+    Promise -> EventLoop: enqueue(reject task)
+    EventLoop -> Promise: set state = Rejected, exception_ = e
+    Promise -> CatchCB: move catch_callbacks_
+    alt có catch_callbacks_
+        loop for each catch_callback
+            Promise -> EventLoop: enqueue(catch_callback)
+        end
+    else không có catch_callbacks_
+        Promise -> Promise: propagate_rejection()
+    end
+end
+@enduml
+
+@startuml ThenCallbackChain
+' Sequence: then_callback triggers next promise in chain
+actor User
+participant "Promise<T>" as Promise1
+participant "EventLoop" as EventLoop
+participant "then_callback" as ThenCB
+participant "Promise<U>" as Promise2
+
+User -> Promise1: resolve(value)
+Promise1 -> EventLoop: enqueue(resolve task)
+EventLoop -> Promise1: [thread] set state = Resolved, value = value
+Promise1 -> ThenCB: move then_callbacks_
+Promise1 -> EventLoop: enqueue(then_callback)
+EventLoop -> ThenCB: [thread] execute then_callback
+alt then_callback trả về giá trị
+    ThenCB -> Promise2: resolve(result)
+else then_callback trả về Promise
+    ThenCB -> Promise2: nhận Promise mới
+    Promise2 -> ...: tiếp tục chuỗi then/catch
+else then_callback throw exception
+    ThenCB -> Promise2: reject(exception_ptr)
+end
+@enduml

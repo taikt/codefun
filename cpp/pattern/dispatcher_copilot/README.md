@@ -4,6 +4,7 @@ only promise, no future
 # install boost, protobuf
 sudo apt-get install libboost-all-dev
 sudo apt-get install protobuf-compiler libprotobuf-dev
+sudo apt-get install graphviz
 
 # create protobuf 
 mkdir gen

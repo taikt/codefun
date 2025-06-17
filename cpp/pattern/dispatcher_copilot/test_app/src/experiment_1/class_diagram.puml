@@ -1,0 +1,56 @@
+@startuml
+class PromiseT {
+    - State state_
+    - T value_
+    - exception_ptr exception_
+    - vector<function<void()>> then_callbacks_
+    - vector<function<void()>> catch_callbacks_
+    - weak_ptr<PromiseT> next_promise_
+    + resolve(T value)
+    + reject(exception_ptr e)
+    + then(F cb)
+    + catchError(function<void(exception_ptr)> cb)
+    + propagate_rejection()
+}
+
+class PromiseVoid {
+    - State state_
+    - exception_ptr exception_
+    - vector<function<void()>> then_callbacks_
+    - vector<function<void()>> catch_callbacks_
+    + resolve()
+    + reject(exception_ptr e)
+    + then(F cb)
+    + catchError(function<void(exception_ptr)> cb)
+}
+
+enum State {
+    Pending
+    Resolved
+    Rejected
+}
+
+class EventLoop {
+    - queue<function<void()>> tasks_
+    - mutex mutex_
+    - condition_variable cond_
+    - thread worker_
+    - bool stopped_
+    + enqueue(function<void()> task)
+    + stop()
+    + getInstance()
+}
+
+PromiseT o-- "1" State
+PromiseT o-- "1" EventLoop : uses
+PromiseT *-- "0..n" "then_callbacks_"
+PromiseT *-- "0..n" "catch_callbacks_"
+PromiseT --> "0..1" PromiseT : next_promise_
+
+PromiseVoid o-- "1" State
+PromiseVoid o-- "1" EventLoop : uses
+PromiseVoid *-- "0..n" "then_callbacks_"
+PromiseVoid *-- "0..n" "catch_callbacks_"
+
+EventLoop "1" o-- "tasks_"
+@enduml

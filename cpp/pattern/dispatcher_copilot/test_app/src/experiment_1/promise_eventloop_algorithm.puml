@@ -1,0 +1,65 @@
+@startuml EventLoopFlow
+start
+:Thread bắt đầu;
+while (true)
+  :Lock mutex_;
+  :cond_.wait(lock, stopped_ || !tasks_.empty());
+  if (stopped_ && tasks_.empty()) then (yes)
+    :Unlock mutex_;
+    stop
+  else (no)
+    if (tasks_.empty()) then (yes)
+      :Unlock mutex_;
+      ' Quay lại đầu vòng lặp
+    else (no)
+      :task = tasks_.front(); tasks_.pop();
+      :Unlock mutex_;
+      :task();
+      note right: try/catch thực hiện ngoài flowchart
+    endif
+  endif
+endwhile
+@enduml
+
+@startuml PromiseFlow
+start
+:User gọi resolve(value) hoặc reject(exception);
+if (resolve) then (yes)
+  :Enqueue resolve task vào EventLoop;
+  :EventLoop lấy task từ queue;
+  :Set state = Resolved, lưu value;
+  :Move then_callbacks_ ra;
+  if (then_callbacks_ không rỗng) then (yes)
+    :Enqueue từng then_callback vào EventLoop;
+    :EventLoop thực thi then_callback tuần tự;
+    if (then_callback throw exception) then (yes)
+      :Gọi reject(exception_ptr);
+      :Enqueue reject task vào EventLoop;
+      :Set state = Rejected, lưu exception;
+      :Move catch_callbacks_ ra;
+      if (catch_callbacks_ không rỗng) then (yes)
+        :Enqueue từng catch_callback vào EventLoop;
+        :EventLoop thực thi catch_callback;
+      else (no)
+        :propagate_rejection() sang next_promise_;
+      endif
+    else (no)
+      :then_callback trả về giá trị, resolve tiếp Promise tiếp theo;
+    endif
+  else (no)
+    :Kết thúc;
+  endif
+else (no)
+  :Enqueue reject task vào EventLoop;
+  :EventLoop lấy task từ queue;
+  :Set state = Rejected, lưu exception;
+  :Move catch_callbacks_ ra;
+  if (catch_callbacks_ không rỗng) then (yes)
+    :Enqueue từng catch_callback vào EventLoop;
+    :EventLoop thực thi catch_callback;
+  else (no)
+    :propagate_rejection() sang next_promise_;
+  endif
+endif
+stop
+@enduml

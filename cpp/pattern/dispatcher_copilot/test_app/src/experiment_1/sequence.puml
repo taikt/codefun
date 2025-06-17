@@ -1,0 +1,72 @@
+@startuml Main
+actor Main
+participant "Promise<int>" as Promise
+participant "Promise<int> (then1)" as Then1
+participant "Promise<int> (then2)" as Then2
+participant "Promise<int> (catchError)" as CatchError
+participant "EventLoop" as EventLoop
+
+Main -> Promise: std::make_shared<Promise<int>>()
+Main -> Promise: then(lambda Step 1)
+Promise -> Then1: trả về Promise mới (then1)
+Main -> Then1: then(lambda Step 2)
+Then1 -> Then2: trả về Promise mới (then2)
+Main -> Then2: catchError(lambda)
+Then2 -> CatchError: trả về Promise mới (catchError)
+Main -> Promise: resolve(5)
+Promise -> EventLoop: enqueue(resolve task)
+EventLoop -> Promise: set state = Resolved, value = 5
+Promise -> Then1: enqueue(then1 exec)
+EventLoop -> Then1: thực thi lambda Step 1
+Then1 -> Then2: resolve(value + 10)
+Then2 -> EventLoop: enqueue(then2 exec)
+EventLoop -> Then2: thực thi lambda Step 2
+Then2 -> Then2: resolve(value * 2)
+Then2 -> CatchError: (nếu có exception, reject và propagate)
+CatchError -> EventLoop: enqueue(catchError exec)
+EventLoop -> CatchError: thực thi lambda catchError
+Main -> EventLoop: stop()
+@enduml
+
+
+@startuml Promise
+actor Main
+participant "Promise<T>" as Promise
+participant "EventLoop" as EventLoop
+participant "then_callbacks_" as ThenCB
+participant "catch_callbacks_" as CatchCB
+
+Main -> Promise: resolve(value)
+Promise -> EventLoop: enqueue(resolve task)
+EventLoop -> Promise: [thread] set state = Resolved, value = value
+Promise -> ThenCB: move then_callbacks_ (lấy các callback)
+loop for each then_callback
+    Promise -> EventLoop: enqueue(then_callback)
+end
+
+EventLoop -> Promise: [thread] thực thi then_callback
+alt then_callback thành công
+    Promise -> Promise: resolve(result)
+    Promise -> EventLoop: enqueue(resolve task)
+    EventLoop -> Promise: [thread] set state = Resolved, value = result
+    Promise -> ThenCB: move then_callbacks_ (lấy các callback)
+    loop for each then_callback
+        Promise -> EventLoop: enqueue(then_callback)
+    end
+else then_callback throw exception
+    Promise -> Promise: reject(exception_ptr)
+    Promise -> EventLoop: enqueue(reject task)
+    EventLoop -> Promise: set state = Rejected, exception_ = e
+    Promise -> CatchCB: move catch_callbacks_ (lấy các callback)
+    alt có catch_callbacks_
+        loop for each catch_callback
+            Promise -> EventLoop: enqueue(catch_callback)
+        end
+    else không có catch_callbacks_
+        Promise -> Promise: propagate_rejection() (gọi reject cho next_promise_)
+    end
+end
+
+EventLoop -> Promise: [thread] thực thi catch_callback
+Promise -> Promise: resolve() hoặc reject() tiếp theo
+@enduml

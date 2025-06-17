@@ -1,0 +1,18 @@
+@startuml
+package "Promise<T>" {
+  [State]
+  [then_callbacks_]
+  [catch_callbacks_]
+  [next_promise_]
+}
+
+[Promise<T>] -down-> [State] : has
+[Promise<T>] -down-> [then_callbacks_] : manages
+[Promise<T>] -down-> [catch_callbacks_] : manages
+[Promise<T>] -right-> [next_promise_] : chain
+
+[Promise<T>] ..> [EventLoop] : uses for async
+[then_callbacks_] ..> [EventLoop] : enqueue
+[catch_callbacks_] ..> [EventLoop] : enqueue
+
+@enduml
