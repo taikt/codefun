@@ -1,0 +1,129 @@
+{
+  "name": "lgedv-clean",
+  "displayName": "LGEDV Clean CodeGuard",
+  "description": "Simple C++ code analysis with Copilot streaming",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "lgedv.checkLGEDVRules",
+        "title": "🎯 Check LGEDV Rules Only",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.checkMISRAHighRules", 
+        "title": "🛡️ Check MISRA-High Rules",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.checkMISRARules", 
+        "title": "📋 Check MISRA Rules",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.checkCERTRules", 
+        "title": "🔐 Check CERTcpp-High Rules",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.checkRapidScanRules", 
+        "title": "⚡ Check RapidScan Rules",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.checkAllRules",
+        "title": "🔍 Check All Rules",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.interactiveCheck",
+        "title": "✨ Choose Rules to Check...",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.generateRulePrompt",
+        "title": "📝 Generate Rule Prompt",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.checkStaticAnalysis",
+        "title": "🔧 Check Rules by Static Analysis",
+        "category": "LGEDV CodeGuard"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "lgedv.codeGuardSubmenu",
+          "when": "resourceLangId == cpp",
+          "group": "1_modification@1"
+        }
+      ],
+      "lgedv.codeGuardSubmenu": [
+        {
+          "command": "lgedv.interactiveCheck",
+          "group": "1_main@1"
+        },
+        {
+          "command": "lgedv.checkLGEDVRules", 
+          "group": "2_specific@1"
+        },
+        {
+          "command": "lgedv.checkMISRAHighRules",
+          "group": "2_specific@2"
+        },
+        {
+          "command": "lgedv.checkMISRARules",
+          "group": "2_specific@3"
+        },
+        {
+          "command": "lgedv.checkCERTRules",
+          "group": "2_specific@4"
+        },
+        {
+          "command": "lgedv.checkRapidScanRules",
+          "group": "2_specific@5"
+        },
+        {
+          "command": "lgedv.checkAllRules",
+          "group": "2_specific@6"
+        },
+        {
+          "command": "lgedv.generateRulePrompt",
+          "group": "3_tools@1"
+        },
+        {
+          "command": "lgedv.checkStaticAnalysis",
+          "group": "3_tools@2"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "lgedv.codeGuardSubmenu",
+        "label": "🛡️ LGEDV CodeGuard"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
