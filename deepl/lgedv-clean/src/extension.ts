@@ -22,32 +22,27 @@ export function activate(context: vscode.ExtensionContext) {
     await runRuleAnalysis('LGEDV');
   });
 
-  // COMMAND 2: Check MISRA-High Rules Only  
-  let checkMISRAHighCommand = vscode.commands.registerCommand('lgedv.checkMISRAHighRules', async () => {
-    await runRuleAnalysis('MISRA-HIGH');
-  });
-
-  // COMMAND 3: Check MISRA Rules Only
+  // COMMAND 2: Check MISRA Rules Only  
   let checkMISRACommand = vscode.commands.registerCommand('lgedv.checkMISRARules', async () => {
     await runRuleAnalysis('MISRA');
   });
 
-  // COMMAND 4: Check CERTcpp-High Rules Only
+  // COMMAND 3: Check CERT Rules Only
   let checkCERTCommand = vscode.commands.registerCommand('lgedv.checkCERTRules', async () => {
     await runRuleAnalysis('CERT');
   });
 
-  // COMMAND 5: Check RapidScan Rules Only
+  // COMMAND 4: Check RapidScan Rules Only
   let checkRapidScanCommand = vscode.commands.registerCommand('lgedv.checkRapidScanRules', async () => {
     await runRuleAnalysis('RAPIDSCAN');
   });
 
-  // COMMAND 6: Check All Rules (Combined)
+  // COMMAND 5: Check Critical Rules (Combined)
   let checkAllRulesCommand = vscode.commands.registerCommand('lgedv.checkAllRules', async () => {
-    await runRuleAnalysis('ALL');
+    await runRuleAnalysis('CRITICAL');
   });
 
-  // COMMAND 7: Interactive Rule Selection
+  // COMMAND 6: Interactive Rule Selection
   let interactiveCheckCommand = vscode.commands.registerCommand('lgedv.interactiveCheck', async () => {
     const choice = await vscode.window.showQuickPick([
       {
@@ -56,29 +51,24 @@ export function activate(context: vscode.ExtensionContext) {
         detail: 'Best for LGEDV compliance check - faster analysis'
       },
       {
-        label: '🛡️ MISRA-High Rules Only', 
-        description: 'Check only MISRA C++ 2008 High Priority rules (fast, focused)',
-        detail: 'Best for MISRA high priority compliance check - faster analysis'
+        label: '🛡️ MISRA C++ Rules Only', 
+        description: 'Check only MISRA C++ 2008 rules (fast, focused)',
+        detail: 'Best for MISRA compliance check - faster analysis'
       },
       {
-        label: '� MISRA All Rules',
-        description: 'Check all MISRA C++ 2008 rules (comprehensive)',
-        detail: 'Complete MISRA analysis - may take longer'
+        label: '� CERT C++ Rules Only', 
+        description: 'Check only CERT C++ rules (fast, focused)',
+        detail: 'Best for CERT compliance check - faster analysis'
       },
       {
-        label: '🔐 CERTcpp-High Rules',
-        description: 'Check CERT C++ High Priority security rules',
-        detail: 'Security-focused analysis for critical vulnerabilities'
+        label: '⚡ RapidScan Rules Only', 
+        description: 'Check only RapidScan rules (fast, focused)',
+        detail: 'Best for RapidScan compliance check - faster analysis'
       },
       {
-        label: '⚡ RapidScan Rules',
-        description: 'Check RapidScan vulnerability rules',
-        detail: 'Fast vulnerability scanning for common issues'
-      },
-      {
-        label: '🔍 All Rules Combined',
-        description: 'Check LGEDV + MISRA + CERT + RapidScan rules (comprehensive)', 
-        detail: 'Complete analysis but may take longer'
+        label: '🔍 Critical Rules Combined',
+        description: 'Check critical LGEDV rules (most important)', 
+        detail: 'Focused analysis on critical compliance rules'
       }
     ], {
       placeHolder: 'Select which rules to check against your code',
@@ -88,16 +78,14 @@ export function activate(context: vscode.ExtensionContext) {
     if (choice) {
       if (choice.label.includes('LGEDV')) {
         await runRuleAnalysis('LGEDV');
-      } else if (choice.label.includes('MISRA-High')) {
-        await runRuleAnalysis('MISRA-HIGH');
-      } else if (choice.label.includes('MISRA All')) {
+      } else if (choice.label.includes('MISRA')) {
         await runRuleAnalysis('MISRA');
-      } else if (choice.label.includes('CERTcpp-High')) {
+      } else if (choice.label.includes('CERT')) {
         await runRuleAnalysis('CERT');
       } else if (choice.label.includes('RapidScan')) {
         await runRuleAnalysis('RAPIDSCAN');
       } else {
-        await runRuleAnalysis('ALL');
+        await runRuleAnalysis('CRITICAL');
       }
     }
   });
@@ -203,7 +191,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   // Main analysis function
-  async function runRuleAnalysis(ruleType: 'LGEDV' | 'MISRA' | 'MISRA-HIGH' | 'CERT' | 'RAPIDSCAN' | 'ALL') {
+  async function runRuleAnalysis(ruleType: 'LGEDV' | 'MISRA' | 'CERT' | 'RAPIDSCAN' | 'CRITICAL') {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       vscode.window.showErrorMessage('No active editor found. Please open a C++ file.');
@@ -263,7 +251,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       // Validate rule content patterns (khái quát hóa)
-      const { hasLGEDV, hasMISRA } = validateRuleContent(rulesContent, ruleType, outputChannel);
+      const { hasLGEDV, hasMISRA, hasCERT, hasRAPIDSCAN, hasCRITICAL } = validateRuleContent(rulesContent, ruleType, outputChannel);
       
       // Create focused prompt based on rule type
       const prompt = createFocusedPrompt(codeContent, rulesContent, ruleType);
@@ -371,15 +359,16 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   // Helper: Load rules based on type
-  async function loadRules(ruleType: 'LGEDV' | 'MISRA' | 'MISRA-HIGH' | 'CERT' | 'RAPIDSCAN' | 'ALL', outputChannel: vscode.OutputChannel): Promise<string> {
-    const ruleSetDir = path.join(__dirname, '..', 'src', 'rule_set'); // Fix path to src/rule_set
-    const copilotMdDir = '/home/worker/src/copilot_md';
+  async function loadRules(ruleType: 'LGEDV' | 'MISRA' | 'CERT' | 'RAPIDSCAN' | 'CRITICAL', outputChannel: vscode.OutputChannel): Promise<string> {
+    const ruleSetDir = path.join(__dirname, '..', 'src', 'rule_set'); // Đọc trực tiếp từ rule_set
     let rulesContent = '';
+
+    outputChannel.appendLine(`📂 Rule set directory: ${ruleSetDir}`);
 
     try {
       // LGEDV Rules
-      if (ruleType === 'LGEDV' || ruleType === 'ALL') {
-        const lgedvContent = await loadRuleFile('LGEDVRuleGuide.md', ruleSetDir, copilotMdDir, outputChannel);
+      if (ruleType === 'LGEDV') {
+        const lgedvContent = await loadRuleFile('LGEDVRuleGuide.md', ruleSetDir, outputChannel);
         if (lgedvContent) {
           rulesContent += `# LGEDV Rules\n${lgedvContent}\n\n`;
           outputChannel.appendLine('✅ LGEDV rules loaded');
@@ -388,33 +377,22 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
 
-      // MISRA-High Rules (Misracpp2008Guidelines_High_en.md)
-      if (ruleType === 'MISRA-HIGH' || ruleType === 'ALL') {
-        const misraHighContent = await loadRuleFile('Misracpp2008Guidelines_High_en.md', ruleSetDir, copilotMdDir, outputChannel);
-        if (misraHighContent) {
-          rulesContent += `# MISRA C++ 2008 High Priority Rules\n${misraHighContent}\n\n`;
-          outputChannel.appendLine('✅ MISRA-High rules loaded');
-        } else {
-          outputChannel.appendLine('⚠️ MISRA-High rules not found');
-        }
-      }
-
-      // MISRA All Rules (Misracpp2008Guidelines_en.md)
-      if (ruleType === 'MISRA' || ruleType === 'ALL') {
-        const misraContent = await loadRuleFile('Misracpp2008Guidelines_en.md', ruleSetDir, copilotMdDir, outputChannel);
+      // MISRA Rules
+      if (ruleType === 'MISRA') {
+        const misraContent = await loadRuleFile('Misracpp2008Guidelines_en.md', ruleSetDir, outputChannel);
         if (misraContent) {
-          rulesContent += `# MISRA C++ 2008 All Rules\n${misraContent}\n\n`;
+          rulesContent += `# MISRA C++ 2008 Rules\n${misraContent}\n\n`;
           outputChannel.appendLine('✅ MISRA rules loaded');
         } else {
           outputChannel.appendLine('⚠️ MISRA rules not found');
         }
       }
 
-      // CERT C++ Rules
-      if (ruleType === 'CERT' || ruleType === 'ALL') {
-        const certContent = await loadRuleFile('CertcppGuidelines_High_en.md', ruleSetDir, copilotMdDir, outputChannel);
+      // CERT Rules
+      if (ruleType === 'CERT') {
+        const certContent = await loadRuleFile('CertcppGuidelines_en.md', ruleSetDir, outputChannel);
         if (certContent) {
-          rulesContent += `# CERT C++ High Priority Rules\n${certContent}\n\n`;
+          rulesContent += `# CERT C++ Rules\n${certContent}\n\n`;
           outputChannel.appendLine('✅ CERT rules loaded');
         } else {
           outputChannel.appendLine('⚠️ CERT rules not found');
@@ -422,13 +400,24 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       // RapidScan Rules
-      if (ruleType === 'RAPIDSCAN' || ruleType === 'ALL') {
-        const rapidScanContent = await loadRuleFile('RapidScanGuidelines_en.md', ruleSetDir, copilotMdDir, outputChannel);
+      if (ruleType === 'RAPIDSCAN') {
+        const rapidScanContent = await loadRuleFile('RapidScanGuidelines_en.md', ruleSetDir, outputChannel);
         if (rapidScanContent) {
-          rulesContent += `# RapidScan Vulnerability Rules\n${rapidScanContent}\n\n`;
+          rulesContent += `# RapidScan Rules\n${rapidScanContent}\n\n`;
           outputChannel.appendLine('✅ RapidScan rules loaded');
         } else {
           outputChannel.appendLine('⚠️ RapidScan rules not found');
+        }
+      }
+
+      // Critical Rules (replaces ALL)
+      if (ruleType === 'CRITICAL') {
+        const criticalContent = await loadRuleFile('CriticalRuleGuideLines.md', ruleSetDir, outputChannel);
+        if (criticalContent) {
+          rulesContent += `# Critical Rules\n${criticalContent}\n\n`;
+          outputChannel.appendLine('✅ Critical rules loaded');
+        } else {
+          outputChannel.appendLine('⚠️ Critical rules not found');
         }
       }
 
@@ -443,8 +432,8 @@ export function activate(context: vscode.ExtensionContext) {
       // Khái quát hóa: Validate rule patterns thay vì hard-code
       const validation = validateRuleContent(rulesContent, ruleType, outputChannel);
       
-      // Optimize prompt size for single rule type vs combined
-      const maxSize = ruleType === 'ALL' ? 30000 : 40000; // More space for single rule type
+      // Optimize prompt size for single rule type vs critical
+      const maxSize = ruleType === 'CRITICAL' ? 30000 : 40000; // More space for single rule type
       if (rulesContent.length > maxSize) {
         outputChannel.appendLine(`⚠️ Rules too large (${rulesContent.length}), optimizing to ${maxSize} chars`);
         rulesContent = optimizeRulesForPrompt(rulesContent, ruleType, maxSize);
@@ -462,30 +451,19 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  // Helper: Load individual rule file with fallback
-  async function loadRuleFile(fileName: string, primaryDir: string, fallbackDir: string, outputChannel: vscode.OutputChannel): Promise<string | null> {
-    const primaryPath = path.join(primaryDir, fileName);
-    const fallbackPath = path.join(fallbackDir, fileName);
+  // Helper: Load individual rule file
+  async function loadRuleFile(fileName: string, ruleSetDir: string, outputChannel: vscode.OutputChannel): Promise<string | null> {
+    const filePath = path.join(ruleSetDir, fileName);
 
-    outputChannel.appendLine(`🔍 Looking for ${fileName}:`);
-    outputChannel.appendLine(`   Primary: ${primaryPath}`);
-    outputChannel.appendLine(`   Fallback: ${fallbackPath}`);
+    outputChannel.appendLine(`🔍 Loading ${fileName} from: ${filePath}`);
 
     try {
-      // Try primary location first
-      if (await fileExists(primaryPath)) {
-        outputChannel.appendLine(`✅ Found at primary location`);
-        return await fs.promises.readFile(primaryPath, 'utf8');
+      if (await fileExists(filePath)) {
+        outputChannel.appendLine(`✅ Found ${fileName}`);
+        return await fs.promises.readFile(filePath, 'utf8');
+      } else {
+        outputChannel.appendLine(`❌ File not found: ${fileName}`);
       }
-      
-      // Try fallback location
-      if (await fileExists(fallbackPath)) {
-        outputChannel.appendLine(`📂 Using fallback: ${path.basename(fallbackDir)}/${fileName}`);
-        return await fs.promises.readFile(fallbackPath, 'utf8');
-      }
-
-      outputChannel.appendLine(`❌ File not found in either location`);
-
     } catch (error) {
       outputChannel.appendLine(`❌ Error reading ${fileName}: ${error}`);
     }
@@ -505,35 +483,27 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Helper: Optimize rules for prompt efficiency
   function optimizeRulesForPrompt(rulesContent: string, ruleType: string, maxSize: number): string {
-    if (ruleType === 'ALL') {
-      // For combined analysis, balance LGEDV and MISRA
-      const lgedvMatch = rulesContent.match(/# LGEDV Rules\n([\s\S]*?)(?=\n# |$)/);
-      const misraMatch = rulesContent.match(/# MISRA C\+\+ 2008 Rules\n([\s\S]*?)(?=\n# |$)/);
+    if (ruleType === 'CRITICAL') {
+      // For Critical rules, optimize specifically for critical content
+      const criticalMatch = rulesContent.match(/# Critical Rules\n([\s\S]*?)(?=\n# |$)/);
       
-      if (lgedvMatch && misraMatch) {
-        const lgedvSpace = Math.floor(maxSize * 0.5);
-        const misraSpace = Math.floor(maxSize * 0.5);
-        
-        const lgedvContent = lgedvMatch[1].substring(0, lgedvSpace);
-        const misraContent = misraMatch[1].substring(0, misraSpace);
-        
-        return `# LGEDV Rules\n${lgedvContent}\n\n# MISRA C++ 2008 Rules\n${misraContent}\n\n`;
+      if (criticalMatch) {
+        return `# Critical Rules\n${criticalMatch[1].substring(0, maxSize)}\n\n`;
       }
     }
     
-    // For single rule type or fallback, simple truncation
+    // For single rule type, simple truncation
     return rulesContent.substring(0, maxSize);
   }
 
   // Helper: Create focused prompt based on rule type
-  function createFocusedPrompt(codeContent: string, rulesContent: string, ruleType: 'LGEDV' | 'MISRA' | 'MISRA-HIGH' | 'CERT' | 'RAPIDSCAN' | 'ALL'): string {
-    const ruleTypeDescription: Record<'LGEDV' | 'MISRA' | 'MISRA-HIGH' | 'CERT' | 'RAPIDSCAN' | 'ALL', string> = {
+  function createFocusedPrompt(codeContent: string, rulesContent: string, ruleType: 'LGEDV' | 'MISRA' | 'CERT' | 'RAPIDSCAN' | 'CRITICAL'): string {
+    const ruleTypeDescription: Record<'LGEDV' | 'MISRA' | 'CERT' | 'RAPIDSCAN' | 'CRITICAL', string> = {
       'LGEDV': 'LGEDV_CRCL rules for automotive code compliance',
-      'MISRA': 'MISRA C++ 2008 all rules for safety-critical software',
-      'MISRA-HIGH': 'MISRA C++ 2008 high priority rules for safety-critical software',
-      'CERT': 'CERT C++ high priority security rules for secure coding',
-      'RAPIDSCAN': 'RapidScan vulnerability rules for security scanning',
-      'ALL': 'LGEDV_CRCL, MISRA C++ 2008, CERT C++, and RapidScan rules'
+      'MISRA': 'MISRA C++ 2008 rules for safety-critical software',
+      'CERT': 'CERT C++ Secure Coding Standard rules',
+      'RAPIDSCAN': 'RapidScan static analysis rules',
+      'CRITICAL': 'Critical LGEDV rules for essential code compliance'
     };
 
     return `You are a C++ static analysis expert. Analyze this code for violations of ${ruleTypeDescription[ruleType]}.
@@ -548,8 +518,8 @@ ${rulesContent}
 
 **ANALYSIS REQUIREMENTS:**
 - Find ALL violations of the rules above
-- Focus specifically on ${ruleType === 'ALL' ? 'ALL RULE TYPES' : ruleType} rule violations
-- Cite EXACT rule numbers (e.g., LGEDV_CRCL_0001, Rule 8-4-3, CTR50-CPP, sprintf)
+- Focus specifically on ${ruleType === 'CRITICAL' ? 'CRITICAL' : ruleType} rule violations
+- Cite EXACT rule numbers (e.g., LGEDV_CRCL_0001, Rule 8-4-3, DCL50-CPP, RS-001)
 - Check every line thoroughly
 - Provide concrete fixes for each violation
 
@@ -668,7 +638,7 @@ ${codeContent}
   }
 
   // Helper: Validate rule content patterns (khái quát hóa)
-  function validateRuleContent(rulesContent: string, ruleType: 'LGEDV' | 'MISRA' | 'MISRA-HIGH' | 'CERT' | 'RAPIDSCAN' | 'ALL', outputChannel: vscode.OutputChannel): { hasLGEDV: boolean, hasMISRA: boolean } {
+  function validateRuleContent(rulesContent: string, ruleType: 'LGEDV' | 'MISRA' | 'CERT' | 'RAPIDSCAN' | 'CRITICAL', outputChannel: vscode.OutputChannel): { hasLGEDV: boolean, hasMISRA: boolean, hasCERT: boolean, hasRAPIDSCAN: boolean, hasCRITICAL: boolean } {
     // Detect LGEDV rules by pattern
     const lgedvPatterns = [
       /LGEDV_CRCL_\d+/,           // LGEDV_CRCL_0001, LGEDV_CRCL_0013, etc.
@@ -679,7 +649,9 @@ ${codeContent}
     // Detect MISRA rules by pattern
     const misraPatterns = [
       /Rule \d+-\d+-\d+/,         // Rule 6-4-2, Rule 8-5-1, etc.
+      /Rule MISRA \d+-\d+-\d+/,   // Rule MISRA 6-4-2, Rule MISRA 8-5-1, etc.
       /### Rule \d+-\d+-\d+/,     // Markdown header format
+      /## Rule MISRA \d+-\d+-\d+/, // ## Rule MISRA 6-4-2 format
       /MISRA.*Rule.*\d+-\d+-\d+/, // Various MISRA rule formats
       /MISRA-C\+\+.*\d+-\d+-\d+/, // MISRA-C++ specific
       /\*\*Rule \d+-\d+-\d+\*\*/  // Bold rule format
@@ -687,60 +659,49 @@ ${codeContent}
 
     // Detect CERT rules by pattern
     const certPatterns = [
-      /CTR\d+-CPP/,               // CTR50-CPP, CTR51-CPP, etc.
-      /DCL\d+-CPP/,               // DCL50-CPP, DCL58-CPP, etc.
-      /ERR\d+-CPP/,               // ERR56-CPP, ERR57-CPP, etc.
-      /EXP\d+-CPP/,               // EXP50-CPP, EXP52-CPP, etc.
-      /MEM\d+-CPP/,               // MEM50-CPP, MEM51-CPP, etc.
-      /MSC\d+-CPP/,               // MSC54-CPP, etc.
-      /OOP\d+-CPP/,               // OOP55-CPP, OOP57-CPP, etc.
-      /STR\d+-CPP/                // STR50-CPP, STR51-CPP, etc.
+      /CERT.*C\+\+/,              // CERT C++ references
+      /SEI.*CERT/,                // SEI CERT references
+      /CERT-.*-\d+/,              // CERT rule format
+      /DCL\d+/,                   // CERT DCL rules
+      /EXP\d+/,                   // CERT EXP rules
+      /CTR\d+/,                   // CERT CTR rules
+      /ARR\d+/,                   // CERT ARR rules
+      /MEM\d+/                    // CERT MEM rules
     ];
 
     // Detect RapidScan rules by pattern
     const rapidScanPatterns = [
-      /sprintf/,                  // sprintf vulnerability
-      /sscanf/,                   // sscanf vulnerability
-      /strcat/,                   // strcat vulnerability
-      /strcpy/,                   // strcpy vulnerability
-      /M-C-UNINIT_MEMORY/,        // RapidScan rule patterns
-      /M-C-FLOAT_EQUAL/,
-      /M-C-MISSING_RETURN/,
-      /M-CPP-DEALLOC_PAIR/,
-      /R-CPP-NEW_DELETE_PAIR/,
-      /R-C-SEQ_POINT/,
-      /R-C-ARRAY_OVERRUN/,
-      /R-CPP-VIRTUAL_DTOR/,
-      /VULDOC_BOF_/,              // Buffer overflow patterns
-      /VULDOC_INSUFFICIENT_SPACE_/,
-      /VULDOC_VALID_SIZE_/,
-      /VULDOC_TOCTOU_/,           // TOCTOU patterns
-      /VULDOC_RANDOM_/,           // Random patterns
-      /VULDOC_INVALID_ARRAY_INDEX/,
-      /VULDOC_UNINITIALIZED_MEMORY/,
-      /VULDOC_SYSCALL_/,          // System call patterns
-      /VULDOC_INSECURE_/,         // Security patterns
-      /VULDOC_SOCKET_WILDCARD_BINDING/
+      /RapidScan/i,               // RapidScan references
+      /Rapid.*Scan/i,             // Alternative format
+      /RAPID.*SCAN/,              // Uppercase format
+      /RS-\d+/,                   // RapidScan rule format
+      /### RS-/                   // Markdown header format
+    ];
+
+    // Detect Critical rules by pattern
+    const criticalPatterns = [
+      /## Rule LGEDV_CRCL_/,      // Critical LGEDV rules format
+      /## Rule MISRA \d+-\d+-\d+/, // Critical MISRA rules format
+      /LGEDV_CRCL_\d+/,           // LGEDV rule numbers
+      /Rule MISRA \d+-\d+-\d+/,   // MISRA rule numbers
+      /Critical.*Rule/i,          // Critical rule references
+      /CRITICAL/i                 // Critical keyword
     ];
     
-    // Check LGEDV patterns
+    // Check patterns
     const hasLGEDV = lgedvPatterns.some(pattern => pattern.test(rulesContent));
-    
-    // Check MISRA patterns
     const hasMISRA = misraPatterns.some(pattern => pattern.test(rulesContent));
-
-    // Check CERT patterns
     const hasCERT = certPatterns.some(pattern => pattern.test(rulesContent));
-
-    // Check RapidScan patterns
-    const hasRapidScan = rapidScanPatterns.some(pattern => pattern.test(rulesContent));
+    const hasRAPIDSCAN = rapidScanPatterns.some(pattern => pattern.test(rulesContent));
+    const hasCRITICAL = criticalPatterns.some(pattern => pattern.test(rulesContent));
     
     // Detailed logging
     outputChannel.appendLine(`🔍 Rule validation:`);
     outputChannel.appendLine(`   LGEDV rules detected: ${hasLGEDV ? '✅' : '❌'}`);
     outputChannel.appendLine(`   MISRA rules detected: ${hasMISRA ? '✅' : '❌'}`);
     outputChannel.appendLine(`   CERT rules detected: ${hasCERT ? '✅' : '❌'}`);
-    outputChannel.appendLine(`   RapidScan rules detected: ${hasRapidScan ? '✅' : '❌'}`);
+    outputChannel.appendLine(`   RapidScan rules detected: ${hasRAPIDSCAN ? '✅' : '❌'}`);
+    outputChannel.appendLine(`   Critical rules detected: ${hasCRITICAL ? '✅' : '❌'}`);
     
     // Show rule counts if detected
     if (hasLGEDV) {
@@ -749,18 +710,27 @@ ${codeContent}
     }
     
     if (hasMISRA) {
-      const misraCount = (rulesContent.match(/Rule \d+-\d+-\d+/g) || []).length;
-      outputChannel.appendLine(`   MISRA rules found: ${misraCount}`);
+      const misraCount1 = (rulesContent.match(/Rule \d+-\d+-\d+/g) || []).length;
+      const misraCount2 = (rulesContent.match(/Rule MISRA \d+-\d+-\d+/g) || []).length;
+      const totalMisraCount = misraCount1 + misraCount2;
+      outputChannel.appendLine(`   MISRA rules found: ${totalMisraCount}`);
     }
 
     if (hasCERT) {
-      const certCount = (rulesContent.match(/[A-Z]{3}\d+-CPP/g) || []).length;
+      const certCount = (rulesContent.match(/DCL\d+|EXP\d+|CTR\d+|ARR\d+|MEM\d+/g) || []).length;
       outputChannel.appendLine(`   CERT rules found: ${certCount}`);
     }
 
-    if (hasRapidScan) {
-      const rapidScanCount = (rulesContent.match(/###\s+\w+/g) || []).length;
+    if (hasRAPIDSCAN) {
+      const rapidScanCount = (rulesContent.match(/RS-\d+/g) || []).length;
       outputChannel.appendLine(`   RapidScan rules found: ${rapidScanCount}`);
+    }
+
+    if (hasCRITICAL) {
+      const lgedvCriticalCount = (rulesContent.match(/## Rule LGEDV_CRCL_/g) || []).length;
+      const misraCriticalCount = (rulesContent.match(/## Rule MISRA \d+-\d+-\d+/g) || []).length;
+      const totalCriticalCount = lgedvCriticalCount + misraCriticalCount;
+      outputChannel.appendLine(`   Critical rules found: ${totalCriticalCount} (${lgedvCriticalCount} LGEDV + ${misraCriticalCount} MISRA)`);
     }
     
     // Validation warnings
@@ -768,7 +738,7 @@ ${codeContent}
       outputChannel.appendLine('⚠️ Warning: LGEDV analysis requested but no LGEDV rules detected');
     }
     
-    if ((ruleType === 'MISRA' || ruleType === 'MISRA-HIGH') && !hasMISRA) {
+    if (ruleType === 'MISRA' && !hasMISRA) {
       outputChannel.appendLine('⚠️ Warning: MISRA analysis requested but no MISRA rules detected');
     }
 
@@ -776,24 +746,23 @@ ${codeContent}
       outputChannel.appendLine('⚠️ Warning: CERT analysis requested but no CERT rules detected');
     }
 
-    if (ruleType === 'RAPIDSCAN' && !hasRapidScan) {
+    if (ruleType === 'RAPIDSCAN' && !hasRAPIDSCAN) {
       outputChannel.appendLine('⚠️ Warning: RapidScan analysis requested but no RapidScan rules detected');
     }
-    
-    if (ruleType === 'ALL' && (!hasLGEDV || !hasMISRA || !hasCERT || !hasRapidScan)) {
-      outputChannel.appendLine('⚠️ Warning: Combined analysis requested but some rule types missing');
+
+    if (ruleType === 'CRITICAL' && !hasCRITICAL) {
+      outputChannel.appendLine('⚠️ Warning: Critical analysis requested but no Critical rules detected');
     }
     
-    return { hasLGEDV, hasMISRA };
+    return { hasLGEDV, hasMISRA, hasCERT, hasRAPIDSCAN, hasCRITICAL };
   }
 
   // Register all commands
   context.subscriptions.push(
     checkLGEDVCommand, 
-    checkMISRAHighCommand,
-    checkMISRACommand, 
+    checkMISRACommand,
     checkCERTCommand,
-    checkRapidScanCommand,
+    checkRapidScanCommand, 
     checkAllRulesCommand, 
     interactiveCheckCommand,
     generateRulePromptCommand,

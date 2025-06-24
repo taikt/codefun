@@ -15,22 +15,17 @@
     "commands": [
       {
         "command": "lgedv.checkLGEDVRules",
-        "title": "🎯 Check LGEDV Rules Only",
-        "category": "LGEDV CodeGuard"
-      },
-      {
-        "command": "lgedv.checkMISRAHighRules", 
-        "title": "🛡️ Check MISRA-High Rules",
+        "title": "🎯 Check LGEDV Rules",
         "category": "LGEDV CodeGuard"
       },
       {
         "command": "lgedv.checkMISRARules", 
-        "title": "📋 Check MISRA Rules",
+        "title": "🛡️ Check MISRA Rules",
         "category": "LGEDV CodeGuard"
       },
       {
         "command": "lgedv.checkCERTRules", 
-        "title": "🔐 Check CERTcpp-High Rules",
+        "title": "🔐 Check Certcpp Rules",
         "category": "LGEDV CodeGuard"
       },
       {
@@ -40,7 +35,7 @@
       },
       {
         "command": "lgedv.checkAllRules",
-        "title": "🔍 Check All Rules",
+        "title": "🔍 Check Critical Rules",
         "category": "LGEDV CodeGuard"
       },
       {
@@ -77,24 +72,20 @@
           "group": "2_specific@1"
         },
         {
-          "command": "lgedv.checkMISRAHighRules",
+          "command": "lgedv.checkMISRARules",
           "group": "2_specific@2"
         },
         {
-          "command": "lgedv.checkMISRARules",
+          "command": "lgedv.checkCERTRules",
           "group": "2_specific@3"
         },
         {
-          "command": "lgedv.checkCERTRules",
+          "command": "lgedv.checkRapidScanRules",
           "group": "2_specific@4"
         },
         {
-          "command": "lgedv.checkRapidScanRules",
-          "group": "2_specific@5"
-        },
-        {
           "command": "lgedv.checkAllRules",
-          "group": "2_specific@6"
+          "group": "2_specific@5"
         },
         {
           "command": "lgedv.generateRulePrompt",
