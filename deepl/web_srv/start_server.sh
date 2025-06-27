@@ -1,0 +1,301 @@
+#!/bin/bash
+
+# Server management script for HTML Report Server
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SERVER_SCRIPT="$SCRIPT_DIR/server_simple.py"
+PID_FILE="$SCRIPT_DIR/server.pid"
+LOG_FILE="$SCRIPT_DIR/server.log"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_info() {
+    echo -e "${BLUE}[DEBUG]${NC} $1"
+}
+
+# Check if we're in the right directory
+check_environment() {
+    if [[ ! -f "$SERVER_SCRIPT" ]]; then
+        print_error "server_simple.py not found in $SCRIPT_DIR"
+        print_error "Please run this script from the web_srv directory"
+        exit 1
+    fi
+}
+
+# Get server process ID
+get_server_pid() {
+    if [[ -f "$PID_FILE" ]]; then
+        local pid=$(cat "$PID_FILE" 2>/dev/null)
+        if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+            echo "$pid"
+            return 0
+        else
+            # PID file exists but process is dead, clean up
+            rm -f "$PID_FILE" 2>/dev/null
+        fi
+    fi
+    
+    # Try to find server process by name and port
+    local pid=$(pgrep -f "python3.*server_simple.py" 2>/dev/null | head -1)
+    if [[ -n "$pid" ]]; then
+        echo "$pid" > "$PID_FILE"
+        echo "$pid"
+        return 0
+    fi
+    
+    return 1
+}
+
+# Check server status
+status_server() {
+    print_info "Checking server status..."
+    
+    local pid=$(get_server_pid)
+    if [[ -n "$pid" ]]; then
+        print_status "Server is running (PID: $pid)"
+        
+        # Check if port is actually being used
+        local port_info=$(netstat -tlnp 2>/dev/null | grep ":888[0-9]" | grep "$pid" | head -1)
+        if [[ -n "$port_info" ]]; then
+            local port=$(echo "$port_info" | awk '{print $4}' | cut -d':' -f2)
+            print_status "Server listening on port: $port"
+            print_status "Dashboard URL: http://localhost:$port"
+            print_status "API Health: http://localhost:$port/api/health"
+        else
+            print_warning "Server process found but no listening port detected"
+        fi
+        
+        if [[ -f "$LOG_FILE" ]]; then
+            print_info "Log file: $LOG_FILE"
+            print_info "Last 3 log lines:"
+            tail -3 "$LOG_FILE" 2>/dev/null | sed 's/^/  /'
+        fi
+        
+        return 0
+    else
+        print_warning "Server is not running"
+        return 1
+    fi
+}
+
+# Start the server
+start_server() {
+    print_info "Starting HTML Report Server..."
+    
+    local pid=$(get_server_pid)
+    if [[ -n "$pid" ]]; then
+        print_warning "Server is already running (PID: $pid)"
+        print_info "Use './start_server.sh status' to check details"
+        return 1
+    fi
+    
+    print_info "Server location: $SCRIPT_DIR"
+    
+    # Start server in background
+    print_status "Starting server..."
+    nohup python3 "$SERVER_SCRIPT" > "$LOG_FILE" 2>&1 &
+    local new_pid=$!
+    
+    # Save PID
+    echo "$new_pid" > "$PID_FILE"
+    
+    # Wait a moment and check if server started successfully
+    sleep 2
+    
+    if kill -0 "$new_pid" 2>/dev/null; then
+        print_status "Server started successfully (PID: $new_pid)"
+        
+        # Try to detect the port
+        sleep 1
+        local port_info=$(netstat -tlnp 2>/dev/null | grep "$new_pid" | grep ":888[0-9]" | head -1)
+        if [[ -n "$port_info" ]]; then
+            local port=$(echo "$port_info" | awk '{print $4}' | cut -d':' -f2)
+            print_status "Server is listening on port: $port"
+            print_status "� Dashboard: http://localhost:$port"
+            print_status "🔗 API Health: http://localhost:$port/api/health"
+        else
+            print_info "Server is starting up, port detection may take a moment..."
+        fi
+        
+        print_info "Log file: $LOG_FILE"
+        print_info "Use './start_server.sh status' to check server status"
+        print_info "Use './start_server.sh stop' to stop the server"
+        
+        return 0
+    else
+        print_error "Failed to start server"
+        rm -f "$PID_FILE" 2>/dev/null
+        if [[ -f "$LOG_FILE" ]]; then
+            print_error "Check log file for details: $LOG_FILE"
+            print_error "Last few log lines:"
+            tail -5 "$LOG_FILE" 2>/dev/null | sed 's/^/  /'
+        fi
+        return 1
+    fi
+}
+
+# Stop the server
+stop_server() {
+    print_info "Stopping HTML Report Server..."
+    
+    local pid=$(get_server_pid)
+    if [[ -z "$pid" ]]; then
+        print_warning "Server is not running"
+        return 0
+    fi
+    
+    print_status "Stopping server (PID: $pid)..."
+    
+    # Try graceful shutdown first
+    if kill -TERM "$pid" 2>/dev/null; then
+        print_info "Sent SIGTERM to server, waiting for graceful shutdown..."
+        
+        # Wait up to 10 seconds for graceful shutdown
+        local count=0
+        while [[ $count -lt 10 ]] && kill -0 "$pid" 2>/dev/null; do
+            sleep 1
+            ((count++))
+        done
+        
+        # Check if process is still running
+        if kill -0 "$pid" 2>/dev/null; then
+            print_warning "Server did not shut down gracefully, forcing termination..."
+            if kill -KILL "$pid" 2>/dev/null; then
+                print_status "Server force terminated"
+            else
+                print_error "Failed to force terminate server"
+                return 1
+            fi
+        else
+            print_status "Server stopped gracefully"
+        fi
+    else
+        print_error "Failed to send stop signal to server"
+        return 1
+    fi
+    
+    # Clean up PID file
+    rm -f "$PID_FILE" 2>/dev/null
+    
+    # Verify port is released
+    sleep 1
+    local remaining_ports=$(netstat -tlnp 2>/dev/null | grep ":888[0-9]" | grep "python3")
+    if [[ -z "$remaining_ports" ]]; then
+        print_status "All server ports have been released"
+    else
+        print_warning "Some ports may still be in use:"
+        echo "$remaining_ports" | sed 's/^/  /'
+    fi
+    
+    print_status "Server stopped successfully"
+    return 0
+}
+
+# Restart the server
+restart_server() {
+    print_info "Restarting HTML Report Server..."
+    
+    # Force stop any running servers first  
+    print_info "Force stopping any existing servers..."
+    pkill -f "server_simple.py" 2>/dev/null || true
+    pkill -f "python3.*8888" 2>/dev/null || true
+    
+    # Wait longer for processes to actually die
+    print_info "Waiting for processes to terminate..."
+    sleep 3
+    
+    # Force kill any remaining
+    pkill -9 -f "server_simple.py" 2>/dev/null || true
+    
+    # Wait for port to be released using a more reliable method
+    print_info "Waiting for port 8888 to be released..."
+    local count=0
+    while [[ $count -lt 15 ]]; do
+        if python3 -c "import socket; s=socket.socket(); s.bind(('', 8888)); s.close()" 2>/dev/null; then
+            print_info "Port 8888 is now free"
+            break
+        fi
+        sleep 1
+        ((count++))
+    done
+    
+    if [[ $count -eq 15 ]]; then
+        print_warning "Port may still be in use, but proceeding..."
+    fi
+    
+    # Clean up files
+    rm -f "$PID_FILE" "$LOG_FILE" 2>/dev/null
+    
+    print_info "Starting fresh server..."
+    start_server
+}
+
+# Show usage
+show_usage() {
+    echo "HTML Report Server Management Script"
+    echo ""
+    echo "Usage: $0 {start|stop|restart|status}"
+    echo ""
+    echo "Commands:"
+    echo "  start    - Start the server in background"
+    echo "  stop     - Stop the server and release all resources"
+    echo "  restart  - Stop and start the server"
+    echo "  status   - Check current server status"
+    echo ""
+    echo "Examples:"
+    echo "  $0 start           # Start server"
+    echo "  $0 status          # Check if server is running"
+    echo "  $0 stop            # Stop server and free resources"
+    echo "  $0 restart         # Restart server"
+    echo ""
+}
+
+# Main script logic
+main() {
+    check_environment
+    
+    case "$1" in
+        start)
+            start_server
+            ;;
+        stop)
+            stop_server
+            ;;
+        restart)
+            restart_server
+            ;;
+        status)
+            status_server
+            ;;
+        "")
+            # Default behavior: start server (backward compatibility)
+            print_info "No command specified, starting server (use 'start' explicitly in future)"
+            start_server
+            ;;
+        *)
+            print_error "Unknown command: $1"
+            show_usage
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function with all arguments
+main "$@"

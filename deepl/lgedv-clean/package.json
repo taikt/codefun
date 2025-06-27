@@ -45,7 +45,42 @@
       },
       {
         "command": "lgedv.generateRulePrompt",
-        "title": "📝 Generate Rule Prompt",
+        "title": "📝 Generate LGEDV Prompt",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.generateMisraPrompt",
+        "title": "📝 Generate MISRA Prompt",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.generateCertCppPrompt",
+        "title": "📝 Generate CERT C++ Prompt",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.generateRapidScanPrompt",
+        "title": "📝 Generate RapidScan Prompt",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.generateCriticalRulePrompt",
+        "title": "📝 Generate Critical Rule Prompt",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.generateHTMLReport",
+        "title": "🌐 Generate Interactive HTML Report",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.openSettings",
+        "title": "⚙️ Open Settings",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.showConfiguration",
+        "title": "📋 Show Current Configuration",
         "category": "LGEDV CodeGuard"
       },
       {
@@ -88,12 +123,34 @@
           "group": "2_specific@5"
         },
         {
-          "command": "lgedv.generateRulePrompt",
+          "submenu": "lgedv.generatePromptSubmenu",
           "group": "3_tools@1"
         },
         {
           "command": "lgedv.checkStaticAnalysis",
           "group": "3_tools@2"
+        }
+      ],
+      "lgedv.generatePromptSubmenu": [
+        {
+          "command": "lgedv.generateRulePrompt",
+          "group": "1_prompt@1"
+        },
+        {
+          "command": "lgedv.generateMisraPrompt",
+          "group": "1_prompt@2"
+        },
+        {
+          "command": "lgedv.generateCertCppPrompt",
+          "group": "1_prompt@3"
+        },
+        {
+          "command": "lgedv.generateRapidScanPrompt",
+          "group": "1_prompt@4"
+        },
+        {
+          "command": "lgedv.generateCriticalRulePrompt",
+          "group": "1_prompt@5"
         }
       ]
     },
@@ -101,8 +158,42 @@
       {
         "id": "lgedv.codeGuardSubmenu",
         "label": "🛡️ LGEDV CodeGuard"
+      },
+      {
+        "id": "lgedv.generatePromptSubmenu",
+        "label": "📝 Generate Prompt"
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "LGEDV CodeGuard Configuration",
+      "properties": {
+        "lgedvCodeGuard.reportDirectory": {
+          "type": "string",
+          "default": "/home/worker/src/codeguard/web_srv/defect_report",
+          "description": "Directory where analysis reports will be saved. This path will be used for both Markdown and HTML reports.",
+          "scope": "window"
+        },
+        "lgedvCodeGuard.webServerDirectory": {
+          "type": "string", 
+          "default": "/home/worker/src/codeguard/web_srv",
+          "description": "Directory where the web server is located. Used for opening reports in browser.",
+          "scope": "window"
+        },
+        "lgedvCodeGuard.ruleSetDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Custom directory for rule files. Leave empty to use the default extension rule set.",
+          "scope": "window"
+        },
+        "lgedvCodeGuard.autoOpenBrowser": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open HTML reports in browser after analysis.",
+          "scope": "window"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

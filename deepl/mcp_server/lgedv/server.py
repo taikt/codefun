@@ -21,27 +21,43 @@ logger = logging.getLogger(__name__)
 
 # Đặt BASE_DIR là thư mục chứa file server.py
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MISRA_RULE_URL = "http://cisivi.lge.com:8060/files/copilot_md/common/Misracpp2008Guidelines_High_en.md"
+MISRA_RULE_URL = os.path.join(BASE_DIR, "resources", "Misracpp2008Guidelines_en.md")
 LGEDV_RULE_URL = os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md")
+CERTCPP_RULE_URL = os.path.join(BASE_DIR, "resources", "CertcppGuidelines_en.md")
+CRITICAL_RULE_URL = os.path.join(BASE_DIR, "resources", "CriticalRuleGuideLines.md")
+RAPIDSCAN_RULE_URL = os.path.join(BASE_DIR, "resources", "RapidScanGuidelines_en.md")
 
 RESOURCE_FILES = {
     "lgedv": os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md"),
-    "misra": os.path.join(BASE_DIR, "resources", "Misracpp2008Guidelines_High_en.md"),
+    "misra": os.path.join(BASE_DIR, "resources", "Misracpp2008Guidelines_en.md"),
+    "certcpp": os.path.join(BASE_DIR, "resources", "CertcppGuidelines_en.md"),
+    "critical_rule": os.path.join(BASE_DIR, "resources", "CriticalRuleGuideLines.md"),
+    "rapidScan": os.path.join(BASE_DIR, "resources", "RapidScanGuidelines_en.md"),
 }
 
 
 async def fetch_misra_rule(url: str) -> list[
     types.TextContent | types.ImageContent | types.AudioContent | types.EmbeddedResource
 ]:
-    logger.debug(f"Fetching MISRA rule from URL: {url}")
+    logger.debug(f"Fetching MISRA rule from: {url}")
     headers = {
         "User-Agent": "MCP MISRA Rule Fetcher"
     }
-    async with create_mcp_http_client(headers=headers) as client:
-        response = await client.get(url)
-        response.raise_for_status()
-        logger.debug("Fetched MISRA rule successfully")
-        return [types.TextContent(type="text", text=response.text)]
+    if url.startswith("http://") or url.startswith("https://"):
+        async with create_mcp_http_client(headers=headers) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            logger.debug("Fetched MISRA rule from remote successfully")
+            return [types.TextContent(type="text", text=response.text)]
+    else:
+        # Treat as local file path
+        if not os.path.exists(url):
+            logger.error(f"MISRA rule file not found: {url}")
+            raise FileNotFoundError(f"MISRA rule file not found: {url}")
+        with open(url, "r", encoding="utf-8") as f:
+            text = f.read()
+        logger.debug("Fetched MISRA rule from local file successfully")
+        return [types.TextContent(type="text", text=text)]
 
 
 async def fetch_lgedv_rule(url: str) -> list[
@@ -65,6 +81,78 @@ async def fetch_lgedv_rule(url: str) -> list[
         with open(url, "r", encoding="utf-8") as f:
             text = f.read()
         logger.debug("Fetched LGEDV rule from local file successfully")
+        return [types.TextContent(type="text", text=text)]
+
+
+async def fetch_certcpp_rule(url: str) -> list[
+    types.TextContent | types.ImageContent | types.AudioContent | types.EmbeddedResource
+]:
+    logger.debug(f"Fetching CERT C++ rule from: {url}")
+    headers = {
+        "User-Agent": "MCP CERT C++ Rule Fetcher"
+    }
+    if url.startswith("http://") or url.startswith("https://"):
+        async with create_mcp_http_client(headers=headers) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            logger.debug("Fetched CERT C++ rule from remote successfully")
+            return [types.TextContent(type="text", text=response.text)]
+    else:
+        # Treat as local file path
+        if not os.path.exists(url):
+            logger.error(f"CERT C++ rule file not found: {url}")
+            raise FileNotFoundError(f"CERT C++ rule file not found: {url}")
+        with open(url, "r", encoding="utf-8") as f:
+            text = f.read()
+        logger.debug("Fetched CERT C++ rule from local file successfully")
+        return [types.TextContent(type="text", text=text)]
+
+
+async def fetch_critical_rule(url: str) -> list[
+    types.TextContent | types.ImageContent | types.AudioContent | types.EmbeddedResource
+]:
+    logger.debug(f"Fetching Critical rule from: {url}")
+    headers = {
+        "User-Agent": "MCP Critical Rule Fetcher"
+    }
+    if url.startswith("http://") or url.startswith("https://"):
+        async with create_mcp_http_client(headers=headers) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            logger.debug("Fetched Critical rule from remote successfully")
+            return [types.TextContent(type="text", text=response.text)]
+    else:
+        # Treat as local file path
+        if not os.path.exists(url):
+            logger.error(f"Critical rule file not found: {url}")
+            raise FileNotFoundError(f"Critical rule file not found: {url}")
+        with open(url, "r", encoding="utf-8") as f:
+            text = f.read()
+        logger.debug("Fetched Critical rule from local file successfully")
+        return [types.TextContent(type="text", text=text)]
+
+
+async def fetch_rapidScan_rule(url: str) -> list[
+    types.TextContent | types.ImageContent | types.AudioContent | types.EmbeddedResource
+]:
+    logger.debug(f"Fetching RapidScan rule from: {url}")
+    headers = {
+        "User-Agent": "MCP RapidScan Rule Fetcher"
+    }
+    if url.startswith("http://") or url.startswith("https://"):
+        async with create_mcp_http_client(headers=headers) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            logger.debug("Fetched RapidScan rule from remote successfully")
+            return [types.TextContent(type="text", text=response.text)]
+    else:
+        # Treat as local file path
+        if not os.path.exists(url):
+            logger.error(f"RapidScan rule file not found: {url}")
+            raise FileNotFoundError(f"RapidScan rule file not found: {url}")
+        with open(url, "r", encoding="utf-8") as f:
+            text = f.read()
+        logger.debug("Fetched RapidScan rule from local file successfully")
         return [types.TextContent(type="text", text=text)]
 
 
@@ -121,7 +209,7 @@ def main(port: int, transport: str):
             try:
                 if name == "fetch_misra_rule":
                     url = arguments.get("url")
-                    if not url or not (url.startswith("http://") or url.startswith("https://")):
+                    if not url:
                         url = MISRA_RULE_URL
                     result = await fetch_misra_rule(url)
                     logger.info(f"[taikt] fetch_misra_rule completed for url: {url}")
@@ -132,6 +220,27 @@ def main(port: int, transport: str):
                         url = LGEDV_RULE_URL
                     result = await fetch_lgedv_rule(url)
                     logger.info(f"[taikt] fetch_lgedv_rule completed for url: {url}")
+                    return result
+                elif name == "fetch_certcpp_rule":
+                    url = arguments.get("url")
+                    if not url:
+                        url = CERTCPP_RULE_URL
+                    result = await fetch_certcpp_rule(url)
+                    logger.info(f"[taikt] fetch_certcpp_rule completed for url: {url}")
+                    return result
+                elif name == "fetch_critical_rule":
+                    url = arguments.get("url")
+                    if not url:
+                        url = CRITICAL_RULE_URL
+                    result = await fetch_critical_rule(url)
+                    logger.info(f"[taikt] fetch_critical_rule completed for url: {url}")
+                    return result
+                elif name == "fetch_rapidScan_rule":
+                    url = arguments.get("url")
+                    if not url:
+                        url = RAPIDSCAN_RULE_URL
+                    result = await fetch_rapidScan_rule(url)
+                    logger.info(f"[taikt] fetch_rapidScan_rule completed for url: {url}")
                     return result
                 elif name == "list_cpp_files":
                     dir_path = arguments.get("dir_path")
@@ -190,6 +299,45 @@ def main(port: int, transport: str):
                             "url": {
                                 "type": "string",
                                 "description": "URL to fetch LGEDV rule (optional, default is preset)",
+                            }
+                        },
+                    },
+                ),
+                types.Tool(
+                    name="fetch_certcpp_rule",
+                    description="Fetches the CERT C++ rule markdown from remote server.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "URL to fetch CERT C++ rule (optional, default is preset)",
+                            }
+                        },
+                    },
+                ),
+                types.Tool(
+                    name="fetch_critical_rule",
+                    description="Fetches the Critical rule markdown from remote server.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "URL to fetch Critical rule (optional, default is preset)",
+                            }
+                        },
+                    },
+                ),
+                types.Tool(
+                    name="fetch_rapidScan_rule",
+                    description="Fetches the RapidScan rule markdown from remote server.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "URL to fetch RapidScan rule (optional, default is preset)",
                             }
                         },
                     },
@@ -283,11 +431,6 @@ def main(port: int, transport: str):
                         ),
                     ],
                 ),
-                types.Prompt(
-                    name="fetch_misra_rule",
-                    description="Fetch the MISRA C++ 2008 rule markdown from remote server.",
-                    arguments=[],
-                ),
             ]
         logger.debug("Registered @app.list_prompts handler")
 
@@ -300,13 +443,15 @@ def main(port: int, transport: str):
             try:
                 if name == "lgedv_all_files":
                     prompt = (
-                        "Find C++ violations based on LGEDV rules for all .cpp files in the directory. "
+                        "Find C++ violations based on LGEDV rules (LGEDVRuleGuide.md) for all .cpp files in the directory. "
+                        "If the rule file is not existed, please calling fetch_lgedv_rule from MCP server. "
                         "For each file, write down the file name first. "
                         "For each violation, indicate the rule content, the exact line number(s) in the file where the rule is violated, "
                         "and explain why the rule is violated. "
                         "Finally, suggest detailed code to fix the violation. "
-                        "Please read the files directly from the workspace to ensure line numbers are accurate."
-                        "Please check full the file's content."
+                        "Please read the .cpp files directly from the workspace to ensure line numbers are accurate."
+                        "Please check full the .cpp file's content. "
+                        "The output for each .cpp file should be as detailed as the output of the lgedv_current_file."
                     )
                     messages = [
                         types.PromptMessage(
@@ -322,13 +467,15 @@ def main(port: int, transport: str):
                     return result
                 elif name == "misra_all_files":
                     prompt = (
-                        "Find C++ violations based on MISRA C++ 2008 rules for all .cpp files in the directory. "
-                        "For each file, write down the file name first. "
+                        "Find C++ violations based on MISRA C++ 2008 rules (Misracpp2008Guidelines_en.md) for all .cpp files in the directory. "
+                        "If the rule file is not existed, please calling fetch_misra_rule from MCP server. "
+                        "For each .cpp file, write down the file name first. "
                         "For each violation, indicate the rule content, the exact line number(s) in the file where the rule is violated, "
                         "and explain why the rule is violated. "
                         "Finally, suggest detailed code to fix the violation. "
-                        "Please read the files directly from the workspace to ensure line numbers are accurate."
-                        "Please check full the file's content."
+                        "Please read the .cpp files directly from the workspace to ensure line numbers are accurate."
+                        "Please check full the .cpp file's content. "
+                        "The output for each .cpp file should be as detailed as the output of the misra_current_file"
                     )
                     messages = [
                         types.PromptMessage(
@@ -344,7 +491,8 @@ def main(port: int, transport: str):
                     return result
                 elif name == "lgedv_current_file":
                     prompt = (
-                        "Find C++ violations based on lgedv rules for current file in the directory. "
+                        "Find C++ violations based on lgedv rules (LGEDVRuleGuide.md) for current file in the directory. "
+                        "If the rule file is not existed, please calling fetch_lgedv_rule from MCP server. "
                         "For each violation, indicate the rule content, the exact line number(s) in the file where the rule is violated, "
                         "and explain why the rule is violated. "
                         "Finally, suggest detailed code to fix the violation. "
@@ -365,7 +513,8 @@ def main(port: int, transport: str):
                     return result
                 elif name == "misra_current_file":
                     prompt = (
-                        "Find C++ violations based on Misra rules for current file in the directory. "
+                        "Find C++ violations based on Misra rules (Misracpp2008Guidelines_en.md) for current file in the directory. "
+                        "If the rule file is not existed, please calling fetch_misra_rule from MCP server. "
                         "For each violation, indicate the rule content, the exact line number(s) in the file where the rule is violated, "
                         "and explain why the rule is violated. "
                         "Finally, suggest detailed code to fix the violation. "
@@ -384,22 +533,6 @@ def main(port: int, transport: str):
                     )
                     logger.info(f"get_prompt {name} completed")
                     return result
-                elif name == "fetch_misra_rule":
-                    import httpx
-                    async with httpx.AsyncClient() as client:
-                        resp = await client.get(MISRA_RULE_URL)
-                        resp.raise_for_status()
-                        rule_content = resp.text
-                    logger.info("Fetched MISRA rule content for prompt")
-                    return types.GetPromptResult(
-                        messages=[
-                            types.PromptMessage(
-                                role="assistant",
-                                content=types.TextContent(type="text", text=rule_content),
-                            )
-                        ],
-                        description="MISRA C++ 2008 rule markdown fetched from remote server.",
-                    )
                 else:
                     logger.error(f"Unknown prompt: {name}")
                     raise ValueError(f"Unknown prompt: {name}")
@@ -415,6 +548,9 @@ def main(port: int, transport: str):
             resources = [
                 get_resource_metadata("lgedv", RESOURCE_FILES["lgedv"]),
                 get_resource_metadata("misra", RESOURCE_FILES["misra"]),
+                get_resource_metadata("certcpp", RESOURCE_FILES["certcpp"]),
+                get_resource_metadata("critical_rule", RESOURCE_FILES["critical_rule"]),
+                get_resource_metadata("rapidScan", RESOURCE_FILES["rapidScan"]),
             ]
             return resources
         logger.debug("Registered @app.list_resources handler")
