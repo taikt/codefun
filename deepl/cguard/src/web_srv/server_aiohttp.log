@@ -1,0 +1,20 @@
+[INFO] Using report directory from user settings: /home/worker/src/codeguard/web_srv/defect_report
+[INFO] Web server will serve HTML reports from: /home/worker/src/codeguard/web_srv/defect_report
+======== Running on http://0.0.0.0:8888 ========
+(Press CTRL+C to quit)
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/rule8-4-3-lgedv-report_bk.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/rule8-4-3-lgedv-report_bk.html
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/rule8-4-3-lgedv-report.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/rule8-4-3-lgedv-report.html
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/rule8-4-3-lgedv-report.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/rule8-4-3-lgedv-report.html
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/t1-lgedv-report.html
+[DEBUG] serve_html: file_path=/home/worker/src/codeguard/web_srv/defect_report/t2-misra-report.html
+[DEBUG] serve_html: file found, serving /home/worker/src/codeguard/web_srv/defect_report/t2-misra-report.html
