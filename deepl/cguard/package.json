@@ -1,6 +1,8 @@
 {
-  "name": "lgedv-clean",
-  "displayName": "LGEDV Clean CodeGuard",
+  "name": "lgedv-codeguard",
+  "icon":"src/logo.svg",
+  "displayName": "Code Guard",
+  "publisher": "TranAnhTai-LGE",
   "description": "Simple C++ code analysis with Copilot streaming",
   "version": "1.0.0",
   "engines": {
