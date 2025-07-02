@@ -1,9 +1,9 @@
 {
   "name": "lgedv-codeguard",
-  "icon":"src/logo.svg",
-  "displayName": "Code Guard",
+  "icon":"src/logo.png",
+  "displayName": "LGEDV Code Guard",
   "publisher": "TranAnhTai-LGE",
-  "description": "Simple C++ code analysis with Copilot streaming",
+  "description": "Find C++ defects using MISRA, CERT C++ and user-defined custom Rules",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.74.0"

@@ -13,7 +13,7 @@ python3 optimized_viewer.py
 # build
 npm run compile
 vsce package
-code --install-extension lgedv-clean-1.0.0.vsix
+code --install-extension lgedv-codeguard-1.0.0.vsix
 -> reload vscode
 
 # "check LGEDV Rules" flow

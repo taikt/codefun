@@ -1,8 +1,0 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="56" fill="#667eea"/>
-  <g>
-    <path d="M128 44L208 76V128C208 176 128 212 128 212C128 212 48 176 48 128V76L128 44Z" fill="#fff" stroke="#2c3e50" stroke-width="8"/>
-    <path d="M96 120L112 136L160 88" stroke="#667eea" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
-  <text x="128" y="242" text-anchor="middle" fill="#2c3e50" font-size="32" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">CodeGuard</text>
-</svg>
