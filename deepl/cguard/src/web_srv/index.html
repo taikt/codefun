@@ -139,6 +139,7 @@
                 <option value="cert">🟡 Cert C++ Violations</option>
                 <option value="rapidscan">🔵 RapidScan Violations</option>
                 <option value="critical">🟣 Critical Rule Violations</option>
+                <option value="static">🟢 Static Analysis Reports</option>
             </select>
             <button class="refresh-btn" onclick="loadReports()">🔄 Refresh</button>
         </div>
@@ -244,7 +245,8 @@
                 'lgedv': 'LGEDV', 
                 'cert': 'Cert C++',
                 'rapidscan': 'RapidScan',
-                'critical': 'Critical Rule'
+                'critical': 'Critical Rule',
+                'static': 'Static Analysis'
             };
             return filterNames[filterType] || 'HTML';
         }

@@ -77,6 +77,8 @@ async def files(request):
             files = [f for f in all_files if '-rapidscan-' in f]
         elif filter_type == 'critical':
             files = [f for f in all_files if '-critical-' in f]
+        elif filter_type == 'static':
+            files = [f for f in all_files if f.endswith('.static-report.html')]
         else:
             files = all_files
     return aiohttp.web.json_response({'files': files, 'count': len(files), 'filter': filter_type})

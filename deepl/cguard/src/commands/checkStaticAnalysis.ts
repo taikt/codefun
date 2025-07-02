@@ -42,7 +42,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height
 .code-block { margin: 0 !important; padding: 8px 16px 8px 0 !important; border: none !important; background: #fff !important; font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 14px; line-height: 1.5; white-space: pre !important; overflow-x: auto; }
 .code-block code { background: transparent !important; padding: 0 !important; display: block; }
 .source-code-block:after { content: ""; display: table; clear: both; }
-</style>
+      </style>
 </head>
 <body>
 <h1>C++ Static Vulnerability Report</h1>
@@ -82,29 +82,35 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height
       mdContent += `\n## === Clang-Tidy (LGEDV Rules) ===\n\n\`\`\`\n${stdout}\n${filteredStderr ? `Errors:\n${filteredStderr}` : ''}\n\`\`\`\n`;
       htmlContent += `<h2>Clang-Tidy (LGEDV Rules)</h2><pre>${stdout}${filteredStderr ? '\nErrors:\n' + filteredStderr : ''}</pre>`;
       // 2. cppcheck
-      const cppcheckCmd = `cppcheck --enable=all --suppress=missingIncludeSystem "${filePath}"`;
-      exec(cppcheckCmd, { encoding: 'utf-8' }, (cppError, cppStdout, cppStderr) => {
-        const cppOutput = cppStdout + cppStderr;
-        mdContent += `\n## === Cppcheck Analysis ===\n\n\`\`\`\n${cppOutput.trim() ? cppOutput : 'No issues detected.'}\n\`\`\`\n`;
-        htmlContent += `<h2>Cppcheck Analysis</h2><pre>${cppOutput.trim() ? cppOutput : 'No issues detected.'}</pre>`;
-        // 3. clang --analyze
-        const clangCmd = `clang --analyze "${filePath}"`;
-        exec(clangCmd, { encoding: 'utf-8' }, (clangError, clangStdout, clangStderr) => {
-          const clangOutput = clangStdout + clangStderr;
-          mdContent += `\n## === Clang Static Analyzer ===\n\n\`\`\`\n${clangOutput.trim() ? clangOutput : 'No issues detected.'}\n\`\`\`\n`;
-          htmlContent += `<h2>Clang Static Analyzer</h2><pre>${clangOutput.trim() ? clangOutput : 'No issues detected.'}</pre></body></html>`;
-          fs.writeFileSync(mdReportPath, mdContent, { encoding: 'utf-8' });
-          fs.writeFileSync(htmlReportPath, htmlContent, { encoding: 'utf-8' });
-          vscode.window.showInformationMessage(`Static analysis reports saved at: ${mdReportPath} and ${htmlReportPath}`);
-        });
-        if (cppError) {
-          vscode.window.showErrorMessage(`Cppcheck Error: ${cppStderr}`);
-        }
+      const cppOutput = stdout + stderr;
+      // Đảm bảo mdContent luôn kết thúc bằng đúng 2 dòng trống trước khi thêm phần mới
+      mdContent = mdContent.replace(/\n+$/, ''); // Xóa hết dòng trống dư
+      mdContent += '\n\n## === Cppcheck Analysis ===\n\n```\n' +
+        (cppOutput.trim() ? cppOutput : 'No issues detected.') +
+        '\n```\n';
+      // Thêm 1 dòng trống trước Cppcheck Analysis trong HTML
+      htmlContent += '<br>\n<h2>Cppcheck Analysis</h2><pre>' + (cppOutput.trim() ? cppOutput : 'No issues detected.') + '</pre>';
+      // 3. clang --analyze
+      const clangCmd = `clang --analyze "${filePath}"`;
+      exec(clangCmd, { encoding: 'utf-8' }, (clangError, clangStdout, clangStderr) => {
+        const clangOutput = clangStdout + clangStderr;
+        mdContent += `\n## === Clang Static Analyzer ===\n\n\`\`\`\n${clangOutput.trim() ? clangOutput : 'No issues detected.'}\n\`\`\`\n`;
+        htmlContent += '<br>\n<h2>Clang Static Analyzer</h2><pre>' + (clangOutput.trim() ? clangOutput : 'No issues detected.') + '</pre></body></html>';
+        fs.writeFileSync(mdReportPath, mdContent, { encoding: 'utf-8' });
+        fs.writeFileSync(htmlReportPath, htmlContent, { encoding: 'utf-8' });
+        vscode.window.showInformationMessage(`Static analysis reports saved at: ${mdReportPath} and ${htmlReportPath}`);
       });
       if (error) {
         vscode.window.showErrorMessage(`Clang-Tidy Error: ${stderr}`);
+        return;
       }
+      // if (error) {
+      //   vscode.window.showErrorMessage(`Cppcheck Error: ${stderr}`);
+      // }
     });
+    // if (error) {
+    //   vscode.window.showErrorMessage(`Clang-Tidy Error: ${stderr}`);
+    // }
   });
   context.subscriptions.push(disposable);
 }
