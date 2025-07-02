@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+
+skinparam linetype ortho
+
+' Đặt Controller ở trung tâm, Rule Engines bên trái, Utilities bên phải
+package "Code Guard" #LightBlue {
+  package "Rule Engines" as RULES {
+    component "LGEDV Rule Engine" as LGEDV
+    component "MISRA Rule Engine" as MISRA
+    component "CERT Rule Engine" as CERT
+    component "Custom Rule Engine" as CUSTOM
+    component "Static Analysis Engine" as STATICANALYSIS
+  }
+  component "Controller" as CONTROLLER
+  package "Utilities" as UTILS {
+    component "Prompt Builder" as PROMPT
+    component "Copilot Connector" as COPILOT
+    component "Report Generator" as REPORT
+    component "File Utils" as FILEUTILS
+  }
+}
+
+CONTROLLER --> RULES
+CONTROLLER --> UTILS
+
+@enduml

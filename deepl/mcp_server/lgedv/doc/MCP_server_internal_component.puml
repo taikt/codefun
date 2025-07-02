@@ -1,0 +1,22 @@
+@startuml
+top to bottom direction
+skinparam linetype ortho
+
+package "MCP Server" #LightBlue {
+  component "Controller" as CONTROLLER
+  component "Tool Handler" as TOOLHANDLER
+  component "Prompt Handler" as PROMPTHANDLER
+  component "Resource Handler" as RESOURCEHANDLER
+  component "Rule Fetchers" as RULEFETCHERS
+  component "Resource Files" as RESOURCEFILES
+  component "Logger" as LOGGER
+}
+
+CONTROLLER --> TOOLHANDLER : @app.call_tool
+CONTROLLER --> PROMPTHANDLER : @app.get_prompt, @app.list_prompts
+CONTROLLER --> RESOURCEHANDLER : @app.list_resources
+TOOLHANDLER --> RULEFETCHERS : fetch_xxx_rule
+RESOURCEHANDLER --> RESOURCEFILES : get_resource_metadata
+CONTROLLER --> LOGGER
+
+@enduml

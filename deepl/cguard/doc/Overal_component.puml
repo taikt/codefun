@@ -1,0 +1,15 @@
+@startuml
+actor User
+component VSCode
+component "CodeGuard" as CodeGuard #Orange
+component "Web Server" as WebServer #LightGreen
+component Storage
+component Copilot
+
+User --> VSCode : Use commands
+VSCode --> CodeGuard : Loads/Activates
+CodeGuard --> Storage : Save report files
+WebServer --> Storage : Read report files
+CodeGuard --> Copilot : Request code analysis
+User --> WebServer : View report
+@enduml
