@@ -1,0 +1,18 @@
+{
+"inputs": [
+  // The "inputs" section defines the inputs required for the MCP server configuration.
+  {
+    "type": "promptString"
+  }
+],
+"servers": {
+  // The "servers" section defines the MCP servers you want to use
+  "mcp_server": {
+     "command": "/home/worker/src/codefun/deepl/mcp_server/venv/bin/codeguard",
+     "args": ["--transport", "stdio"],
+     "env": {
+      "CPP_DIR": "/home/worker/src/code_test/src"
+    }
+  }
+ }
+}

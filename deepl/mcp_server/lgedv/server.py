@@ -26,6 +26,7 @@ LGEDV_RULE_URL = os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md")
 CERTCPP_RULE_URL = os.path.join(BASE_DIR, "resources", "CertcppGuidelines_en.md")
 CRITICAL_RULE_URL = os.path.join(BASE_DIR, "resources", "CriticalRuleGuideLines.md")
 RAPIDSCAN_RULE_URL = os.path.join(BASE_DIR, "resources", "RapidScanGuidelines_en.md")
+CUSTOM_RULE_URL = os.path.join(BASE_DIR, "resources", "CustomRule.md")
 
 RESOURCE_FILES = {
     "lgedv": os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md"),
@@ -156,6 +157,30 @@ async def fetch_rapidScan_rule(url: str) -> list[
         return [types.TextContent(type="text", text=text)]
 
 
+async def fetch_custom_rule(url: str) -> list[
+    types.TextContent | types.ImageContent | types.AudioContent | types.EmbeddedResource
+]:
+    logger.debug(f"Fetching Custom rule from: {url}")
+    headers = {
+        "User-Agent": "MCP Custom Rule Fetcher"
+    }
+    if url.startswith("http://") or url.startswith("https://"):
+        async with create_mcp_http_client(headers=headers) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            logger.debug("Fetched Custom rule from remote successfully")
+            return [types.TextContent(type="text", text=response.text)]
+    else:
+        # Treat as local file path
+        if not os.path.exists(url):
+            logger.error(f"Custom rule file not found: {url}")
+            raise FileNotFoundError(f"Custom rule file not found: {url}")
+        with open(url, "r", encoding="utf-8") as f:
+            text = f.read()
+        logger.debug("Fetched Custom rule from local file successfully")
+        return [types.TextContent(type="text", text=text)]
+
+
 def get_resource_metadata(name: str, file_path: str) -> types.Resource:
     return types.Resource(
         uri=FileUrl(f"file://{file_path}"),
@@ -241,6 +266,13 @@ def main(port: int, transport: str):
                         url = RAPIDSCAN_RULE_URL
                     result = await fetch_rapidScan_rule(url)
                     logger.info(f"[taikt] fetch_rapidScan_rule completed for url: {url}")
+                    return result
+                elif name == "fetch_custom_rule":
+                    url = arguments.get("url")
+                    if not url:
+                        url = CUSTOM_RULE_URL
+                    result = await fetch_custom_rule(url)
+                    logger.info(f"[taikt] fetch_custom_rule completed for url: {url}")
                     return result
                 elif name == "list_cpp_files":
                     dir_path = arguments.get("dir_path")
@@ -343,6 +375,19 @@ def main(port: int, transport: str):
                     },
                 ),
                 types.Tool(
+                    name="fetch_custom_rule",
+                    description="Fetches the Custom rule markdown from remote server.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "URL to fetch Custom rule (optional, default is preset)",
+                            }
+                        },
+                    },
+                ),
+                types.Tool(
                     name="list_cpp_files",
                     description="List all .cpp files in the current CPP_DIR or given directory.",
                     inputSchema={
@@ -377,59 +422,66 @@ def main(port: int, transport: str):
             logger.info("list_prompts called")
             logger.debug("list_prompts called")
             return [
+                # Disabled prompts (for reference, not returned)
+                # types.Prompt(
+                #     name="check_lgedv_violation_files",
+                #     description="check code violations based on LGEDV rule guide for all .cpp files in the directory.",
+                #     arguments=[
+                #         types.PromptArgument(
+                #             name="context",
+                #             description="Additional context to consider",
+                #             required=False,
+                #         ),
+                #     ],
+                # ),
+                # types.Prompt(
+                #     name="check_misra_violation_files",
+                #     description="check code violations based on MISRA C++ 2008 rule guide for all .cpp files in the directory.",
+                #     arguments=[
+                #         types.PromptArgument(
+                #             name="context",
+                #             description="Additional context to consider",
+                #             required=False,
+                #         ),
+                #     ],
+                # ),
                 types.Prompt(
-                    name="lgedv_all_files",
-                    description="check code violations based on LGEDV rule guide for all cpp files.",
-                    arguments=[
-                        types.PromptArgument(
-                            name="context",
-                            description="Additional context to consider",
-                            required=False,
-                        ),
-                        types.PromptArgument(
-                            name="topic",
-                            description="Specific topic to focus on",
-                            required=False,
-                        ),
-                    ],
+                    name="check_lgedv",
+                    description="check code violations based on LGEDV rule guide for current file."
+                    # No arguments field: this prompt takes no arguments
                 ),
                 types.Prompt(
-                    name="misra_all_files",
-                    description="check code violations based on MISRA C++ 2008 rule guide for all cpp files.",
-                    arguments=[
-                        types.PromptArgument(
-                            name="context",
-                            description="Additional context to consider",
-                            required=False,
-                        ),
-                        types.PromptArgument(
-                            name="topic",
-                            description="Specific topic to focus on",
-                            required=False,
-                        ),
-                    ],
+                    name="check_misra",
+                    description="check code violations based on MISRA C++ 2008 rule guide for current file."
+                    # arguments=[
+                    #     types.PromptArgument(
+                    #         name="context",
+                    #         description="Additional context to consider",
+                    #         required=False,
+                    #     ),
+                    # ],
                 ),
                 types.Prompt(
-                    name="lgedv_current_file",
-                    description="check code violations based on LGEDV rule guide for current file.",
-                    arguments=[
-                        types.PromptArgument(
-                            name="context",
-                            description="Additional context to consider",
-                            required=False,
-                        ),
-                    ],
+                    name="check_certcpp",
+                    description="check code violations based on CERT C++ rule guide for current file."
+                    # arguments=[
+                    #     types.PromptArgument(
+                    #         name="context",
+                    #         description="Additional context to consider",
+                    #         required=False,
+                    #     ),
+                    # ],
                 ),
                 types.Prompt(
-                    name="misra_current_file",
-                    description="check code violations based on MISRA C++ 2008 rule guide for current file.",
-                    arguments=[
-                        types.PromptArgument(
-                            name="context",
-                            description="Additional context to consider",
-                            required=False,
-                        ),
-                    ],
+                    name="check_custom",
+                    description="check code violations based on Custom rule guide for current file."
+                    # arguments=[
+                    #     types.PromptArgument(
+                    #         name="context",
+                    #         description="Additional context to consider",
+                    #         required=False,
+                    #     ),
+                    # ],
                 ),
             ]
         logger.debug("Registered @app.list_prompts handler")
@@ -441,7 +493,7 @@ def main(port: int, transport: str):
         ) -> types.GetPromptResult:
             logger.info(f"get_prompt called with name: {name}, arguments: {arguments}")
             try:
-                if name == "lgedv_all_files":
+                if name == "check_lgedv_violation_files":
                     prompt = (
                         "Find C++ violations based on LGEDV rules (LGEDVRuleGuide.md) for all .cpp files in the directory. "
                         "If the rule file is not existed, please calling fetch_lgedv_rule from MCP server. "
@@ -451,7 +503,7 @@ def main(port: int, transport: str):
                         "Finally, suggest detailed code to fix the violation. "
                         "Please read the .cpp files directly from the workspace to ensure line numbers are accurate."
                         "Please check full the .cpp file's content. "
-                        "The output for each .cpp file should be as detailed as the output of the lgedv_current_file."
+                        "The output for each .cpp file should be as detailed as the output of the check_lgedv_violation."
                     )
                     messages = [
                         types.PromptMessage(
@@ -465,7 +517,7 @@ def main(port: int, transport: str):
                     )
                     logger.info(f"get_prompt {name} completed")
                     return result
-                elif name == "misra_all_files":
+                elif name == "check_misra_violation_files":
                     prompt = (
                         "Find C++ violations based on MISRA C++ 2008 rules (Misracpp2008Guidelines_en.md) for all .cpp files in the directory. "
                         "If the rule file is not existed, please calling fetch_misra_rule from MCP server. "
@@ -475,7 +527,7 @@ def main(port: int, transport: str):
                         "Finally, suggest detailed code to fix the violation. "
                         "Please read the .cpp files directly from the workspace to ensure line numbers are accurate."
                         "Please check full the .cpp file's content. "
-                        "The output for each .cpp file should be as detailed as the output of the misra_current_file"
+                        "The output for each .cpp file should be as detailed as the output of the check_misra_violation"
                     )
                     messages = [
                         types.PromptMessage(
@@ -489,7 +541,7 @@ def main(port: int, transport: str):
                     )
                     logger.info(f"get_prompt {name} completed")
                     return result
-                elif name == "lgedv_current_file":
+                elif name == "check_lgedv":
                     prompt = (
                         "Find C++ violations based on lgedv rules (LGEDVRuleGuide.md) for current file in the directory. "
                         "If the rule file is not existed, please calling fetch_lgedv_rule from MCP server. "
@@ -511,7 +563,7 @@ def main(port: int, transport: str):
                     )
                     logger.info(f"get_prompt {name} completed")
                     return result
-                elif name == "misra_current_file":
+                elif name == "check_misra":
                     prompt = (
                         "Find C++ violations based on Misra rules (Misracpp2008Guidelines_en.md) for current file in the directory. "
                         "If the rule file is not existed, please calling fetch_misra_rule from MCP server. "
@@ -533,6 +585,50 @@ def main(port: int, transport: str):
                     )
                     logger.info(f"get_prompt {name} completed")
                     return result
+                elif name == "check_certcpp":
+                    prompt = (
+                        "Find C++ violations based on CERT C++ rules (CertcppGuidelines_en.md) for current file in the directory. "
+                        "If the rule file is not existed, please calling fetch_certcpp_rule from MCP server. "
+                        "For each violation, indicate the rule content, the exact line number(s) in the file where the rule is violated, "
+                        "and explain why the rule is violated. "
+                        "Finally, suggest detailed code to fix the violation. "
+                        "Please read the file directly from the workspace to ensure line numbers are accurate."
+                        "Please check full the file's content."
+                    )
+                    messages = [
+                        types.PromptMessage(
+                            role="user",
+                            content=types.TextContent(type="text", text=prompt),
+                        )
+                    ]
+                    result = types.GetPromptResult(
+                        messages=messages,
+                        description="A prompt for CERT C++ rule on current file.",
+                    )
+                    logger.info(f"get_prompt {name} completed")
+                    return result
+                elif name == "check_custom":
+                    prompt = (
+                        "Find C++ violations based on custom rules (CustomRule.md) for current file in the directory. "
+                        "If the rule file is not existed, please calling fetch_custom_rule from MCP server. "
+                        "For each violation, indicate the rule content, the exact line number(s) in the file where the rule is violated, "
+                        "and explain why the rule is violated. "
+                        "Finally, suggest detailed code to fix the violation. "
+                        "Please read the file directly from the workspace to ensure line numbers are accurate."
+                        "Please check full the file's content."
+                    )
+                    messages = [
+                        types.PromptMessage(
+                            role="user",
+                            content=types.TextContent(type="text", text=prompt),
+                        )
+                    ]
+                    result = types.GetPromptResult(
+                        messages=messages,
+                        description="A prompt for Custom rule on current file.",
+                    )
+                    logger.info(f"get_prompt {name} completed")
+                    return result
                 else:
                     logger.error(f"Unknown prompt: {name}")
                     raise ValueError(f"Unknown prompt: {name}")
@@ -551,6 +647,7 @@ def main(port: int, transport: str):
                 get_resource_metadata("certcpp", RESOURCE_FILES["certcpp"]),
                 get_resource_metadata("critical_rule", RESOURCE_FILES["critical_rule"]),
                 get_resource_metadata("rapidScan", RESOURCE_FILES["rapidScan"]),
+                get_resource_metadata("custom", CUSTOM_RULE_URL),
             ]
             return resources
         logger.debug("Registered @app.list_resources handler")
