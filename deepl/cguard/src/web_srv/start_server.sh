@@ -30,6 +30,52 @@ print_info() {
     echo -e "${BLUE}[DEBUG]${NC} $1"
 }
 
+# ---[ Python environment auto-check & setup ]---
+PYTHON_OK=1
+PYTHON_BIN="python3"
+VENV_DIR="$SCRIPT_DIR/venv"
+
+# Check python3
+if ! command -v python3 >/dev/null 2>&1; then
+    print_error "Python3 not found! Please install python3."
+    exit 1
+fi
+
+# Check/cài python3-venv nếu có sudo
+if ! $PYTHON_BIN -m venv --help >/dev/null 2>&1; then
+    if command -v sudo >/dev/null 2>&1; then
+        print_status "Installing python3-venv..."
+        sudo apt update && sudo apt install -y python3-venv python3-full
+    else
+        print_error "python3-venv not found and no sudo permission. Please ask admin to install python3-venv."
+        exit 1
+    fi
+fi
+
+# Tạo lại venv nếu thiếu hoặc lỗi
+if [ ! -f "$VENV_DIR/bin/activate" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
+    print_status "Creating new venv with --copies..."
+    rm -rf "$VENV_DIR"
+    $PYTHON_BIN -m venv --copies "$VENV_DIR"
+fi
+
+# Kích hoạt venv
+source "$VENV_DIR/bin/activate"
+PYTHON_BIN="python"
+
+# Đảm bảo pip có sẵn
+if ! command -v pip >/dev/null 2>&1; then
+    print_status "Installing pip in venv..."
+    $PYTHON_BIN -m ensurepip --upgrade
+fi
+
+# Cài aiohttp nếu thiếu
+if ! $PYTHON_BIN -c "import aiohttp" 2>/dev/null; then
+    print_status "Installing aiohttp in venv..."
+    pip install --break-system-packages aiohttp
+fi
+# ---[ End Python env check ]---
+
 # Check if we're in the right directory
 check_environment() {
     if [[ ! -f "$SERVER_SCRIPT" ]]; then

@@ -79,34 +79,43 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height
         .split('\n')
         .filter((line) => !linesToExclude.includes(line.trim()))
         .join('\n');
-      mdContent += `\n## === Clang-Tidy (LGEDV Rules) ===\n\n\`\`\`\n${stdout}\n${filteredStderr ? `Errors:\n${filteredStderr}` : ''}\n\`\`\`\n`;
+      mdContent += `\n## === Clang-Tidy (LGEDV Rules) ===\n\n\
+\
+${stdout}\n${filteredStderr ? `Errors:\n${filteredStderr}` : ''}\n\
+\
+`;
       htmlContent += `<h2>Clang-Tidy (LGEDV Rules)</h2><pre>${stdout}${filteredStderr ? '\nErrors:\n' + filteredStderr : ''}</pre>`;
-      // 2. cppcheck
-      const cppOutput = stdout + stderr;
-      // Đảm bảo mdContent luôn kết thúc bằng đúng 2 dòng trống trước khi thêm phần mới
-      mdContent = mdContent.replace(/\n+$/, ''); // Xóa hết dòng trống dư
-      mdContent += '\n\n## === Cppcheck Analysis ===\n\n```\n' +
-        (cppOutput.trim() ? cppOutput : 'No issues detected.') +
-        '\n```\n';
-      // Thêm 1 dòng trống trước Cppcheck Analysis trong HTML
-      htmlContent += '<br>\n<h2>Cppcheck Analysis</h2><pre>' + (cppOutput.trim() ? cppOutput : 'No issues detected.') + '</pre>';
-      // 3. clang --analyze
-      const clangCmd = `clang --analyze "${filePath}"`;
-      exec(clangCmd, { encoding: 'utf-8' }, (clangError, clangStdout, clangStderr) => {
-        const clangOutput = clangStdout + clangStderr;
-        mdContent += `\n## === Clang Static Analyzer ===\n\n\`\`\`\n${clangOutput.trim() ? clangOutput : 'No issues detected.'}\n\`\`\`\n`;
-        htmlContent += '<br>\n<h2>Clang Static Analyzer</h2><pre>' + (clangOutput.trim() ? clangOutput : 'No issues detected.') + '</pre></body></html>';
-        fs.writeFileSync(mdReportPath, mdContent, { encoding: 'utf-8' });
-        fs.writeFileSync(htmlReportPath, htmlContent, { encoding: 'utf-8' });
-        vscode.window.showInformationMessage(`Static analysis reports saved at: ${mdReportPath} and ${htmlReportPath}`);
+      // 2. cppcheck (chạy thực sự)
+      const cppcheckCmd = `cppcheck --enable=all --std=c++17 --inline-suppr --quiet --template=gcc \"${filePath}\"`;
+      exec(cppcheckCmd, (cppErr, cppStdout, cppStderr) => {
+        const cppOutput = cppStdout + cppStderr;
+        mdContent = mdContent.replace(/\n+$/, ''); // Xóa hết dòng trống dư
+        mdContent += '\n\n## === Cppcheck Analysis ===\n\n```\n' +
+          (cppOutput.trim() ? cppOutput : 'No issues detected.') +
+          '\n```\n';
+        htmlContent += '<br>\n<h2>Cppcheck Analysis</h2><pre>' + (cppOutput.trim() ? cppOutput : 'No issues detected.') + '</pre>';
+        // 3. clang --analyze
+        const clangCmd = `clang --analyze "${filePath}"`;
+        exec(clangCmd, { encoding: 'utf-8' }, (clangError, clangStdout, clangStderr) => {
+          const clangOutput = clangStdout + clangStderr;
+          mdContent += `\n## === Clang Static Analyzer ===\n\n\
+\
+${clangOutput.trim() ? clangOutput : 'No issues detected.'}\n\
+\
+`;
+          htmlContent += '<br>\n<h2>Clang Static Analyzer</h2><pre>' + (clangOutput.trim() ? clangOutput : 'No issues detected.') + '</pre></body></html>';
+          fs.writeFileSync(mdReportPath, mdContent, { encoding: 'utf-8' });
+          fs.writeFileSync(htmlReportPath, htmlContent, { encoding: 'utf-8' });
+          vscode.window.showInformationMessage(`Static analysis reports saved at: ${mdReportPath} and ${htmlReportPath}`);
+        });
+        if (cppErr) {
+          vscode.window.showErrorMessage(`Cppcheck Error: ${cppStderr}`);
+        }
       });
       if (error) {
         vscode.window.showErrorMessage(`Clang-Tidy Error: ${stderr}`);
         return;
       }
-      // if (error) {
-      //   vscode.window.showErrorMessage(`Cppcheck Error: ${stderr}`);
-      // }
     });
     // if (error) {
     //   vscode.window.showErrorMessage(`Clang-Tidy Error: ${stderr}`);
