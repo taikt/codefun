@@ -8,11 +8,13 @@ import { getReportDirectory } from '../extension';
 
 export function registerCheckMultipleFilesLGEDVCommand(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand('lgedv.checkMultipleFilesLGEDV', async () => {
+    const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri;
     const folderUri = await vscode.window.showOpenDialog({
       canSelectFolders: true,
       canSelectFiles: false,
       canSelectMany: false,
-      openLabel: 'Select Source Folder to Scan'
+      openLabel: 'Select Source Folder to Scan',
+      defaultUri: wsFolder
     });
     if (!folderUri || folderUri.length === 0) {
       vscode.window.showInformationMessage('No folder selected.');

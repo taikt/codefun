@@ -228,52 +228,40 @@ export function createFocusedPrompt(
     'CRITICAL': 'Critical LGEDV rules for essential code compliance',
     'CUSTOM': 'the following custom rules (markdown format)'
   };
-  return `You are a C++ static analysis expert. Analyze this code for violations of ${ruleTypeDescription[ruleType]}.
-
-**IMPORTANT:**
-- Report all line numbers and function ranges according to the original file as provided below, including all comments, includes, and blank lines. Do NOT renumber or skip any lines. Your line numbers must match exactly with the code block below.
-
-**CODE TO ANALYZE:**
-\`\`\`cpp
-${codeContent}
-\`\`\`
-
-**RULES TO CHECK:**
-${rulesContent}
-
-**ANALYSIS REQUIREMENTS:**
-- Find ALL violations of the rules above
-- Focus specifically on ${ruleType === 'CRITICAL' ? 'CRITICAL' : ruleType} rule violations
-- Cite EXACT rule numbers (e.g., LGEDV_CRCL_0001, Rule 8-4-3, DCL50-CPP, RS-001)
-- Check every line thoroughly
-- Provide concrete fixes for each violation
-- Use the original file's line numbers in all reports
-
-**OUTPUT FORMAT:**
-For each violation found:
-
-## 🚨 Issue [#]: [Brief Description]
-**Rule Violated:** [EXACT_RULE_NUMBER] - [Rule Description]
-**Line:** [LINE_NUMBER]
-**Severity:** [Critical/High/Medium/Low]
-**Current Code:**
-\`\`\`cpp
-[problematic code]
-\`\`\`
-**Fixed Code:**
-\`\`\`cpp
-[corrected code]
-\`\`\`
-**Explanation:** [Why this violates the rule and how fix works]
-
----
-
-## 🔧 Complete Fixed Code
-\`\`\`cpp
-[entire corrected file with all fixes applied]
-\`\`\`
-
-**Important:** If no violations are found, clearly state "No ${ruleType} rule violations detected in this code."`;
+  return (
+    `You are a C++ static analysis expert. Analyze this code for violations of ${ruleTypeDescription[ruleType]}.
+` +
+    `\n**IMPORTANT:**\n` +
+    `- Report all line numbers and function ranges according to the original file as provided below, including all comments, includes, and blank lines. Do NOT renumber or skip any lines. Your line numbers must match exactly with the code block dưới đây.\n` +
+    `\n**STRICT OUTPUT REQUIREMENTS:**\n` +
+    `- Preserve all original indentation, blank lines, and code formatting.\n` +
+    `- All code blocks must be valid C++ and preserve original formatting.\n` +
+    `\n**CODE TO ANALYZE:**\n` +
+    '```cpp\n' + codeContent + '\n```\n' +
+    `\n**RULES TO CHECK:**\n` + rulesContent + '\n' +
+    `\n**ANALYSIS REQUIREMENTS:**\n` +
+    `- Find ALL violations of the rules above\n` +
+    `- Focus specifically on ${ruleType} rule violations\n` +
+    `- Cite EXACT rule numbers (e.g., LGEDV_CRCL_0001, MISRA Rule 8-4-3, DCL50-CPP, RS-001)\n` +
+    `- Check every line thoroughly\n` +
+    `- Provide concrete fixes for each violation\n` +
+    `- Use the original file's line numbers in all reports\n` +
+    `\n**OUTPUT FORMAT:**\n` +
+    `For each violation found:\n` +
+    `\n## 🚨 Issue [#]: [Brief Description]\n` +
+    `**Rule Violated:** [EXACT_RULE_NUMBER] - [Rule Description]\n` +
+    `**Line:** [LINE_NUMBER]\n` +
+    `**Severity:** [Critical/High/Medium/Low]\n` +
+    `**Current Code:**\n` +
+    '```cpp\n[problematic code]\n```\n' +
+    `**Fixed Code:**\n` +
+    '```cpp\n[corrected code]\n```\n' +
+    `**Explanation:** [Why this violates the rule and how fix works]\n` +
+    `\n---\n` +
+    `\n## 🔧 Complete Fixed Code\n` +
+    '```cpp\n[entire corrected file with all fixes applied]\n```\n' +
+    `\n**Important:** If no violations are found, clearly state "No ${ruleType} rule violations detected in this code."`
+  );
 }
 
 export async function runAnalysisWithProgress(
@@ -302,7 +290,22 @@ export async function runAnalysisWithProgress(
     }
   }
   clearTimeout(timeoutId);
+  // Post-process response to preserve blank lines with only spaces in code blocks
+  response = preserveBlankLinesInCodeBlocks(response);
   return response;
+}
+
+/**
+ * Post-process markdown to preserve blank lines with only spaces in code blocks.
+ * Converts lines with only spaces inside code blocks to non-breaking spaces (for HTML safety),
+ * or simply ensures they are not trimmed/removed.
+ */
+function preserveBlankLinesInCodeBlocks(markdown: string): string {
+  return markdown.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    // Replace lines that are only spaces with non-breaking spaces (for HTML safety)
+    const processed = code.replace(/^ +$/gm, (m: string) => m.replace(/ /g, '\u00A0'));
+    return '```' + lang + '\n' + processed + '```';
+  });
 }
 
 export async function saveReport(
