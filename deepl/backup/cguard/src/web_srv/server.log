@@ -1,0 +1,374 @@
+127.0.0.1 - - [27/Jun/2025 21:01:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 21:01:08] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 21:01:12] "GET /rule8-4-3-cert-report.html HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 21:25:34] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 21:25:34] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 21:25:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 21:25:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:28] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:28] code 404, message File not found
+127.0.0.1 - - [27/Jun/2025 23:36:28] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [27/Jun/2025 23:36:31] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:31] "GET /api/files HTTP/1.1" 200 -
+📁 Serving from: /home/worker/src/codeguard/web_srv
+Server starting on port 8888...
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.001s - Filter: None, Found: 8 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+127.0.0.1 - - [27/Jun/2025 23:36:32] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:33] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:34] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:34] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:35] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:36] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:37] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:37] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:38] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:38] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:39] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:40] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:41] "GET / HTTP/1.1" 304 -
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+127.0.0.1 - - [27/Jun/2025 23:36:41] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:42] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:42] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:43] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:44] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:45] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:45] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:46] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:46] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:47] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:48] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:49] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:49] "GET /api/files HTTP/1.1" 200 -
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+❌ Not found: /home/worker/.config/Code/User/settings.json
+📄 Found settings file: /home/worker/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/.vscode/settings.json
+📁 Using default report directory: /home/worker/src/codeguard/web_srv/defect_report
+🔍 Processing request: /api/files
+📂 Looking in directory: /home/worker/src/codeguard/web_srv/defect_report
+⚡ Processed in 0.000s - Filter: None, Found: 9 files
+🔍 Searching for VS Code settings in official locations...
+📄 Found settings file: /home/worker/src/.vscode/settings.json
+⚠️ Setting 'lgedvCodeGuard.reportDirectory' not found or empty in /home/worker/src/.vscode/settings.json
+127.0.0.1 - - [27/Jun/2025 23:36:50] "GET / HTTP/1.1" 304 -
+127.0.0.1 - - [27/Jun/2025 23:36:50] "GET /api/files HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:52] "GET /t1-lgedv-report.html HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:36:57] "GET /height_test.html HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:37:03] "GET /t1-critical-report.html HTTP/1.1" 200 -
+127.0.0.1 - - [27/Jun/2025 23:37:09] "GET /t1-critical-report.html HTTP/1.1" 200 -

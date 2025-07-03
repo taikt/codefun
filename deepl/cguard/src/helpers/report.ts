@@ -30,12 +30,12 @@ function parseViolationsFromResponse(response: string): Array<{severity: string,
     const currentCodeMatch = issueText.match(/\*\*Current Code:\*\*\s*```cpp\s*([\s\S]*?)\s*```/);
     const fixedCodeMatch = issueText.match(/\*\*Fixed Code:\*\*\s*```cpp\s*([\s\S]*?)\s*```/);
     const explanationMatch = issueText.match(/\*\*Explanation:\*\*\s*([^\n]+)/);
-    // Loại bỏ dòng trắng đầu/cuối, KHÔNG dùng .trim() để giữ nguyên indentation
+    // Loại bỏ dòng đầu/cuối chỉ khi là rỗng hoàn toàn (''), giữ nguyên dòng chỉ có space
     function stripBlankLinesPreserveIndent(code: string | undefined): string {
       if (!code) return '';
       const lines = code.split('\n');
-      while (lines.length > 0 && lines[0].trim() === '') lines.shift();
-      while (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop();
+      while (lines.length > 0 && lines[0] === '') lines.shift();
+      while (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
       return lines.join('\n');
     }
     violations.push({
