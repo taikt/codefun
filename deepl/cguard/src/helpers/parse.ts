@@ -33,16 +33,6 @@ export const extractCompleteFixedCode = (response: string): string | null => {
   return fixedCodeMatch ? fixedCodeMatch[1].trim() : null;
 };
 
-export function validateRuleContent(rulesContent: string, ruleType: string, outputChannel: vscode.OutputChannel): {hasLGEDV: boolean, hasMISRA: boolean, hasCERT: boolean, hasRAPIDSCAN: boolean, hasCRITICAL: boolean} {
-  const hasLGEDV = /LGEDV_CRCL_\d+/.test(rulesContent);
-  const hasMISRA = /Rule \d+-\d+-\d+/.test(rulesContent);
-  const hasCERT = /[A-Z]{3}\d{2}-CPP/.test(rulesContent);
-  const hasRAPIDSCAN = /RS-\d+/.test(rulesContent);
-  const hasCRITICAL = ruleType === 'CRITICAL' && rulesContent.length > 1000;
-  outputChannel.appendLine(`📋 Rule validation: LGEDV=${hasLGEDV}, MISRA=${hasMISRA}, CERT=${hasCERT}, RapidScan=${hasRAPIDSCAN}, Critical=${hasCRITICAL}`);
-  return { hasLGEDV, hasMISRA, hasCERT, hasRAPIDSCAN, hasCRITICAL };
-}
-
 export function extractRuleId(line: string): string {
   const ruleMatch = line.match(/(LGEDV_CRCL_\d+|Rule \d+-\d+-\d+|[A-Z]{3}\d{2}-CPP|RS-\d+)/);
   return ruleMatch ? ruleMatch[1] : 'Unknown Rule';

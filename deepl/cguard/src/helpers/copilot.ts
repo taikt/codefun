@@ -98,6 +98,10 @@ export async function runRuleAnalysis(ruleType: 'LGEDV' | 'MISRA' | 'CERT' | 'RA
       return;
     }
     const prompt = createFocusedPrompt(codeContent, rulesContent, ruleType);
+    // taikt: debug prompt content
+    // outputChannel.appendLine('--- PROMPT SENT TO MODEL ---');
+    // outputChannel.appendLine(prompt);
+    // outputChannel.appendLine('--- END PROMPT ---');
     outputChannel.appendLine(`🔍 Analyzing against ${ruleType} rules...`);
     outputChannel.appendLine('');
     const response = await runAnalysisWithProgress(selectedModel, prompt, outputChannel);

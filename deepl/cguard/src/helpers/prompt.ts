@@ -1,9 +1,15 @@
+import * as vscode from 'vscode';
+let outputChannel: vscode.OutputChannel | undefined;
+
 // Hàm tạo prompt cho Copilot
 export function createFocusedPrompt(
   codeContent: string,
   rulesContent: string,
   ruleType: 'LGEDV' | 'MISRA' | 'CERT' | 'RAPIDSCAN' | 'CRITICAL' | 'CUSTOM'
 ): string {
+  if (!outputChannel) {
+    outputChannel = vscode.window.createOutputChannel('LGEDV CodeGuard');
+  }
   const ruleTypeDescription: Record<'LGEDV' | 'MISRA' | 'CERT' | 'RAPIDSCAN' | 'CRITICAL' | 'CUSTOM', string> = {
     'LGEDV': 'LGEDV_CRCL rules for automotive code compliance',
     'MISRA': 'MISRA C++ 2008 rules for safety-critical software',
@@ -12,7 +18,7 @@ export function createFocusedPrompt(
     'CRITICAL': 'Critical LGEDV rules for essential code compliance',
     'CUSTOM': 'the following custom rules (markdown format)'
   };
-  return `You are a C++ static analysis expert. Analyze this code for violations of ${ruleTypeDescription[ruleType]}.
+  const prompt = `You are a C++ static analysis expert. Analyze this code for violations of ${ruleTypeDescription[ruleType]}.
 
 **IMPORTANT:**
 - Report all line numbers and function ranges according to the original file as provided below, including all comments, includes, and blank lines. Do NOT renumber or skip any lines. Your line numbers must match exactly with the code block below.
@@ -59,4 +65,7 @@ For each violation found:
 \`\`\`
 
 **Important:** If no violations are found, clearly state "No ${ruleType} rule violations detected in this code."`;
+  outputChannel.appendLine('[createFocusedPrompt] Prompt:');
+  outputChannel.appendLine(prompt);
+  return prompt;
 }
