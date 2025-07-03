@@ -26,7 +26,9 @@ LGEDV_RULE_URL = os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md")
 CERTCPP_RULE_URL = os.path.join(BASE_DIR, "resources", "CertcppGuidelines_en.md")
 CRITICAL_RULE_URL = os.path.join(BASE_DIR, "resources", "CriticalRuleGuideLines.md")
 RAPIDSCAN_RULE_URL = os.path.join(BASE_DIR, "resources", "RapidScanGuidelines_en.md")
-CUSTOM_RULE_URL = os.path.join(BASE_DIR, "resources", "CustomRule.md")
+CUSTOM_RULE_URL = os.environ.get("CUSTOM_RULE_PATH")
+if not CUSTOM_RULE_URL:
+    CUSTOM_RULE_URL = os.path.join(BASE_DIR, "resources", "CustomRule.md")
 
 RESOURCE_FILES = {
     "lgedv": os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md"),
@@ -552,15 +554,14 @@ def main(port: int, transport: str):
                     #     "Please check full the file's content."
                     # )
                     prompt = (
-                        "You are a C++ static analysis expert. Analyze this code for violations of LGEDV rules (LGEDVRuleGuide.md) for automotive code compliance.\n"
+                        "You are a C++ static analysis expert. Analyze this code for violations of LGEDV rules for automotive code compliance.\n"
                         "If the rule file is not existed, please calling fetch_lgedv_rule from MCP server.\n\n"
                         "**IMPORTANT:**\n"
-                        "- Report all line numbers and function ranges according to the original file as provided below, including all comments, includes, and blank lines. Do NOT renumber or skip any lines. Your line numbers must match exactly with the code block below.\n\n"
+                        "- Report all line numbers and function ranges according to the original file as provided below.\n"
                         "**CODE TO ANALYZE:**\n"
                         "```cpp\n[codeContent]\n```\n\n"
                         "**RULES TO CHECK:**\n[ruleContent]\n\n"
                         "**ANALYSIS REQUIREMENTS:**\n"
-                        "- When returning any code block (Current Code, Fixed Code, Complete Fixed Code), you MUST preserve all leading whitespace, indentation, and blank lines exactly as in the original or as intended in your fix. Do NOT left-align, trim, or otherwise alter the indentation of any code lines.\n"
                         "- Find ALL violations of the rules above\n"
                         "- Focus specifically on LGEDV rule violations\n"
                         "- Cite EXACT rule numbers (e.g., LGEDV_CRCL_0001, MISRA Rule 8-4-3, DCL50-CPP, RS-001)\n"
@@ -606,15 +607,13 @@ def main(port: int, transport: str):
                     #     "Please check full the file's content."
                     # )
                     prompt = (
-                        "You are a C++ static analysis expert. Analyze this code for violations of MISRA C++ 2008 rules (Misracpp2008Guidelines_en.md) for safety-critical software.\n"
+                        "You are a C++ static analysis expert. Analyze this code for violations of MISRA C++ 2008 rules for safety-critical software.\n"
                         "If the rule file is not existed, please calling fetch_misra_rule from MCP server.\n\n"
                         "**IMPORTANT:**\n"
-                        "- Report all line numbers and function ranges according to the original file as provided below, including all comments, includes, and blank lines. Do NOT renumber or skip any lines. Your line numbers must match exactly with the code block below.\n\n"
-                        "**CODE TO ANALYZE:**\n"
+                        "- Report all line numbers and function ranges according to the original file as provided below.\n"
                         "```cpp\n[codeContent]\n```\n\n"
                         "**RULES TO CHECK:**\n[ruleContent]\n\n"
-                        "**ANALYSIS REQUIREMENTS:**\n"
-                        "- When returning any code block (Current Code, Fixed Code, Complete Fixed Code), you MUST preserve all leading whitespace, indentation, and blank lines exactly as in the original or as intended in your fix. Do NOT left-align, trim, or otherwise alter the indentation of any code lines.\n"
+                        "**ANALYSIS REQUIREMENTS:**\n"                       
                         "- Find ALL violations of the rules above\n"
                         "- Focus specifically on MISRA rule violations\n"
                         "- Cite EXACT rule numbers (e.g., MISRA Rule 8-4-3, LGEDV_CRCL_0001, DCL50-CPP, RS-001)\n"
@@ -660,15 +659,13 @@ def main(port: int, transport: str):
                     #     "Please check full the file's content."
                     # )
                     prompt = (
-                        "You are a C++ static analysis expert. Analyze this code for violations of CERT C++ Secure Coding Standard rules.(CertcppGuidelines_en.md)\n"
+                        "You are a C++ static analysis expert. Analyze this code for violations of CERT C++ Secure Coding Standard rules.\n"
                         "If the rule file is not existed, please calling fetch_certcpp_rule from MCP server.\n\n"
                         "**IMPORTANT:**\n"
-                        "- Report all line numbers and function ranges according to the original file as provided below, including all comments, includes, and blank lines. Do NOT renumber or skip any lines. Your line numbers must match exactly with the code block below.\n\n"
-                        "**CODE TO ANALYZE:**\n"
+                        "- Report all line numbers and function ranges according to the original file as provided below.\n"
                         "```cpp\n[codeContent]\n```\n\n"
                         "**RULES TO CHECK:**\n[ruleContent]\n\n"
-                        "**ANALYSIS REQUIREMENTS:**\n"
-                        "- When returning any code block (Current Code, Fixed Code, Complete Fixed Code), you MUST preserve all leading whitespace, indentation, and blank lines exactly as in the original or as intended in your fix. Do NOT left-align, trim, or otherwise alter the indentation of any code lines.\n"
+                        "**ANALYSIS REQUIREMENTS:**\n"                       
                         "- Find ALL violations of the rules above\n"
                         "- Focus specifically on CERT rule violations\n"
                         "- Cite EXACT rule numbers (e.g., DCL50-CPP, MISRA Rule 8-4-3, LGEDV_CRCL_0001, RS-001)\n"
@@ -705,7 +702,7 @@ def main(port: int, transport: str):
                     return result
                 elif name == "check_custom":
                     # prompt = (
-                    #     "Find C++ violations based on custom rules (CustomRule.md) for current file in the directory. "
+                    #     "Find C++ violations based on custom rules for current file in the directory. "
                     #     "If the rule file is not existed, please calling fetch_custom_rule from MCP server. "
                     #     "For each violation, indicate the rule content, the exact line number(s) in the file where the rule is violated, "
                     #     "and explain why the rule is violated. "
@@ -714,15 +711,14 @@ def main(port: int, transport: str):
                     #     "Please check full the file's content."
                     # )
                     prompt = (
-                        "You are a C++ static analysis expert. Analyze this code for violations of the following custom rules (CustomRule.md).\n"
+                        "You are a C++ static analysis expert. Analyze this code for violations of the following custom rules.\n"
                         "If the rule file is not existed, please calling fetch_custom_rule from MCP server.\n\n"
                         "**IMPORTANT:**\n"
-                        "- Report all line numbers and function ranges according to the original file as provided below, including all comments, includes, and blank lines. Do NOT renumber or skip any lines. Your line numbers must match exactly with the code block below.\n\n"
+                        "- Report all line numbers and function ranges according to the original file as provided below.\n"
                         "**CODE TO ANALYZE:**\n"
                         "```cpp\n[codeContent]\n```\n\n"
                         "**RULES TO CHECK:**\n[ruleContent]\n\n"
-                        "**ANALYSIS REQUIREMENTS:**\n"
-                        "- When returning any code block (Current Code, Fixed Code, Complete Fixed Code), you MUST preserve all leading whitespace, indentation, and blank lines exactly as in the original or as intended in your fix. Do NOT left-align, trim, or otherwise alter the indentation of any code lines.\n"
+                        "**ANALYSIS REQUIREMENTS:**\n"                        
                         "- Find ALL violations of the rules above\n"
                         "- Focus specifically on custom rule violations\n"
                         "- Cite EXACT rule numbers (e.g., CUSTOM-001, MISRA Rule 8-4-3, LGEDV_CRCL_0001, RS-001)\n"

@@ -218,18 +218,6 @@
           "description": "Directory where analysis reports will be saved. This path will be used for both Markdown and HTML reports.",
           "scope": "window"
         },
-        "lgedvCodeGuard.webServerDirectory": {
-          "type": "string",
-          "default": "${workspaceFolder}/web_srv",
-          "description": "Directory where the web server is located. Used for opening reports in browser.",
-          "scope": "window"
-        },
-        "lgedvCodeGuard.ruleSetDirectory": {
-          "type": "string",
-          "default": "",
-          "description": "Custom directory for rule files. Leave empty to use the default extension rule set.",
-          "scope": "window"
-        },
         "lgedvCodeGuard.autoOpenBrowser": {
           "type": "boolean",
           "default": true,
