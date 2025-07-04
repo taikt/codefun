@@ -1,3 +1,6 @@
+# TODO
+1. evaluate accuracy
+2. evaluate false positives
 
 # Installation guide
 sudo apt-get update

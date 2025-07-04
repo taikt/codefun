@@ -73,10 +73,8 @@ async def files(request):
             files = [f for f in all_files if '-lgedv-' in f]
         elif filter_type == 'cert':
             files = [f for f in all_files if '-cert-' in f]
-        elif filter_type == 'rapidscan':
-            files = [f for f in all_files if '-rapidscan-' in f]
-        elif filter_type == 'critical':
-            files = [f for f in all_files if '-critical-' in f]
+        elif filter_type == 'custom':
+            files = [f for f in all_files if f.endswith('custom-report.html')]
         elif filter_type == 'static':
             files = [f for f in all_files if f.endswith('.static-report.html')]
         else:

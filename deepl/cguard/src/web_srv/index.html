@@ -134,12 +134,11 @@
             <label class="filter-label" for="reportType">📋 Filter by Report Type:</label>
             <select id="reportType" class="filter-select" onchange="loadReports()">
                 <option value="">🔍 All Reports</option>
-                <option value="misra">🔴 MISRA Violations</option>
-                <option value="lgedv">🟠 LGEDV Violations</option>
-                <option value="cert">🟡 Cert C++ Violations</option>
-                <option value="rapidscan">🔵 RapidScan Violations</option>
-                <option value="critical">🟣 Critical Rule Violations</option>
-                <option value="static">🟢 Static Analysis Reports</option>
+                <option value="misra">🔴 MISRA Violation</option>
+                <option value="lgedv">🟠 LGEDV Violation</option>
+                <option value="cert">🟡 Cert C++ Violation</option>
+                <option value="custom">🟣 Custom Rule Violation</option>
+                <option value="static">🟢 Static Analysis Report</option>
             </select>
             <button class="refresh-btn" onclick="loadReports()">🔄 Refresh</button>
         </div>
@@ -244,8 +243,7 @@
                 'misra': 'MISRA',
                 'lgedv': 'LGEDV', 
                 'cert': 'Cert C++',
-                'rapidscan': 'RapidScan',
-                'critical': 'Critical Rule',
+                'custom': 'Custom Rule',
                 'static': 'Static Analysis'
             };
             return filterNames[filterType] || 'HTML';
