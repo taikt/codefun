@@ -2,6 +2,18 @@
 1. evaluate accuracy
 2. evaluate false positives
 
+## Workflow: https://mermaid.live/
+
+graph TD
+    A[C++ Files] --> B[Static Analysis Tools]
+    A --> C[Copilot/MCP Analysis]
+    B --> D[Potential Issues List]
+    C --> D
+    D --> E[Manual Code Review]
+    E --> F[Dynamic Testing]
+    F --> G[Final Report]
+
+
 # Installation guide
 sudo apt-get update
 sudo su

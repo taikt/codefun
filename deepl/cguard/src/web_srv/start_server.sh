@@ -178,7 +178,9 @@ start_server() {
         print_info "Log file: $LOG_FILE"
         print_info "Use './start_server.sh status' to check server status"
         print_info "Use './start_server.sh stop' to stop the server"
-        return 0
+        print_status "Server startup completed. Terminal will exit automatically in 5 seconds..."
+        sleep 5
+        exit 0
     else
         print_error "Failed to start server"
         rm -f "$PID_FILE" 2>/dev/null
@@ -187,7 +189,7 @@ start_server() {
             print_error "Last few log lines:"
             tail -5 "$LOG_FILE" 2>/dev/null | sed 's/^/  /'
         fi
-        return 1
+        exit 1
     fi
 }
 

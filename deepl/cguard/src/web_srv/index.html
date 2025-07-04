@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report Dashboard</title>
+    <title>LGEDV CodeGuard Report Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -123,12 +123,49 @@
             font-size: 0.9em;
             color: #1976d2;
         }
+
+        .intro-highlight {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.15em;
+            font-weight: 500;
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 18px 10px 14px 10px;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.07);
+        }
+        .intro-main, .intro-sub {
+            color: #222;
+        }
+        .cpp-highlight {
+            color: #111;
+            font-weight: bold;
+        }
+        .ai-highlight {
+            color: #512da8;
+            font-weight: bold;
+        }
+        .static-highlight {
+            color: #388e3c;
+            font-weight: bold;
+        }
+        .browse-highlight {
+            color: #0288d1;
+            font-weight: bold;
+        }
+        .filter-highlight {
+            color: #fbc02d;
+            font-weight: bold;
+        }
+        .review-highlight {
+            color: #7b1fa2;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📄 Report Dashboard</h1>
-        <p class="subtitle">HTML reports in current directory</p>
+        <h1 style="text-align:center; margin-bottom: 30px;">🛡️ LGEDV CodeGuard Report</h1>
         
         <div class="filter-container">
             <label class="filter-label" for="reportType">📋 Filter by Report Type:</label>
