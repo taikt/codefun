@@ -2,6 +2,7 @@
 Tool handlers for MCP server operations
 Xử lý các MCP tools (fetch rules, analyze files, etc.)
 """
+import os
 from typing import List, Union, Dict
 from mcp import types
 from lgedv.modules.rule_fetcher import (
@@ -10,7 +11,7 @@ from lgedv.modules.rule_fetcher import (
 )
 from lgedv.modules.file_utils import list_cpp_files, get_cpp_files_content
 from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
-from lgedv.analyzers.memory_analyzer import MemoryAnalyzer
+from lgedv.analyzers.memory_analyzer import MemoryAnalyzer, analyze_leaks
 from lgedv.modules.config import setup_logging
 
 logger = setup_logging()
@@ -53,9 +54,9 @@ class ToolHandler:
                 return await self._handle_get_cpp_files_content(arguments)
             
             # Analysis tools
-            elif name == "detect_race_conditions":
-                return await self._handle_detect_race_conditions(arguments)
-            elif name == "analyze_memory_leaks_with_ai":
+            elif name == "detect_races":
+                return await self._handle_detect_races(arguments)
+            elif name == "analyze_leaks":
                 return await self._handle_ai_memory_analysis(arguments)
             
             else:
@@ -114,11 +115,11 @@ class ToolHandler:
         logger.info(f"get_cpp_files_content completed for dir: {dir_path}")
         return [types.TextContent(type="text", text=content)]
     
-    async def _handle_detect_race_conditions(self, arguments: dict) -> List[types.TextContent]:
-        """Handle detect_race_conditions tool"""
+    async def _handle_detect_races(self, arguments: dict) -> List[types.TextContent]:
+        """Handle detect_races tool"""
         dir_path = arguments.get("dir_path")
         result = analyze_race_conditions_in_codebase(dir_path)
-        logger.info(f"detect_race_conditions completed for dir: {dir_path}")
+        logger.info(f"detect_races completed for dir: {dir_path}")
         
         # Chuyển đổi kết quả thành định dạng trả về
         files_with_races = result.get("shared_resources", {})

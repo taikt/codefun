@@ -159,7 +159,7 @@ def main(port: int, transport: str):
                     },
                 ),
                 types.Tool(
-                    name="detect_race_conditions",
+                    name="detect_races",
                     description="Detect potential race conditions in the codebase.",
                     inputSchema={
                         "type": "object",
@@ -172,7 +172,7 @@ def main(port: int, transport: str):
                     },
                 ),
                 types.Tool(
-                    name="analyze_memory_leaks_with_ai",
+                    name="analyze_leaks",
                     description="AI-powered memory leak detection in C++ codebase with semantic analysis.",
                     inputSchema={
                         "type": "object",
@@ -209,7 +209,7 @@ def main(port: int, transport: str):
                     description="check code violations based on Custom rule guide for current file."
                 ),
                 types.Prompt(
-                    name="analyze_race_conditions",
+                    name="check_races",
                     description="Analyze potential race conditions in C++ codebase using AI with MCP context.",
                     arguments=[
                         types.PromptArgument(
@@ -220,7 +220,7 @@ def main(port: int, transport: str):
                     ],
                 ),
                 types.Prompt(
-                    name="memory_leak_analysis",
+                    name="check_leaks",
                     description="Analyze potential memory leaks in C++ codebase using AI with detailed context.",
                     arguments=[
                         types.PromptArgument(

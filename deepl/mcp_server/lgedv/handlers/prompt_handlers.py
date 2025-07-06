@@ -40,9 +40,9 @@ class PromptHandler:
                 return await self._handle_certcpp_check()
             elif name == "check_custom":
                 return await self._handle_custom_check()
-            elif name == "analyze_race_conditions":
+            elif name == "check_races":
                 return await self._handle_race_condition_analysis(arguments)
-            elif name == "memory_leak_analysis":
+            elif name == "check_leaks":
                 return await self._handle_memory_leak_analysis(arguments)
             else:
                 raise ValueError(f"Unknown prompt: {name}")
@@ -285,7 +285,7 @@ class PromptHandler:
 
 There was an error analyzing the codebase automatically: {error_msg}
 
-Please use the `detect_race_conditions` tool first to manually analyze the C++ files in the directory: {dir_path}
+Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}
 
 Then provide your expert analysis of potential race conditions, focusing on:
 1. Unprotected shared state modifications
@@ -323,7 +323,7 @@ Use this format for each issue found:
 
 There was an error analyzing the codebase for memory leaks automatically: {error_msg}
 
-Please use the `analyze_memory_leaks_with_ai` tool first to manually analyze the C++ files in the directory: {dir_path}
+Please use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}
 
 Then provide your expert analysis of potential memory leaks, focusing on:
 1. Unreleased memory allocations

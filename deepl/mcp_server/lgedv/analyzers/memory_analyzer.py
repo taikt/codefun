@@ -484,7 +484,7 @@ class MemoryAnalyzer:
         return recommendations
 
 # Factory function
-def analyze_memory_leaks_with_ai(dir_path: str = None) -> Dict:
+def analyze_leaks(dir_path: str = None) -> Dict:
     """
     Main entry point cho full codebase memory leak analysis với dynamic grouping
     
