@@ -160,28 +160,18 @@ def main(port: int, transport: str):
                 ),
                 types.Tool(
                     name="detect_races",
-                    description="Detect potential race conditions in the codebase.",
+                    description="Detect potential race conditions in the codebase using CPP_DIR.",
                     inputSchema={
                         "type": "object",
-                        "properties": {
-                            "dir_path": {
-                                "type": "string",
-                                "description": "Directory to analyze for race conditions (optional, default is CPP_DIR or cwd)",
-                            }
-                        },
+                        "properties": {},
                     },
                 ),
                 types.Tool(
                     name="analyze_leaks",
-                    description="AI-powered memory leak detection in C++ codebase with semantic analysis.",
+                    description="AI-powered memory leak detection in C++ codebase using CPP_DIR.",
                     inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "dir_path": {
-                                "type": "string",
-                                "description": "Directory to analyze for memory leaks (optional, default is CPP_DIR or cwd)",
-                            }
-                        },
+                        "type": "object", 
+                        "properties": {},
                     },
                 ),
             ]
@@ -210,25 +200,11 @@ def main(port: int, transport: str):
                 ),
                 types.Prompt(
                     name="check_races",
-                    description="Analyze potential race conditions in C++ codebase using AI with MCP context.",
-                    arguments=[
-                        types.PromptArgument(
-                            name="dir_path",
-                            description="Directory path to analyze (optional, default is current workspace)",
-                            required=False,
-                        ),
-                    ],
+                    description="Analyze potential race conditions in C++ codebase using AI.",
                 ),
                 types.Prompt(
                     name="check_leaks",
-                    description="Analyze potential memory leaks in C++ codebase using AI with detailed context.",
-                    arguments=[
-                        types.PromptArgument(
-                            name="dir_path",
-                            description="Directory path to analyze (optional, default is current workspace)",
-                            required=False,
-                        ),
-                    ],
+                    description="Analyze potential memory leaks in C++ codebase using AI.",
                 ),
             ]
 

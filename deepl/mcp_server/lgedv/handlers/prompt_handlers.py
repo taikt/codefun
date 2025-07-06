@@ -128,13 +128,11 @@ class PromptHandler:
         return result
     
     async def _handle_race_condition_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
-        """Handle race condition analysis prompt"""
+        """Handle race condition analysis prompt - sử dụng CPP_DIR từ config"""
         try:
-            dir_path = arguments.get("dir_path") if arguments else None
-            if dir_path is None:
-                dir_path = get_cpp_dir()
-            
-            logger.info(f"Starting race condition analysis for: {dir_path}")
+            # Sử dụng CPP_DIR trực tiếp từ config
+            dir_path = get_cpp_dir()
+            logger.info(f"[check_races] Using CPP_DIR: {dir_path}")
             
             # Sử dụng analyzer để thu thập context
             analysis_result = analyze_race_conditions_in_codebase(dir_path)
@@ -156,10 +154,10 @@ class PromptHandler:
             
             result = types.GetPromptResult(
                 messages=messages,
-                description="AI-powered race condition analysis with MCP context.",
+                description="Race condition analysis using CPP_DIR",
             )
             
-            logger.info("Race condition analysis prompt completed successfully")
+            logger.info("Race condition analysis prompt completed")
             return result
             
         except Exception as e:
@@ -168,42 +166,34 @@ class PromptHandler:
             return self._create_fallback_race_prompt(dir_path if 'dir_path' in locals() else 'current directory', str(e))
     
     async def _handle_memory_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
-        """Handle memory leak analysis prompt với rich AI context"""
-        dir_path = arguments.get("dir_path") if arguments else None
-        if not dir_path:
-            dir_path = get_cpp_dir()
-        
-        logger.info(f"Handling memory leak analysis for directory: {dir_path}")
+        """Handle memory leak analysis prompt - sử dụng CPP_DIR từ config"""
+        # Sử dụng CPP_DIR trực tiếp từ config
+        dir_path = get_cpp_dir()
+        logger.info(f"[check_leaks] Using CPP_DIR: {dir_path}")
         
         try:
-            # Sử dụng tool handler mới để tạo rich prompt
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
-            
-            # Gọi tool analysis để tạo rich prompt
             tool_result = await tool_handler._handle_ai_memory_analysis({"dir_path": dir_path})
-            
-            # Lấy rich prompt content từ tool
             rich_prompt_content = tool_result[0].text if tool_result else "Error generating analysis content"
             
             messages = [
                 types.PromptMessage(
-                    role="user", 
+                    role="user",
                     content=types.TextContent(type="text", text=rich_prompt_content),
                 )
             ]
             
             result = types.GetPromptResult(
                 messages=messages,
-                description="Comprehensive Memory Leak Analysis with Rich Context",
+                description="Memory Leak Analysis using CPP_DIR",
             )
             
-            logger.info("Memory leak analysis prompt completed with rich context")
+            logger.info("Memory leak analysis prompt completed")
             return result
             
         except Exception as e:
             logger.error(f"Error in memory leak analysis: {e}")
-            # Fallback to old format if error
             return self._create_fallback_memory_leak_prompt(dir_path, str(e))
 
     def _create_context_summary(self, analysis_result: Dict, dir_path: str) -> str:

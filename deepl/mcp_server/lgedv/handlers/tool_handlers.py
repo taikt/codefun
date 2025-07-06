@@ -12,7 +12,7 @@ from lgedv.modules.rule_fetcher import (
 from lgedv.modules.file_utils import list_cpp_files, get_cpp_files_content
 from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer, analyze_leaks
-from lgedv.modules.config import setup_logging
+from lgedv.modules.config import setup_logging, get_cpp_dir
 
 logger = setup_logging()
 
@@ -116,8 +116,11 @@ class ToolHandler:
         return [types.TextContent(type="text", text=content)]
     
     async def _handle_detect_races(self, arguments: dict) -> List[types.TextContent]:
-        """Handle detect_races tool"""
-        dir_path = arguments.get("dir_path")
+        """Handle detect_races tool - sử dụng CPP_DIR từ config"""
+        # Sử dụng CPP_DIR trực tiếp, không nhận tham số dir_path nữa
+        dir_path = get_cpp_dir()
+        logger.info(f"[detect_races] Using CPP_DIR: {dir_path}")
+        
         result = analyze_race_conditions_in_codebase(dir_path)
         logger.info(f"detect_races completed for dir: {dir_path}")
         
@@ -134,8 +137,10 @@ class ToolHandler:
         return race_results
     
     async def _handle_ai_memory_analysis(self, arguments: dict) -> List[types.TextContent]:
-        """Handle AI-powered memory leak analysis with rich metadata and code context"""
-        dir_path = arguments.get("dir_path")
+        """Handle AI-powered memory leak analysis - sử dụng CPP_DIR từ config"""
+        # Sử dụng CPP_DIR trực tiếp, không nhận tham số dir_path nữa
+        dir_path = get_cpp_dir()
+        logger.info(f"[analyze_leaks] Using CPP_DIR: {dir_path}")
         
         # Use the new MemoryAnalyzer
         analyzer = MemoryAnalyzer()
