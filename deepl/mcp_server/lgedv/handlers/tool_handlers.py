@@ -127,17 +127,31 @@ class ToolHandler:
         result = analyze_race_conditions_in_codebase(dir_path)
         logger.info(f"detect_races completed for dir: {dir_path}")
         
-        # Chuyển đổi kết quả thành định dạng trả về
-        files_with_races = result.get("shared_resources", {})
-        race_results = []
-        for resource_name, accesses in files_with_races.items():
-            race_results.append(
-                types.TextContent(
-                    type="text", 
-                    text=f"Resource: {resource_name}, Accesses: {accesses}"
-                )
-            )
-        return race_results
+        # Create rich metadata prompt for AI analysis similar to memory analyzer
+        metadata_section = self._create_race_analysis_metadata(result, dir_path)
+        code_context_section = self._create_race_code_context_section(result, dir_path)
+        analysis_prompt = self._create_race_analysis_prompt_section(result)
+        
+        # Combine all sections into comprehensive prompt
+        full_prompt = f"""# 🔍 Race Condition Analysis Request
+
+{metadata_section}
+
+{code_context_section}
+
+{analysis_prompt}
+
+## 🔧 Please Provide:
+
+1. **Detailed Analysis**: Review each potential race condition and assess its validity
+2. **Risk Assessment**: Categorize findings by severity and likelihood  
+3. **Synchronization Strategy**: Recommend appropriate locking mechanisms
+4. **Code Examples**: Show before/after code with proper synchronization
+
+Focus on actionable recommendations that can be immediately implemented.
+"""
+        
+        return [types.TextContent(type="text", text=full_prompt)]
     
     async def _handle_ai_memory_analysis(self, arguments: dict) -> List[types.TextContent]:
         """Handle AI-powered memory leak analysis - sử dụng CPP_DIR từ config"""
@@ -571,3 +585,355 @@ Focus on actionable recommendations that can be immediately implemented.
             result += "\n"
         
         return result
+    
+    async def _handle_ai_resource_analysis(self, arguments: dict) -> List[types.TextContent]:
+        """
+        Handle AI resource leak analysis - tạo rich prompt cho Copilot analysis
+        Simplified version to prevent hanging
+        """
+        cpp_dir = get_cpp_dir()
+        logger.info(f"Starting AI resource leak analysis on directory: {cpp_dir}")
+        
+        try:
+            # Simple file listing and content extraction instead of complex analysis
+            from lgedv.modules.file_utils import list_cpp_files, get_cpp_files_content
+            
+            # Get C++ files
+            cpp_files = list_cpp_files(cpp_dir)
+            if not cpp_files:
+                return [types.TextContent(
+                    type="text",
+                    text=f"# 🔍 Linux C++ Resource Leak Analysis\n\n❌ No C++ files found in: {cpp_dir}"
+                )]
+            
+            # Get file contents (limited)
+            file_contents = ""
+            for i, filename in enumerate(cpp_files[:3]):  # Limit to first 3 files
+                try:
+                    file_path = os.path.join(cpp_dir, filename)
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        # Truncate if too long
+                        if len(content) > 1000:
+                            content = content[:1000] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+                        file_contents += f"### {i+1}. `{filename}`\n\n```cpp\n{content}\n```\n\n"
+                except Exception as e:
+                    file_contents += f"### {i+1}. `{filename}` (Error: {e})\n\n"
+            
+            # Create simple prompt
+            prompt_content = f"""# 🔍 Linux C++ Resource Leak Analysis Request
+
+## 📊 **Analysis Metadata**
+
+- **Directory**: `{cpp_dir}`
+- **Analysis Type**: Linux C++ Resource Leak Detection
+- **Files Found**: {len(cpp_files)}
+- **Files Shown**: {min(len(cpp_files), 3)}
+
+## 📝 **Source Code Context**
+
+{file_contents}
+
+## 🎯 **Analysis Guidelines**
+
+Please analyze the above C++ code for Linux resource management issues:
+
+1. **File Descriptors**: Check for unmatched open()/close() calls
+2. **Sockets**: Verify socket descriptors are properly closed  
+3. **Memory Mappings**: Ensure mmap() has corresponding munmap()
+4. **Directory Handles**: Check opendir()/closedir() pairs
+5. **IPC Resources**: Verify shared memory, semaphores, message queues cleanup
+
+## 📋 **Expected Output Format**
+
+For each potential resource leak:
+- **Resource Type**: File descriptor, socket, mmap, etc.
+- **Severity**: Critical/High/Medium/Low based on system impact
+- **Location**: File and line number
+- **Problem**: What resource is not being cleaned up
+- **Fix**: Specific code changes needed
+- **RAII Solution**: Modern C++ wrapper suggestions
+
+Focus on Linux-specific resources and provide actionable recommendations.
+"""
+
+            logger.info(f"AI resource leak analysis content generated: {len(prompt_content)} chars")
+            
+            return [types.TextContent(
+                type="text",
+                text=prompt_content
+            )]
+            
+        except Exception as e:
+            error_msg = f"❌ AI resource leak analysis failed: {str(e)}"
+            logger.error(error_msg)
+            return [types.TextContent(
+                type="text", 
+                text=error_msg
+            )]
+    
+    def _create_resource_analysis_metadata(self, analysis_result: dict, cpp_dir: str) -> str:
+        """Create metadata section for resource analysis"""
+        detected_leaks = analysis_result.get("detected_leaks", [])
+        summary = analysis_result.get("summary", {})
+        
+        metadata = f"""## 📊 **Analysis Metadata**
+
+- **Directory**: `{cpp_dir}`
+- **Analysis Type**: Linux C++ Resource Leak Detection
+- **Files Analyzed**: {summary.get('total_files_analyzed', 0)}
+- **Resource Operations Found**: {summary.get('resource_operations_found', 0)}
+- **Potential Leaks**: {len(detected_leaks)}
+- **Cross-file Flows**: {summary.get('cross_file_flows', 0)}
+
+### 📈 **Severity Breakdown**
+"""
+        
+        severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+        for leak in detected_leaks:
+            severity = leak.get('severity', 'medium')
+            severity_counts[severity] += 1
+        
+        metadata += f"- Critical: {severity_counts['critical']}\n"
+        metadata += f"- High: {severity_counts['high']}\n"
+        metadata += f"- Medium: {severity_counts['medium']}\n"
+        metadata += f"- Low: {severity_counts['low']}\n"
+        
+        return metadata
+    
+    def _create_resource_code_context_section(self, analysis_result: dict, cpp_dir: str) -> str:
+        """Create code context section with source files"""
+        context_section = "## 📝 **Source Code Context**\n\n"
+        
+        # Get analyzed files
+        analyzed_files = set()
+        detected_leaks = analysis_result.get("detected_leaks", [])
+        
+        for leak in detected_leaks:
+            files_involved = leak.get('files_involved', [])
+            analyzed_files.update(files_involved)
+        
+        # Limit to first 3 files for token efficiency
+        for i, file_path in enumerate(list(analyzed_files)[:3], 1):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    
+                # Truncate if too long
+                if len(content) > 1500:
+                    content = content[:1500] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+                
+                file_name = os.path.basename(file_path)
+                context_section += f"### {i}. `{file_name}`\n\n"
+                context_section += f"```cpp\n{content}\n```\n\n"
+                
+            except Exception as e:
+                file_name = os.path.basename(file_path)
+                context_section += f"### {i}. `{file_name}` (Error reading: {e})\n\n"
+        
+        if len(analyzed_files) > 3:
+            context_section += f"... and {len(analyzed_files) - 3} more files analyzed\n\n"
+        
+        return context_section
+    
+    def _create_resource_findings_section(self, analysis_result: dict) -> str:
+        """Create findings section with detected resource leaks"""
+        detected_leaks = analysis_result.get("detected_leaks", [])
+        
+        if not detected_leaks:
+            return "## ✅ **Analysis Results**: No resource leaks detected\n"
+        
+        findings_section = f"## 🚨 **Resource Leak Findings** ({len(detected_leaks)} total)\n\n"
+        
+        # Group by resource type
+        leak_groups = {}
+        for leak in detected_leaks:
+            resource_type = leak.get('resource_type', 'unknown')
+            if resource_type not in leak_groups:
+                leak_groups[resource_type] = []
+            leak_groups[resource_type].append(leak)
+        
+        for resource_type, type_leaks in leak_groups.items():
+            display_type = resource_type.replace('_', ' ').title()
+            findings_section += f"### 🔍 **{display_type} Leaks** ({len(type_leaks)} found)\n\n"
+            
+            # Show first 3 leaks of each type for token efficiency
+            for i, leak in enumerate(type_leaks[:3], 1):
+                variable = leak.get('variable', 'unknown')
+                severity = leak.get('severity', 'medium')
+                files_involved = leak.get('files_involved', [])
+                file_names = [os.path.basename(f) for f in files_involved]
+                
+                findings_section += f"{i}. **Variable `{variable}`** - {severity} severity\n"
+                findings_section += f"   - Files: {', '.join(file_names)}\n"
+                findings_section += f"   - Opens: {leak.get('open_operations', 0)}, Closes: {leak.get('close_operations', 0)}\n"
+                
+                # Show open locations
+                open_details = leak.get('open_details', [])
+                if open_details:
+                    findings_section += f"   - Open locations:\n"
+                    for detail in open_details[:2]:  # Show first 2
+                        file_name = os.path.basename(detail.get('file', ''))
+                        line = detail.get('line', 'unknown')
+                        findings_section += f"     • {file_name}:{line}\n"
+                
+                if leak.get('recommendation'):
+                    findings_section += f"   - Fix: {leak['recommendation']}\n"
+                
+                findings_section += "\n"
+            
+            if len(type_leaks) > 3:
+                findings_section += f"   ... and {len(type_leaks) - 3} more {display_type.lower()} leaks\n\n"
+        
+        return findings_section
+
+    def _create_race_analysis_metadata(self, race_result: dict, dir_path: str) -> str:
+        """Create metadata section for race condition analysis"""
+        metadata_section = "## 📊 Analysis Metadata\n\n"
+        metadata_section += f"**Target Directory:** `{dir_path}`\n"
+        
+        summary = race_result.get('summary', {})
+        detected_races = race_result.get('potential_race_conditions', [])
+        
+        metadata_section += f"**Files Analyzed:** {summary.get('total_files_analyzed', 0)} C++ files\n"
+        metadata_section += f"**Race Conditions Found:** {len(detected_races)}\n"
+        
+        if detected_races:
+            # Count by severity
+            severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+            for race in detected_races:
+                severity = race.get('severity', 'medium').lower()
+                if severity in severity_counts:
+                    severity_counts[severity] += 1
+            
+            metadata_section += f"**Severity Breakdown:** {severity_counts['critical']} Critical, "
+            metadata_section += f"{severity_counts['high']} High, {severity_counts['medium']} Medium, "
+            metadata_section += f"{severity_counts['low']} Low\n"
+        
+        metadata_section += "\n"
+        return metadata_section
+    
+    def _create_race_code_context_section(self, race_result: dict, dir_path: str) -> str:
+        """Create rich code context section with actual source files"""
+        context_section = "## 📁 Source Code Context\n\n"
+        
+        summary = race_result.get('summary', {})
+        detected_races = race_result.get('potential_race_conditions', [])
+        thread_usage = race_result.get('thread_usage', {})
+        files_analyzed = summary.get('total_files_analyzed', 0)
+        
+        if files_analyzed == 0:
+            context_section += f"❌ No C++ files found in: {dir_path}\n\n"
+            return context_section
+        
+        # Get files with race conditions or thread usage
+        priority_files = set()
+        for race in detected_races:
+            files_involved = race.get('files_involved', [])
+            priority_files.update(files_involved)
+        
+        # Add files with thread usage
+        for file_path, threads in thread_usage.items():
+            if threads:  # Has thread usage
+                priority_files.add(file_path)
+        
+        # Show actual source code for priority files
+        file_count = 0
+        max_files = 3  # Limit for token efficiency
+        
+        for file_path in list(priority_files)[:max_files]:
+            file_count += 1
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Truncate if too long
+                if len(content) > 1200:
+                    content = content[:1200] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+                
+                filename = os.path.basename(file_path)
+                context_section += f"### {file_count}. 📁 **{filename}**\n"
+                context_section += f"**Path**: `{file_path}`\n"
+                
+                # Show race conditions for this file
+                file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
+                if file_races:
+                    context_section += f"**Race Conditions**: {len(file_races)} found\n"
+                    for race in file_races[:2]:
+                        context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
+                
+                # Show thread usage
+                file_threads = thread_usage.get(file_path, [])
+                if file_threads:
+                    context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
+                
+                context_section += f"\n```cpp\n{content}\n```\n\n"
+                
+            except Exception as e:
+                filename = os.path.basename(file_path)
+                context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
+        
+        # Show summary if we have more files
+        remaining_files = files_analyzed - len(priority_files)
+        if remaining_files > 0:
+            context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files analyzed\n\n"
+        
+        return context_section
+    
+    def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
+        """Create analysis prompt section with race condition details"""
+        prompt_section = "## 🎯 Race Condition Analysis Focus\n\n"
+        
+        detected_races = race_result.get('potential_race_conditions', [])
+        
+        if not detected_races:
+            prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
+            prompt_section += "However, please perform a manual review focusing on:\n"
+            prompt_section += "1. Shared state access patterns\n"
+            prompt_section += "2. Thread synchronization mechanisms\n"
+            prompt_section += "3. Atomic operations usage\n"
+            prompt_section += "4. Lock-free programming patterns\n\n"
+            return prompt_section
+        
+        # Group races by type for better organization
+        race_types = {}
+        for race in detected_races:
+            race_type = race.get('type', 'unknown')
+            if race_type not in race_types:
+                race_types[race_type] = []
+            race_types[race_type].append(race)
+        
+        prompt_section += f"🚨 **{len(detected_races)} potential race conditions found:**\n\n"
+        
+        for race_type, type_races in race_types.items():
+            display_type = race_type.replace('_', ' ').title()
+            prompt_section += f"### {display_type} ({len(type_races)} found)\n\n"
+            
+            for i, race in enumerate(type_races[:3], 1):  # Show first 3 of each type
+                severity = race.get('severity', 'medium')
+                files_involved = race.get('files_involved', [])
+                description = race.get('description', 'No description available')
+                
+                prompt_section += f"{i}. **Severity: {severity.title()}**\n"
+                if files_involved:
+                    file_list = ', '.join([os.path.basename(f) for f in files_involved])
+                    prompt_section += f"   - Files: {file_list}\n"
+                prompt_section += f"   - Issue: {description}\n"
+                
+                if race.get('recommendation'):
+                    prompt_section += f"   - Suggested Fix: {race['recommendation']}\n"
+                
+                prompt_section += "\n"
+            
+            if len(type_races) > 3:
+                prompt_section += f"   ... and {len(type_races) - 3} more {display_type.lower()} issues\n\n"
+        
+        # Add analysis guidelines
+        prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
+        prompt_section += "1. **Focus on critical/high severity races first** - These can cause data corruption\n"
+        prompt_section += "2. **Check shared data access patterns** - Look for unprotected reads/writes\n"
+        prompt_section += "3. **Verify synchronization mechanisms** - Mutex, semaphores, atomic operations\n"
+        prompt_section += "4. **Look for lock ordering issues** - Potential deadlock scenarios\n"
+        prompt_section += "5. **Check thread-local storage usage** - Ensure proper isolation\n\n"
+        
+        return prompt_section

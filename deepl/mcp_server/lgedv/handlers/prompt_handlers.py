@@ -6,7 +6,6 @@ import os
 from typing import Dict
 from mcp import types
 from lgedv.prompts.prompt_templates import PromptTemplates
-from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer
 from lgedv.modules.config import get_cpp_dir, setup_logging
 
@@ -130,151 +129,115 @@ class PromptHandler:
         return result
     
     async def _handle_race_condition_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
-        """Handle race condition analysis prompt - sử dụng CPP_DIR từ config"""
+        """Handle race condition analysis prompt - always use fallback-style prompt with findings if available"""
+        dir_path = get_cpp_dir()
+        logger.info(f"[check_races] Using CPP_DIR: {dir_path}")
         try:
-            # Sử dụng CPP_DIR trực tiếp từ config
-            dir_path = get_cpp_dir()
-            logger.info(f"[check_races] Using CPP_DIR: {dir_path}")
+            from lgedv.handlers.tool_handlers import ToolHandler
+            tool_handler = ToolHandler()
+            tool_result = await tool_handler._handle_detect_races({})
+            # Parse findings from tool_result
+            findings = []
+            if tool_result and hasattr(tool_result[0], 'text'):
+                text = tool_result[0].text
+                # Try to extract findings from the tool_result text (very simple, can be improved)
+                # If no findings, text will mention no race conditions
+                if 'potential race conditions found' in text or 'Race Condition Details' in text:
+                    findings.append(text)
             
-            # Sử dụng analyzer để thu thập context
-            analysis_result = analyze_race_conditions_in_codebase(dir_path)
-            
-            logger.info(f"Analysis completed. Found {analysis_result['summary']['total_files_analyzed']} files")
-            
-            # Tạo context summary
-            context_summary = self._create_context_summary(analysis_result, dir_path)
-            
-            # Tạo prompt với context
-            prompt = self.templates.get_race_condition_analysis_prompt(context_summary)
+            # Compose fallback-style prompt
+            fallback_prompt = f"""You are an expert C++ concurrency analyst.\n\nPlease use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential race conditions, focusing on:\n1. Unprotected shared state modifications\n2. Missing synchronization mechanisms\n3. Thread-unsafe patterns\n4. Potential deadlock scenarios\n\nUse this format for each issue found:\n\n## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n**Type:** [data_race|deadlock|missing_sync]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
+            if findings:
+                fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
             
             messages = [
                 types.PromptMessage(
                     role="user",
-                    content=types.TextContent(type="text", text=prompt),
+                    content=types.TextContent(type="text", text=fallback_prompt),
                 )
             ]
-            
             result = types.GetPromptResult(
                 messages=messages,
-                description="Race condition analysis using CPP_DIR",
+                description="Race condition analysis (fallback style, always consistent)",
             )
-            
-            logger.info("Race condition analysis prompt completed")
+            logger.info("Race condition analysis prompt (fallback style) completed")
             return result
-            
         except Exception as e:
-            logger.exception(f"Error in race condition analysis prompt: {e}")
-            # Return fallback prompt
-            return self._create_fallback_race_prompt(dir_path if 'dir_path' in locals() else 'current directory', str(e))
+            logger.error(f"Error in race condition analysis: {e}")
+            return self._create_fallback_race_prompt(dir_path, str(e))
     
     async def _handle_memory_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
-        """Handle memory leak analysis prompt - sử dụng CPP_DIR từ config"""
-        # Sử dụng CPP_DIR trực tiếp từ config
+        """Handle memory leak analysis prompt - always use fallback-style prompt with findings if available"""
         dir_path = get_cpp_dir()
         logger.info(f"[check_leaks] Using CPP_DIR: {dir_path}")
-        
         try:
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
             tool_result = await tool_handler._handle_ai_memory_analysis({"dir_path": dir_path})
-            rich_prompt_content = tool_result[0].text if tool_result else "Error generating analysis content"
-            
+            findings = []
+            if tool_result and hasattr(tool_result[0], 'text'):
+                text = tool_result[0].text
+                if 'Memory Leak' in text or 'Detailed Memory Leak Findings' in text:
+                    findings.append(text)
+            fallback_prompt = f"""You are an expert C++ memory management analyst.\n\nPlease use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential memory leaks, focusing on:\n1. Unreleased memory allocations\n2. Dangling pointers\n3. Memory corruption issues\n4. Inefficient memory usage patterns\n\nUse this format for each issue found:\n\n## 🚨 **MEMORY LEAK #[number]**: [Brief Description]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
+            if findings:
+                fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
             messages = [
                 types.PromptMessage(
                     role="user",
-                    content=types.TextContent(type="text", text=rich_prompt_content),
+                    content=types.TextContent(type="text", text=fallback_prompt),
                 )
             ]
-            
             result = types.GetPromptResult(
                 messages=messages,
-                description="Memory Leak Analysis using CPP_DIR",
+                description="Memory leak analysis (fallback style, always consistent)",
             )
-            
-            logger.info("Memory leak analysis prompt completed")
+            logger.info("Memory leak analysis prompt (fallback style) completed")
             return result
-            
         except Exception as e:
             logger.error(f"Error in memory leak analysis: {e}")
             return self._create_fallback_memory_leak_prompt(dir_path, str(e))
 
     async def _handle_resource_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
-        """Handle resource leak analysis prompt - sử dụng CPP_DIR từ config giống check_leaks"""
-        # Sử dụng CPP_DIR trực tiếp từ config
+        """Handle resource leak analysis prompt - always use fallback-style prompt with findings if available, now with line numbers"""
         dir_path = get_cpp_dir()
         logger.info(f"[check_resources] Using CPP_DIR: {dir_path}")
-        
         try:
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
-            tool_result = await tool_handler._handle_analyze_resources({})
-            rich_prompt_content = tool_result[0].text if tool_result else "Error generating analysis content"
-            
+            # Call the resource analyzer tool directly to get leaks as objects
+            analyzer = __import__('lgedv.analyzers.resource_analyzer', fromlist=['ResourceAnalyzer']).ResourceAnalyzer()
+            leaks = analyzer.analyze_directory()
+            findings = []
+            # Compose fallback prompt
+            fallback_prompt = f"""You are an expert Linux C++ resource management analyst.\n\nPlease use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential resource leaks, focusing on:\n\n## 🎯 **Analysis Focus Areas**\n\n1. **File Resources:**\n   - Unmatched open()/close() calls\n   - FILE* streams not properly closed\n   - Missing fclose() for fopen()\n\n2. **Socket Resources:**\n   - Socket descriptors not closed\n   - Network connections left open\n   - Unmatched socket()/close() pairs\n\n3. **Memory Mapping:**\n   - mmap() without corresponding munmap()\n   - Shared memory segments not cleaned up\n\n4. **IPC Resources:**\n   - Message queues not destroyed\n   - Semaphores not cleaned up\n   - Shared memory not detached\n\n5. **Directory Handles:**\n   - opendir() without closedir()\n   - Directory streams left open\n\n## 📋 **Report Format**\nFor each resource leak found, use this format:\n\n### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]\n- **Severity:** [Critical|High|Medium|Low]\n- **File:** [filename]\n- **Line:** [line number]\n- **Resource:** [specific resource name/variable]\n- **Description:** [what resource is leaking and why]\n- **Fix:** [specific remediation steps]\n\nFocus on Linux-specific resources and provide actionable recommendations for each finding.\n"""
+            # Add detailed leak info with line numbers
+            if leaks:
+                for i, leak in enumerate(leaks, 1):
+                    file_line = ""
+                    if leak.get('open_details'):
+                        file_line = ", ".join([f"{d['file'].split('/')[-1]}:{d['line']}" for d in leak['open_details']])
+                    fallback_prompt += f"\n### 🚨 **RESOURCE LEAK #{i}**: {leak.get('resource_type','')}\n- **Severity:** {leak.get('severity','')}\n- **File:** {', '.join([f.split('/')[-1] for f in leak.get('files_involved', [])])}\n- **Line:** {file_line}\n- **Resource:** {leak.get('variable','')}\n- **Description:** {leak.get('description','')}\n- **Fix:** {leak.get('recommendation','')}\n"
+            # Also append the original findings text for reference
+            tool_result = await tool_handler._handle_ai_resource_analysis({})
+            if tool_result and hasattr(tool_result[0], 'text'):
+                text = tool_result[0].text
+                if 'Resource Leak' in text or 'Linux C++ Resource Leak Analysis' in text:
+                    findings.append(text)
+            if findings:
+                fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
             messages = [
                 types.PromptMessage(
                     role="user",
-                    content=types.TextContent(type="text", text=rich_prompt_content),
+                    content=types.TextContent(type="text", text=fallback_prompt),
                 )
             ]
-            
             result = types.GetPromptResult(
                 messages=messages,
-                description="Resource Leak Analysis using CPP_DIR",
+                description="Resource leak analysis (fallback style, always consistent, with line numbers)",
             )
-            
-            logger.info("Resource leak analysis prompt completed")
+            logger.info("Resource leak analysis prompt (fallback style, with line numbers) completed")
             return result
-            
-        except Exception as e:
-            logger.error(f"Error in resource leak analysis: {e}")
-            return self._create_fallback_resource_leak_prompt(dir_path, str(e))
-            
-            # Combine sections into comprehensive prompt
-            full_prompt = f"""# 🔍 Linux C++ Resource Leak Analysis Request
-
-{metadata_section}
-
-{code_context_section}
-
-{analysis_prompt}
-
-## � Please Provide:
-
-1. **Detailed Analysis**: Review each potential resource leak and assess its validity
-2. **Risk Assessment**: Categorize findings by severity and impact on system resources
-3. **Fix Recommendations**: Specific code changes for each resource leak
-4. **RAII Implementation**: Suggest modern C++ resource management patterns
-5. **Linux Best Practices**: Proper cleanup patterns for file descriptors, sockets, etc.
-
-## 📋 Expected Output Format:
-
-For each resource leak found:
-- **Resource Type**: (e.g., File Descriptor, Socket, Memory Mapping)
-- **Severity**: Critical/High/Medium/Low
-- **Location**: File and line number
-- **Current Code**: Show the problematic code
-- **Fixed Code**: Show the corrected version with proper cleanup
-- **RAII Wrapper**: Suggest or show a RAII wrapper class if applicable
-- **Explanation**: Why this leak is problematic and how the fix works
-
-Focus on Linux-specific resource management and actionable recommendations that can be immediately implemented.
-"""
-
-            messages = [
-                types.PromptMessage(
-                    role="user",
-                    content=types.TextContent(type="text", text=full_prompt),
-                )
-            ]
-            
-            result = types.GetPromptResult(
-                messages=messages,
-                description=f"Resource leak analysis prompt for {cpp_dir}",
-            )
-            
-            logger.info(f"Resource leak analysis prompt completed. Analysis available for Copilot review")
-            return result
-            
         except Exception as e:
             logger.error(f"Error in resource leak analysis: {e}")
             return self._create_fallback_resource_leak_prompt(dir_path, str(e))
@@ -305,9 +268,6 @@ Focus on Linux-specific resource management and actionable recommendations that 
     def _create_fallback_race_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
         """Tạo fallback prompt khi có lỗi"""
         fallback_prompt = f"""You are an expert C++ concurrency analyst. 
-
-There was an error analyzing the codebase automatically: {error_msg}
-
 Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}
 
 Then provide your expert analysis of potential race conditions, focusing on:

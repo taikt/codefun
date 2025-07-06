@@ -257,7 +257,12 @@ class ResourceAnalyzer:
     
     def __init__(self):
         self.parser = LinuxResourceParser()
+        self.analyzed_files = []  # Track analyzed files
         
+    def get_analyzed_files(self) -> List[str]:
+        """Get list of analyzed files"""
+        return self.analyzed_files.copy()
+    
     def analyze_codebase(self, dir_path: str = None) -> Dict:
         """
         Analyze resource leaks in entire codebase - always uses CPP_DIR from config
@@ -299,6 +304,7 @@ class ResourceAnalyzer:
             all_resource_ops[file_path] = analysis["resource_operations"]
             all_includes[file_path] = analysis["includes"]
             all_cross_file_calls[file_path] = analysis["cross_file_calls"]
+            self.analyzed_files.append(file_path)  # Track analyzed file
         
         # Build resource flow map
         resource_flows = self._build_resource_flow_map(all_resource_ops)
