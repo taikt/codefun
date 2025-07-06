@@ -174,6 +174,14 @@ def main(port: int, transport: str):
                         "properties": {},
                     },
                 ),
+                types.Tool(
+                    name="analyze_resources",
+                    description="AI-powered resource leak detection in Linux C++ codebase using CPP_DIR.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {},
+                    },
+                ),
             ]
 
         # Register prompt list handler
@@ -205,6 +213,10 @@ def main(port: int, transport: str):
                 types.Prompt(
                     name="check_leaks",
                     description="Analyze potential memory leaks in C++ codebase using AI.",
+                ),
+                types.Prompt(
+                    name="check_resources",
+                    description="Analyze potential resource leaks (file/socket/handle) in Linux C++ codebase using AI.",
                 ),
             ]
 

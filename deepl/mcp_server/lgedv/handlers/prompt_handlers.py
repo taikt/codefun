@@ -44,6 +44,8 @@ class PromptHandler:
                 return await self._handle_race_condition_analysis(arguments)
             elif name == "check_leaks":
                 return await self._handle_memory_leak_analysis(arguments)
+            elif name == "check_resources":
+                return await self._handle_resource_leak_analysis(arguments)
             else:
                 raise ValueError(f"Unknown prompt: {name}")
                 
@@ -196,78 +198,109 @@ class PromptHandler:
             logger.error(f"Error in memory leak analysis: {e}")
             return self._create_fallback_memory_leak_prompt(dir_path, str(e))
 
-    def _create_context_summary(self, analysis_result: Dict, dir_path: str) -> str:
-        """Tạo context summary từ kết quả phân tích"""
-        context_summary = f"""
-**CODEBASE ANALYSIS CONTEXT:**
-- Total files analyzed: {analysis_result['summary']['total_files_analyzed']}
-- Shared resources found: {analysis_result['summary']['total_shared_resources']}
-- Files with threads: {analysis_result['summary']['files_with_threads']}
-- Basic race conditions detected: {analysis_result['summary']['potential_races']}
+    async def _handle_resource_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
+        """Handle resource leak analysis prompt - sử dụng CPP_DIR từ config giống check_leaks"""
+        # Sử dụng CPP_DIR trực tiếp từ config
+        dir_path = get_cpp_dir()
+        logger.info(f"[check_resources] Using CPP_DIR: {dir_path}")
+        
+        try:
+            from lgedv.handlers.tool_handlers import ToolHandler
+            tool_handler = ToolHandler()
+            tool_result = await tool_handler._handle_analyze_resources({})
+            rich_prompt_content = tool_result[0].text if tool_result else "Error generating analysis content"
+            
+            messages = [
+                types.PromptMessage(
+                    role="user",
+                    content=types.TextContent(type="text", text=rich_prompt_content),
+                )
+            ]
+            
+            result = types.GetPromptResult(
+                messages=messages,
+                description="Resource Leak Analysis using CPP_DIR",
+            )
+            
+            logger.info("Resource leak analysis prompt completed")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in resource leak analysis: {e}")
+            return self._create_fallback_resource_leak_prompt(dir_path, str(e))
+            
+            # Combine sections into comprehensive prompt
+            full_prompt = f"""# 🔍 Linux C++ Resource Leak Analysis Request
 
-**SHARED RESOURCES DETECTED:**
-"""
-        
-        # Add shared resources info
-        for resource_name, accesses in analysis_result.get('shared_resources', {}).items():
-            context_summary += f"\n- Resource: `{resource_name}` ({len(accesses)} accesses)\n"
-            for access in accesses[:3]:  # Limit to first 3 accesses
-                context_summary += f"  - File: {access['file']}, Line: {access['line']}\n"
-        
-        # Add thread usage info
-        context_summary += f"""
+{metadata_section}
 
-**THREAD USAGE DETECTED:**
+{code_context_section}
+
+{analysis_prompt}
+
+## � Please Provide:
+
+1. **Detailed Analysis**: Review each potential resource leak and assess its validity
+2. **Risk Assessment**: Categorize findings by severity and impact on system resources
+3. **Fix Recommendations**: Specific code changes for each resource leak
+4. **RAII Implementation**: Suggest modern C++ resource management patterns
+5. **Linux Best Practices**: Proper cleanup patterns for file descriptors, sockets, etc.
+
+## 📋 Expected Output Format:
+
+For each resource leak found:
+- **Resource Type**: (e.g., File Descriptor, Socket, Memory Mapping)
+- **Severity**: Critical/High/Medium/Low
+- **Location**: File and line number
+- **Current Code**: Show the problematic code
+- **Fixed Code**: Show the corrected version with proper cleanup
+- **RAII Wrapper**: Suggest or show a RAII wrapper class if applicable
+- **Explanation**: Why this leak is problematic and how the fix works
+
+Focus on Linux-specific resource management and actionable recommendations that can be immediately implemented.
 """
-        for file_path, threads in analysis_result.get('thread_usage', {}).items():
-            if threads:
-                context_summary += f"\n- File: {file_path}\n"
-                for thread in threads[:2]:  # Limit to first 2 threads
-                    context_summary += f"  - Line {thread['line']}: {thread['code'][:60]}...\n"
-        
-        # Add sample file contents
-        context_summary += self._add_sample_file_contents(analysis_result)
-        
-        return context_summary
+
+            messages = [
+                types.PromptMessage(
+                    role="user",
+                    content=types.TextContent(type="text", text=full_prompt),
+                )
+            ]
+            
+            result = types.GetPromptResult(
+                messages=messages,
+                description=f"Resource leak analysis prompt for {cpp_dir}",
+            )
+            
+            logger.info(f"Resource leak analysis prompt completed. Analysis available for Copilot review")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in resource leak analysis: {e}")
+            return self._create_fallback_resource_leak_prompt(dir_path, str(e))
     
-    def _add_sample_file_contents(self, analysis_result: Dict) -> str:
-        """Thêm sample file contents vào context"""
-        context_part = """
-
-**SAMPLE C++ FILE CONTENTS:**
-"""
+    def _format_resource_leak_summary(self, leaks: list) -> str:
+        """Format a summary of resource leaks by type and severity"""
+        summary = {}
+        severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
         
-        # Tìm files có threads để ưu tiên
-        files_with_threads = []
-        for file_path, threads in analysis_result.get('thread_usage', {}).items():
-            if threads:
-                files_with_threads.append(file_path)
+        for leak in leaks:
+            leak_type = leak.get('type', 'unknown')
+            severity = leak.get('severity', 'medium')
+            
+            if leak_type not in summary:
+                summary[leak_type] = 0
+            
+            summary[leak_type] += 1
+            severity_counts[severity] += 1
         
-        # Lấy 2 files đầu tiên có threads, hoặc random 2 files
-        files_to_show = files_with_threads[:2] if files_with_threads else []
-        if not files_to_show:
-            # Fallback: lấy 2 files bất kỳ
-            all_files = list(analysis_result.get('thread_usage', {}).keys())
-            files_to_show = all_files[:2]
+        summary_text = f"**By Severity:** {severity_counts['critical']} Critical, {severity_counts['high']} High, {severity_counts['medium']} Medium, {severity_counts['low']} Low\n\n"
+        summary_text += "**By Resource Type:**\n"
         
-        for file_path in files_to_show:
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    file_content = f.read()
-                    # Giới hạn độ dài để tránh token overflow
-                    if len(file_content) > 2000:
-                        file_content = file_content[:2000] + "\n\n// ... [TRUNCATED] ..."
-                    
-                    context_part += f"""
-### 📄 File: {file_path}
-```cpp
-{file_content}
-```
-"""
-            except Exception as e:
-                context_part += f"\n❌ Error reading {file_path}: {e}\n"
+        for leak_type, count in summary.items():
+            summary_text += f"- {leak_type.title()}: {count} leak(s)\n"
         
-        return context_part
+        return summary_text
     
     def _create_fallback_race_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
         """Tạo fallback prompt khi có lỗi"""
@@ -342,4 +375,68 @@ Use this format for each issue found:
         )
         
         logger.info("Memory leak analysis fallback prompt completed")
+        return result
+
+    def _create_fallback_resource_leak_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
+        """Create fallback prompt for resource leak analysis"""
+        fallback_prompt = f"""You are an expert Linux C++ resource management analyst.
+
+There was an error analyzing the codebase for resource leaks automatically: {error_msg}
+
+Please use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}
+
+Then provide your expert analysis of potential resource leaks, focusing on:
+
+## 🎯 **Analysis Focus Areas**
+
+1. **File Resources:**
+   - Unmatched open()/close() calls
+   - FILE* streams not properly closed
+   - Missing fclose() for fopen()
+
+2. **Socket Resources:**
+   - Socket descriptors not closed
+   - Network connections left open
+   - Unmatched socket()/close() pairs
+
+3. **Memory Mapping:**
+   - mmap() without corresponding munmap()
+   - Shared memory segments not cleaned up
+
+4. **IPC Resources:**
+   - Message queues not destroyed
+   - Semaphores not cleaned up
+   - Shared memory not detached
+
+5. **Directory Handles:**
+   - opendir() without closedir()
+   - Directory streams left open
+
+## 📋 **Report Format**
+For each resource leak found, use this format:
+
+### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]
+- **Severity:** [Critical|High|Medium|Low]
+- **File:** [filename]
+- **Line:** [line number]
+- **Resource:** [specific resource name/variable]
+- **Description:** [what resource is leaking and why]
+- **Fix:** [specific remediation steps]
+
+Focus on Linux-specific resources and provide actionable recommendations for each finding.
+"""
+        
+        messages = [
+            types.PromptMessage(
+                role="user", 
+                content=types.TextContent(type="text", text=fallback_prompt),
+            )
+        ]
+        
+        result = types.GetPromptResult(
+            messages=messages,
+            description="Resource leak analysis (fallback mode).",
+        )
+        
+        logger.info("Resource leak analysis fallback prompt completed")
         return result

@@ -12,6 +12,7 @@ from lgedv.modules.rule_fetcher import (
 from lgedv.modules.file_utils import list_cpp_files, get_cpp_files_content
 from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer, analyze_leaks
+from lgedv.analyzers.resource_analyzer import ResourceAnalyzer
 from lgedv.modules.config import setup_logging, get_cpp_dir
 
 logger = setup_logging()
@@ -58,6 +59,8 @@ class ToolHandler:
                 return await self._handle_detect_races(arguments)
             elif name == "analyze_leaks":
                 return await self._handle_ai_memory_analysis(arguments)
+            elif name == "analyze_resources":
+                return await self._handle_analyze_resources(arguments)
             
             else:
                 raise ValueError(f"Unknown tool: {name}")
@@ -462,3 +465,109 @@ Focus on actionable recommendations that can be immediately implemented.
                 marked_lines.append(line)
         
         return '\n'.join(marked_lines)
+    
+    async def _handle_analyze_resources(self, arguments: dict) -> List[types.TextContent]:
+        """
+        Handle resource leak analysis tool
+        
+        Returns:
+            List[types.TextContent]: Analysis results
+        """
+        cpp_dir = get_cpp_dir()
+        logger.info(f"Starting resource leak analysis on directory: {cpp_dir}")
+        
+        try:
+            # Initialize resource analyzer
+            analyzer = ResourceAnalyzer()
+            
+            # Analyze directory for resource leaks - analyzer will use CPP_DIR internally
+            leaks = analyzer.analyze_directory()
+            
+            # Format results
+            if not leaks:
+                result_text = f"✅ **Resource Leak Analysis Complete**\n\nNo resource leaks detected in {cpp_dir}\n\nAnalyzed resources:\n- File descriptors (open/close)\n- Socket connections (socket/close)\n- Memory mappings (mmap/munmap)\n- Directory handles (opendir/closedir)\n- IPC resources (shared memory, semaphores)\n- Other Linux resources\n\n📊 **Status**: CLEAN"
+            else:
+                result_text = f"🔍 **Resource Leak Analysis Results**\n\nDirectory: {cpp_dir}\nTotal leaks found: {len(leaks)}\n\n"
+                
+                # Group leaks by type and severity
+                leak_summary = self._summarize_resource_leaks(leaks)
+                result_text += f"📋 **Summary by Type:**\n{leak_summary}\n\n"
+                
+                # Detailed leak information
+                result_text += "📝 **Detailed Findings:**\n\n"
+                for i, leak in enumerate(leaks, 1):
+                    result_text += f"**{i}. {leak['resource_type'].upper().replace('_', ' ')} Leak**\n"
+                    result_text += f"   - Variable: {leak['variable']}\n"
+                    result_text += f"   - Resource Type: {leak['resource_type']}\n"
+                    result_text += f"   - Files Involved: {len(leak['files_involved'])} file(s)\n"
+                    result_text += f"   - Severity: {leak['severity']}\n"
+                    result_text += f"   - Open Operations: {leak['open_operations']}\n"
+                    result_text += f"   - Close Operations: {leak['close_operations']}\n"
+                    
+                    # Show file details
+                    for file_info in leak.get('files_involved', []):
+                        file_short = file_info.split('/')[-1] if isinstance(file_info, str) else str(file_info)
+                        result_text += f"   - File: {file_short}\n"
+                    
+                    # Show open details
+                    if leak.get('open_details'):
+                        result_text += f"   - Open Locations:\n"
+                        for detail in leak['open_details'][:3]:  # Limit to first 3
+                            file_short = detail['file'].split('/')[-1]
+                            result_text += f"     • {file_short}:{detail['line']} ({detail['details']})\n"
+                    
+                    # Show recommendation
+                    if leak.get('recommendation'):
+                        result_text += f"   - Fix: {leak['recommendation']}\n"
+                    result_text += "\n"
+            
+            logger.info(f"Resource leak analysis completed. Found {len(leaks)} leaks")
+            
+            return [types.TextContent(
+                type="text",
+                text=result_text
+            )]
+            
+        except Exception as e:
+            error_msg = f"❌ Resource leak analysis failed: {str(e)}"
+            logger.error(error_msg)
+            return [types.TextContent(
+                type="text", 
+                text=error_msg
+            )]
+    
+    def _summarize_resource_leaks(self, leaks: list) -> str:
+        """
+        Summarize resource leaks by type and severity
+        
+        Args:
+            leaks: List of resource leak findings
+            
+        Returns:
+            str: Formatted summary
+        """
+        summary = {}
+        severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+        
+        for leak in leaks:
+            leak_type = leak.get('resource_type', 'unknown')
+            severity = leak.get('severity', 'medium')
+            
+            if leak_type not in summary:
+                summary[leak_type] = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0, 'total': 0}
+            
+            summary[leak_type][severity] += 1
+            summary[leak_type]['total'] += 1
+            severity_counts[severity] += 1
+        
+        result = f"Overall: {severity_counts['critical']} critical, {severity_counts['high']} high, {severity_counts['medium']} medium, {severity_counts['low']} low\n\n"
+        
+        for leak_type, counts in summary.items():
+            result += f"• {leak_type.replace('_', ' ').title()}: {counts['total']} total "
+            if counts['critical'] > 0:
+                result += f"({counts['critical']} critical) "
+            if counts['high'] > 0:
+                result += f"({counts['high']} high) "
+            result += "\n"
+        
+        return result
