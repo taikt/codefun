@@ -146,7 +146,7 @@ class PromptHandler:
                     findings.append(text)
             
             # Compose fallback-style prompt
-            fallback_prompt = f"""You are an expert C++ concurrency analyst.\n\nPlease use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential race conditions, focusing on:\n1. Unprotected shared state modifications\n2. Missing synchronization mechanisms\n3. Thread-unsafe patterns\n4. Potential deadlock scenarios\n\nUse this format for each issue found:\n\n## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n**Type:** [data_race|deadlock|missing_sync]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
+            fallback_prompt = f"""You are an expert C++ concurrency analyst.\n\nPlease use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential race conditions, focusing on:\n1. Unprotected shared state modifications\n2. Missing synchronization mechanisms\n3. Thread-unsafe patterns\n4. Potential deadlock scenarios\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\nUse this format for each issue found:\n\n## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n**Type:** [data_race|deadlock|missing_sync]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
             if findings:
                 fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
             
@@ -179,7 +179,7 @@ class PromptHandler:
                 text = tool_result[0].text
                 if 'Memory Leak' in text or 'Detailed Memory Leak Findings' in text:
                     findings.append(text)
-            fallback_prompt = f"""You are an expert C++ memory management analyst.\n\nPlease use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential memory leaks, focusing on:\n1. Unreleased memory allocations\n2. Dangling pointers\n3. Memory corruption issues\n4. Inefficient memory usage patterns\n\nUse this format for each issue found:\n\n## 🚨 **MEMORY LEAK #[number]**: [Brief Description]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
+            fallback_prompt = f"""You are an expert C++ memory management analyst.\n\nPlease use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential memory leaks, focusing on:\n1. Unreleased memory allocations\n2. Dangling pointers\n3. Memory corruption issues\n4. Inefficient memory usage patterns\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\nUse this format for each issue found:\n\n## 🚨 **MEMORY LEAK #[number]**: [Brief Description]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
             if findings:
                 fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
             messages = [
@@ -210,7 +210,7 @@ class PromptHandler:
             leaks = analyzer.analyze_directory()
             findings = []
             # Compose fallback prompt
-            fallback_prompt = f"""You are an expert Linux C++ resource management analyst.\n\nPlease use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential resource leaks, focusing on:\n\n## 🎯 **Analysis Focus Areas**\n\n1. **File Resources:**\n   - Unmatched open()/close() calls\n   - FILE* streams not properly closed\n   - Missing fclose() for fopen()\n\n2. **Socket Resources:**\n   - Socket descriptors not closed\n   - Network connections left open\n   - Unmatched socket()/close() pairs\n\n3. **Memory Mapping:**\n   - mmap() without corresponding munmap()\n   - Shared memory segments not cleaned up\n\n4. **IPC Resources:**\n   - Message queues not destroyed\n   - Semaphores not cleaned up\n   - Shared memory not detached\n\n5. **Directory Handles:**\n   - opendir() without closedir()\n   - Directory streams left open\n\n## 📋 **Report Format**\nFor each resource leak found, use this format:\n\n### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]\n- **Severity:** [Critical|High|Medium|Low]\n- **File:** [filename]\n- **Line:** [line number]\n- **Resource:** [specific resource name/variable]\n- **Description:** [what resource is leaking and why]\n- **Fix:** [specific remediation steps]\n\nFocus on Linux-specific resources and provide actionable recommendations for each finding.\n"""
+            fallback_prompt = f"""You are an expert Linux C++ resource management analyst.\n\nPlease use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential resource leaks, focusing on:\n\n## 🎯 **Analysis Focus Areas**\n\n1. **File Resources:**\n   - Unmatched open()/close() calls\n   - FILE* streams not properly closed\n   - Missing fclose() for fopen()\n\n2. **Socket Resources:**\n   - Socket descriptors not closed\n   - Network connections left open\n   - Unmatched socket()/close() pairs\n\n3. **Memory Mapping:**\n   - mmap() without corresponding munmap()\n   - Shared memory segments not cleaned up\n\n4. **IPC Resources:**\n   - Message queues not destroyed\n   - Semaphores not cleaned up\n   - Shared memory not detached\n\n5. **Directory Handles:**\n   - opendir() without closedir()\n   - Directory streams left open\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\n## 📋 **Report Format**\nFor each resource leak found, use this format:\n\n### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]\n- **Severity:** [Critical|High|Medium|Low]\n- **File:** [filename]\n- **Line:** [line number]\n- **Resource:** [specific resource name/variable]\n- **Description:** [what resource is leaking and why]\n- **Fix:** [specific remediation steps]\n\nFocus on Linux-specific resources and provide actionable recommendations for each finding.\n"""
             # Add detailed leak info with line numbers
             if leaks:
                 for i, leak in enumerate(leaks, 1):
@@ -314,6 +314,10 @@ Then provide your expert analysis of potential memory leaks, focusing on:
 3. Memory corruption issues
 4. Inefficient memory usage patterns
 
+Only provide your expert analysis. Do not repeat the Automated Findings section.
+
+Additionally, propose refactored code for all relevant C++ files.
+
 Use this format for each issue found:
 
 ## 🚨 **MEMORY LEAK #[number]**: [Brief Description]
@@ -371,6 +375,10 @@ Then provide your expert analysis of potential resource leaks, focusing on:
 5. **Directory Handles:**
    - opendir() without closedir()
    - Directory streams left open
+
+Only provide your expert analysis. Do not repeat the Automated Findings section.
+
+Additionally, propose refactored code for all relevant C++ files.
 
 ## 📋 **Report Format**
 For each resource leak found, use this format:
