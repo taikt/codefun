@@ -4,8 +4,8 @@ box "MCP Server" #LightBlue
   participant "Controller" as controller
   participant "PromptHandler" as promptHandler
   participant "Tool Handler" as toolHandler
+  participant "MemoryAnalyzer" as memoryAnalyzer
 end box
-participant "MemoryAnalyzer" as memoryAnalyzer
 participant "Storage" as storage #yellow
 
 autonumber

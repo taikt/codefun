@@ -9,8 +9,8 @@ box "MCP Server" #LightBlue
   participant "Controller" as controller
   participant "PromptHandler" as promptHandler
   participant "Tool Handler" as toolHandler
+  participant "RaceAnalyzer" as raceAnalyzer
 end box
-participant "RaceConditionAnalyzer" as raceAnalyzer
 participant "Storage" as storage #yellow
 
 autonumber
