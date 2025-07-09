@@ -142,9 +142,11 @@ class PromptHandler:
                 text = tool_result[0].text
                 # Try to extract findings from the tool_result text (very simple, can be improved)
                 # If no findings, text will mention no race conditions
-                if 'potential race conditions found' in text or 'Race Condition Details' in text:
+                if 'Race Condition' in text or 'Race Condition Details' in text:
                     findings.append(text)
-            
+
+            # logger.info(f"Tool result findings: {findings}")
+
             # Compose fallback-style prompt
             fallback_prompt = f"""You are an expert C++ concurrency analyst.\n\nPlease use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential race conditions, focusing on:\n1. Unprotected shared state modifications\n2. Missing synchronization mechanisms\n3. Thread-unsafe patterns\n4. Potential deadlock scenarios\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\nUse this format for each issue found:\n\n## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n**Type:** [data_race|deadlock|missing_sync]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
             if findings:
@@ -408,3 +410,38 @@ Focus on Linux-specific resources and provide actionable recommendations for eac
         
         logger.info("Resource leak analysis fallback prompt completed")
         return result
+    
+    def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
+        """Create analysis prompt section with detailed race condition information (no grouping, no limit)"""
+        detected_races = race_result.get('potential_race_conditions', [])
+        prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
+        prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
+        if not detected_races:
+            prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
+            prompt_section += "However, please perform a manual review focusing on:\n"
+            prompt_section += "1. Shared state access patterns\n"
+            prompt_section += "2. Thread synchronization mechanisms\n"
+            prompt_section += "3. Atomic operations usage\n"
+            prompt_section += "4. Lock-free programming patterns\n\n"
+            return prompt_section
+        # Show all race conditions in detail
+        for i, race in enumerate(detected_races, 1):
+            severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
+            prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
+            prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
+            prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
+            prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
+            prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
+            if 'potential_causes' in race:
+                prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
+            if 'recommended_actions' in race:
+                prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
+            prompt_section += "\n" + "─" * 60 + "\n\n"
+        # Add summary recommendations
+        prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
+        prompt_section += "1. Focus on shared state accessed by multiple threads.\n"
+        prompt_section += "2. Ensure proper synchronization (mutexes, locks, atomics).\n"
+        prompt_section += "3. Review thread creation and join/detach logic.\n"
+        prompt_section += "4. Check for lock-free and concurrent data structure usage.\n"
+        prompt_section += "5. Provide before/after code examples for fixes.\n\n"
+        return prompt_section

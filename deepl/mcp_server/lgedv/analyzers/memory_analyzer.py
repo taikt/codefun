@@ -378,6 +378,27 @@ class MemoryAnalyzer:
         
         for flow_name, flow in memory_flows.items():
             if flow.has_potential_leak():
+                allocation_details = [
+                {
+                    'file': op.file_path,
+                    'line': op.line_num,
+                    'scope': op.scope,
+                    'details': op.details
+                } for op in flow.allocations
+                ]
+                deallocation_details = [
+                    {
+                        'file': op.file_path,
+                        'line': op.line_num,
+                        'scope': op.scope,
+                        'details': op.details
+                    } for op in flow.deallocations
+                ]
+                # Tổng hợp tất cả các dòng có thao tác cấp phát/giải phóng bộ nhớ
+                allocation_lines = [op['line'] for op in allocation_details]
+                deallocation_lines = [op['line'] for op in deallocation_details]
+                leak_lines = sorted(set(allocation_lines + deallocation_lines))
+
                 leak_info = {
                     'variable': flow_name,
                     'severity': 'high' if flow.is_cross_file() else 'medium',
@@ -385,22 +406,9 @@ class MemoryAnalyzer:
                     'files_involved': list(flow.files_involved),
                     'allocations': len(flow.allocations),
                     'deallocations': len(flow.deallocations),
-                    'allocation_details': [
-                        {
-                            'file': op.file_path,
-                            'line': op.line_num,
-                            'scope': op.scope,
-                            'details': op.details
-                        } for op in flow.allocations
-                    ],
-                    'deallocation_details': [
-                        {
-                            'file': op.file_path,
-                            'line': op.line_num,
-                            'scope': op.scope,
-                            'details': op.details
-                        } for op in flow.deallocations
-                    ]
+                    'allocation_details': allocation_details,
+                    'deallocation_details': deallocation_details,
+                    'leak_lines': leak_lines
                 }
                 detected_leaks.append(leak_info)
         

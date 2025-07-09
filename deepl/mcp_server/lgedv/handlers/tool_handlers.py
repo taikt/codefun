@@ -14,6 +14,7 @@ from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer, analyze_leaks
 from lgedv.analyzers.resource_analyzer import ResourceAnalyzer
 from lgedv.modules.config import setup_logging, get_cpp_dir
+import pprint
 
 logger = setup_logging()
 
@@ -130,8 +131,9 @@ class ToolHandler:
         # Create rich metadata prompt for AI analysis similar to memory analyzer
         metadata_section = self._create_race_analysis_metadata(result, dir_path)
         code_context_section = self._create_race_code_context_section(result, dir_path)
+        #logger.info(f"Code context section created start")
         analysis_prompt = self._create_race_analysis_prompt_section(result)
-        
+        #logger.info(f"Code context section created end")
         # Combine all sections into comprehensive prompt
         full_prompt = f"""# 🔍 Race Condition Analysis Request
 
@@ -284,6 +286,8 @@ Focus on actionable recommendations that can be immediately implemented.
                 break
                 
             try:
+                # logger.info("leak_info (short): %s", pprint.pformat({k: leak_info[k] for k in list(leak_info)[:5]}))
+                logger.info(f"[memory_leak] Reading file: {file_path}")
                 # Read file content with smart truncation
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
@@ -295,8 +299,21 @@ Focus on actionable recommendations that can be immediately implemented.
                 filename = file_path.split('/')[-1]
                 code_section += f"### 📁 {filename}\n"
                 code_section += f"**Path**: `{file_path}`\n"
-                code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
-                
+                #code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
+                # if 'leak_lines' in leak_info:
+                #     code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
+                # else:
+                #     code_section += "**Lines with Memory Operations**: (not available)\n\n"
+
+                all_lines = []
+                for leak in leak_info['leaks']:
+                    all_lines.extend(leak.get('leak_lines', []))
+                if all_lines:
+                    unique_lines = sorted(set(all_lines))
+                    code_section += f"**Lines with Memory Operations**: {unique_lines}\n"
+                else:
+                    code_section += "**Lines with Memory Operations**: (not available)\n"
+
                 # Add leak markers to content
                 marked_content = self._add_leak_markers_to_content(content, leak_info['leaks'])
                 code_section += f"```cpp\n{marked_content}\n```\n\n"
@@ -407,54 +424,110 @@ Focus on actionable recommendations that can be immediately implemented.
         
         return prompt_section
     
-    def _prioritize_files_by_leak_severity(self, detected_leaks: list) -> list:
-        """Prioritize files by number of critical/high severity leaks"""
+    def _prioritize_files_by_leak_severity(self, leaks: list) -> list:
+        """Prioritize files by number of critical/high severity memory leaks"""
         file_leak_map = {}
-        
-        for leak in detected_leaks:
+        for leak in leaks:
             files_involved = leak.get('files_involved', [])
             severity = leak.get('severity', 'medium')
-            
             for file_path in files_involved:
                 if file_path not in file_leak_map:
                     file_leak_map[file_path] = {
                         'critical_count': 0,
                         'high_count': 0,
                         'medium_count': 0,
+                        'low_count': 0,
                         'total_leaks': 0,
-                        'leak_lines': [],
                         'leaks': []
                     }
-                
-                # Count by severity
                 if severity == 'critical':
                     file_leak_map[file_path]['critical_count'] += 1
                 elif severity == 'high':
                     file_leak_map[file_path]['high_count'] += 1
-                else:
+                elif severity == 'medium':
                     file_leak_map[file_path]['medium_count'] += 1
-                
+                else:
+                    file_leak_map[file_path]['low_count'] += 1
                 file_leak_map[file_path]['total_leaks'] += 1
                 file_leak_map[file_path]['leaks'].append(leak)
-                
-                # Collect leak lines
-                for alloc in leak.get('allocation_details', []):
-                    if alloc.get('file') == file_path and alloc.get('line'):
-                        file_leak_map[file_path]['leak_lines'].append(alloc.get('line'))
-        
-        # Sort by priority: critical count desc, then high count desc, then total desc
+
+        #for file_path, info in file_leak_map.items():
+        #    logger.info("File: %s\nInfo:\n%s", file_path, pprint.pformat(info))   
+        logger.info("Prioritized file leak map:")     
+        for file_path, info in file_leak_map.items():
+            leak_vars = [leak.get('variable', 'unknown') for leak in info['leaks'][:3]]
+            logger.info(
+                "File: %s | Critical: %d | High: %d | Medium: %d | Low: %d | Total: %d | Leak Vars: %s%s",
+                file_path,
+                info['critical_count'],
+                info['high_count'],
+                info['medium_count'],
+                info['low_count'],
+                info['total_leaks'],
+                ', '.join(leak_vars),
+                f" (+{len(info['leaks'])-3} more)" if len(info['leaks']) > 3 else ""
+            )
+
         prioritized_files = sorted(
             file_leak_map.items(),
             key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
             reverse=True
         )
+        return prioritized_files
+    
+    def _prioritize_files_by_resource_leak_severity(self, leaks: list) -> list:
+        """Prioritize files by number and severity of resource leaks (critical/high first)"""
+        file_leak_map = {}
+        for leak in leaks:
+            files_involved = leak.get('files_involved', [])
+            severity = leak.get('severity', 'medium')
+            for file_path in files_involved:
+                if file_path not in file_leak_map:
+                    file_leak_map[file_path] = {
+                        'critical_count': 0,
+                        'high_count': 0,
+                        'medium_count': 0,
+                        'low_count': 0,
+                        'total_leaks': 0,
+                        'leaks': []
+                    }
+                if severity == 'critical':
+                    file_leak_map[file_path]['critical_count'] += 1
+                elif severity == 'high':
+                    file_leak_map[file_path]['high_count'] += 1
+                elif severity == 'medium':
+                    file_leak_map[file_path]['medium_count'] += 1
+                else:
+                    file_leak_map[file_path]['low_count'] += 1
+                file_leak_map[file_path]['total_leaks'] += 1
+                file_leak_map[file_path]['leaks'].append(leak)
         
+        logger.info("Prioritized resource file leak map:")
+        for file_path, info in file_leak_map.items():
+            leak_vars = [leak.get('variable', 'unknown') for leak in info['leaks'][:3]]
+            logger.info(
+                "File: %s | Critical: %d | High: %d | Medium: %d | Low: %d | Total: %d | Leak Vars: %s%s",
+                file_path,
+                info['critical_count'],
+                info['high_count'],
+                info['medium_count'],
+                info['low_count'],
+                info['total_leaks'],
+                ', '.join(leak_vars),
+                f" (+{len(info['leaks'])-3} more)" if len(info['leaks']) > 3 else ""
+            )
+
+        # sap xep theo thu tu uu tien: critical > high > total_leaks
+        prioritized_files = sorted(
+            file_leak_map.items(),
+            key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
+            reverse=True
+        )
         return prioritized_files
     
     def _add_leak_markers_to_content(self, content: str, leaks: list) -> str:
         """Add visual markers to code content to highlight memory leaks"""
         lines = content.split('\n')
-        
         # Create a map of line numbers to leak info
         line_markers = {}
         for leak in leaks:
@@ -463,13 +536,11 @@ Focus on actionable recommendations that can be immediately implemented.
                 if line_num and 1 <= line_num <= len(lines):
                     marker = f"🔴 ALLOCATION: {leak.get('variable', 'unknown')} - {alloc.get('details', '')}"
                     line_markers[line_num] = marker
-            
             for dealloc in leak.get('deallocation_details', []):
                 line_num = dealloc.get('line')
                 if line_num and 1 <= line_num <= len(lines):
                     marker = f"🟢 DEALLOCATION: {leak.get('variable', 'unknown')} - {dealloc.get('details', '')}"
                     line_markers[line_num] = marker
-        
         # Add markers to lines
         marked_lines = []
         for i, line in enumerate(lines, 1):
@@ -477,7 +548,6 @@ Focus on actionable recommendations that can be immediately implemented.
                 marked_lines.append(f"{line}  // {line_markers[i]}")
             else:
                 marked_lines.append(line)
-        
         return '\n'.join(marked_lines)
     
     async def _handle_analyze_resources(self, arguments: dict) -> List[types.TextContent]:
@@ -589,86 +659,45 @@ Focus on actionable recommendations that can be immediately implemented.
     async def _handle_ai_resource_analysis(self, arguments: dict) -> List[types.TextContent]:
         """
         Handle AI resource leak analysis - tạo rich prompt cho Copilot analysis
-        Simplified version to prevent hanging
+        Prioritize files by leak severity for code context (like memory analyzer)
         """
         cpp_dir = get_cpp_dir()
         logger.info(f"Starting AI resource leak analysis on directory: {cpp_dir}")
-        
         try:
-            # Simple file listing and content extraction instead of complex analysis
-            from lgedv.modules.file_utils import list_cpp_files, get_cpp_files_content
-            
-            # Get C++ files
-            cpp_files = list_cpp_files(cpp_dir)
-            if not cpp_files:
+            analyzer = ResourceAnalyzer()
+            leaks = analyzer.analyze_directory()
+            if not leaks:
                 return [types.TextContent(
                     type="text",
-                    text=f"# 🔍 Linux C++ Resource Leak Analysis\n\n❌ No C++ files found in: {cpp_dir}"
+                    text=f"# 🔍 Linux C++ Resource Leak Analysis\n\n❌ No resource leaks detected in: {cpp_dir}"
                 )]
-            
-            # Get file contents (limited)
+            # Prioritize files by leak severity
+            prioritized_files = self._prioritize_files_by_resource_leak_severity(leaks)
             file_contents = ""
-            for i, filename in enumerate(cpp_files[:3]):  # Limit to first 3 files
+            max_files = 3
+            max_file_size = 1200
+            for i, (file_path, info) in enumerate(prioritized_files[:max_files]):
                 try:
-                    file_path = os.path.join(cpp_dir, filename)
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                        # Truncate if too long
-                        if len(content) > 1000:
-                            content = content[:1000] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
-                        file_contents += f"### {i+1}. `{filename}`\n\n```cpp\n{content}\n```\n\n"
+                    if len(content) > max_file_size:
+                        content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+                    file_name = os.path.basename(file_path)
+                    file_contents += f"### {i+1}. `{file_name}`\n\n```cpp\n{content}\n```\n\n"
                 except Exception as e:
-                    file_contents += f"### {i+1}. `{filename}` (Error: {e})\n\n"
-            
-            # Create simple prompt
-            prompt_content = f"""# 🔍 Linux C++ Resource Leak Analysis Request
-
-## 📊 **Analysis Metadata**
-
-- **Directory**: `{cpp_dir}`
-- **Analysis Type**: Linux C++ Resource Leak Detection
-- **Files Found**: {len(cpp_files)}
-- **Files Shown**: {min(len(cpp_files), 3)}
-
-## 📝 **Source Code Context**
-
-{file_contents}
-
-## 🎯 **Analysis Guidelines**
-
-Please analyze the above C++ code for Linux resource management issues:
-
-1. **File Descriptors**: Check for unmatched open()/close() calls
-2. **Sockets**: Verify socket descriptors are properly closed  
-3. **Memory Mappings**: Ensure mmap() has corresponding munmap()
-4. **Directory Handles**: Check opendir()/closedir() pairs
-5. **IPC Resources**: Verify shared memory, semaphores, message queues cleanup
-
-## 📋 **Expected Output Format**
-
-For each potential resource leak:
-- **Resource Type**: File descriptor, socket, mmap, etc.
-- **Severity**: Critical/High/Medium/Low based on system impact
-- **Location**: File and line number
-- **Problem**: What resource is not being cleaned up
-- **Fix**: Specific code changes needed
-- **RAII Solution**: Modern C++ wrapper suggestions
-
-Focus on Linux-specific resources and provide actionable recommendations.
-"""
-
+                    file_name = os.path.basename(file_path)
+                    file_contents += f"### {i+1}. `{file_name}` (Error: {e})\n\n"
+            prompt_content = f"""# 🔍 Linux C++ Resource Leak Analysis Request\n\n## 📊 **Analysis Metadata**\n\n- **Directory**: `{cpp_dir}`\n- **Analysis Type**: Linux C++ Resource Leak Detection\n- **Files Found**: {len(prioritized_files)}\n- **Files Shown**: {min(len(prioritized_files), max_files)}\n\n## 📝 **Source Code Context**\n\n{file_contents}\n## 🎯 **Analysis Guidelines**\n\nPlease analyze the above C++ code for Linux resource management issues:\n\n1. **File Descriptors**: Check for unmatched open()/close() calls\n2. **Sockets**: Verify socket descriptors are properly closed  \n3. **Memory Mappings**: Ensure mmap() has corresponding munmap()\n4. **Directory Handles**: Check opendir()/closedir() pairs\n5. **IPC Resources**: Verify shared memory, semaphores, message queues cleanup\n\n## 📋 **Expected Output Format**\n\nFor each potential resource leak:\n- **Resource Type**: File descriptor, socket, mmap, etc.\n- **Severity**: Critical/High/Medium/Low based on system impact\n- **Location**: File and line number\n- **Problem**: What resource is not being cleaned up\n- **Fix**: Specific code changes needed\n- **RAII Solution**: Modern C++ wrapper suggestions\n\nFocus on Linux-specific resources and provide actionable recommendations.\n"""
             logger.info(f"AI resource leak analysis content generated: {len(prompt_content)} chars")
-            
             return [types.TextContent(
                 type="text",
                 text=prompt_content
             )]
-            
         except Exception as e:
             error_msg = f"❌ AI resource leak analysis failed: {str(e)}"
             logger.error(error_msg)
             return [types.TextContent(
-                type="text", 
+                type="text",
                 text=error_msg
             )]
     
@@ -819,29 +848,93 @@ Focus on Linux-specific resources and provide actionable recommendations.
         
         summary = race_result.get('summary', {})
         detected_races = race_result.get('potential_race_conditions', [])
+        logger.info(f"[detect_races] detected_races: {detected_races}")
+
+        # Tóm tắt detected_races theo file
+        from collections import defaultdict
+        race_file_map = defaultdict(list)
+        for race in detected_races:
+            for file_path in race.get('files_involved', []):
+                race_file_map[file_path].append(race)
+
+        logger.info("[detect_races] Race condition summary:")
+        for file_path, races in race_file_map.items():
+            race_types = [r.get('type', 'unknown') for r in races[:3]]
+            logger.info(
+                "File: %s | Race count: %d | Race types: %s%s",
+                file_path,
+                len(races),
+                ', '.join(race_types),
+                f" (+{len(races)-3} more)" if len(races) > 3 else ""
+            )
+        
         thread_usage = race_result.get('thread_usage', {})
+   
+        #logger.info(f"[detect_races] thread_usage:\n{pprint.pformat(thread_usage)}")
+        logger.info("[detect_races] Thread usage summary:")
+        for file_path, threads in thread_usage.items():
+            logger.info(
+                "File: %s | Thread-related operations: %d | Thread types: %s%s",
+                file_path,
+                len(threads),
+                ', '.join(str(t) for t in threads[:3]),
+                f" (+{len(threads)-3} more)" if len(threads) > 3 else ""
+            )
+
         files_analyzed = summary.get('total_files_analyzed', 0)
         
         if files_analyzed == 0:
             context_section += f"❌ No C++ files found in: {dir_path}\n\n"
             return context_section
         
+        import collections
+
+        # Tạo map: file_path -> count số lượng race
+        file_race_count = collections.defaultdict(int)
+
         # Get files with race conditions or thread usage
-        priority_files = set()
+        # priority_files = set()
         for race in detected_races:
+            # logger.info("[detect_races] race:\n%s", pprint.pformat(race))
+            # tra lai danh sach cac files involved in
             files_involved = race.get('files_involved', [])
-            priority_files.update(files_involved)
+
+            for file_path in files_involved:
+                file_race_count[file_path] += 1
+
+            logger.info(f"[detect_races] files_involved: {files_involved}")
+            # priority_files.update(files_involved)
         
         # Add files with thread usage
         for file_path, threads in thread_usage.items():
             if threads:  # Has thread usage
-                priority_files.add(file_path)
+                # priority_files.add(file_path)
+                file_race_count[file_path] += 1
         
+        
+        logger.info("[detect_races] file_race_count:\n%s", pprint.pformat(dict(file_race_count)))
+        if file_race_count:
+            logger.info("[detect_races] file_race_count summary:")
+            for file_path, count in sorted(file_race_count.items(), key=lambda x: x[1], reverse=True):
+                logger.info("File: %s | Race/Thread-related issues: %d", file_path, count)
+
+        # Sắp xếp map theo số lượng race giảm dần và lấy 3 file đầu tiên
+        max_files = 3  # Limit for token efficiency
+        top_files = sorted(file_race_count.items(), key=lambda x: x[1], reverse=True)[:max_files]
+        logger.info(f"[detect_races] top_files (file, race_count): {top_files}")
+        # top_files là list các tuple (file_path, count)
+        logger.info("[detect_races] Top files with most race/thread issues:")
+        for file_path, count in top_files:
+            logger.info("File: %s | Race/Thread-related issues: %d", file_path, count)
+
+        # Lấy ra danh sách 3 file có số lượng race lớn nhất
+        top_file_paths = [file_path for file_path, count in top_files]
+
         # Show actual source code for priority files
         file_count = 0
-        max_files = 3  # Limit for token efficiency
         
-        for file_path in list(priority_files)[:max_files]:
+        # for file_path in list(priority_files)[:max_files]:
+        for file_path in top_file_paths:
             file_count += 1
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
@@ -874,18 +967,17 @@ Focus on Linux-specific resources and provide actionable recommendations.
                 context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
         
         # Show summary if we have more files
-        remaining_files = files_analyzed - len(priority_files)
+        remaining_files = files_analyzed - len(top_files)
         if remaining_files > 0:
-            context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files analyzed\n\n"
+            context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
         
         return context_section
     
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
-        """Create analysis prompt section with race condition details"""
-        prompt_section = "## 🎯 Race Condition Analysis Focus\n\n"
-        
+        """Create analysis prompt section with detailed race condition information (no grouping, no limit)"""
         detected_races = race_result.get('potential_race_conditions', [])
-        
+        prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
+        prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
         if not detected_races:
             prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
             prompt_section += "However, please perform a manual review focusing on:\n"
@@ -894,46 +986,24 @@ Focus on Linux-specific resources and provide actionable recommendations.
             prompt_section += "3. Atomic operations usage\n"
             prompt_section += "4. Lock-free programming patterns\n\n"
             return prompt_section
-        
-        # Group races by type for better organization
-        race_types = {}
-        for race in detected_races:
-            race_type = race.get('type', 'unknown')
-            if race_type not in race_types:
-                race_types[race_type] = []
-            race_types[race_type].append(race)
-        
-        prompt_section += f"🚨 **{len(detected_races)} potential race conditions found:**\n\n"
-        
-        for race_type, type_races in race_types.items():
-            display_type = race_type.replace('_', ' ').title()
-            prompt_section += f"### {display_type} ({len(type_races)} found)\n\n"
-            
-            for i, race in enumerate(type_races[:3], 1):  # Show first 3 of each type
-                severity = race.get('severity', 'medium')
-                files_involved = race.get('files_involved', [])
-                description = race.get('description', 'No description available')
-                
-                prompt_section += f"{i}. **Severity: {severity.title()}**\n"
-                if files_involved:
-                    file_list = ', '.join([os.path.basename(f) for f in files_involved])
-                    prompt_section += f"   - Files: {file_list}\n"
-                prompt_section += f"   - Issue: {description}\n"
-                
-                if race.get('recommendation'):
-                    prompt_section += f"   - Suggested Fix: {race['recommendation']}\n"
-                
-                prompt_section += "\n"
-            
-            if len(type_races) > 3:
-                prompt_section += f"   ... and {len(type_races) - 3} more {display_type.lower()} issues\n\n"
-        
-        # Add analysis guidelines
+        # Show all race conditions in detail
+        for i, race in enumerate(detected_races, 1):
+            severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
+            prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
+            prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
+            prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
+            prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
+            prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
+            if 'potential_causes' in race:
+                prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
+            if 'recommended_actions' in race:
+                prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
+            prompt_section += "\n" + "─" * 60 + "\n\n"
+        # Add summary recommendations
         prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
-        prompt_section += "1. **Focus on critical/high severity races first** - These can cause data corruption\n"
-        prompt_section += "2. **Check shared data access patterns** - Look for unprotected reads/writes\n"
-        prompt_section += "3. **Verify synchronization mechanisms** - Mutex, semaphores, atomic operations\n"
-        prompt_section += "4. **Look for lock ordering issues** - Potential deadlock scenarios\n"
-        prompt_section += "5. **Check thread-local storage usage** - Ensure proper isolation\n\n"
-        
+        prompt_section += "1. Focus on shared state accessed by multiple threads.\n"
+        prompt_section += "2. Ensure proper synchronization (mutexes, locks, atomics).\n"
+        prompt_section += "3. Review thread creation and join/detach logic.\n"
+        prompt_section += "4. Check for lock-free and concurrent data structure usage.\n"
+        prompt_section += "5. Provide before/after code examples for fixes.\n\n"
         return prompt_section
