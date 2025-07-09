@@ -210,6 +210,9 @@ class PromptHandler:
             # Call the resource analyzer tool directly to get leaks as objects
             analyzer = __import__('lgedv.analyzers.resource_analyzer', fromlist=['ResourceAnalyzer']).ResourceAnalyzer()
             leaks = analyzer.analyze_directory()
+            #logger.info(f"Resource leaks found: {len(leaks)}")
+            logger.info(f"Resource leaks found:")
+
             findings = []
             # Compose fallback prompt
             fallback_prompt = f"""You are an expert Linux C++ resource management analyst.\n\nPlease use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential resource leaks, focusing on:\n\n## 🎯 **Analysis Focus Areas**\n\n1. **File Resources:**\n   - Unmatched open()/close() calls\n   - FILE* streams not properly closed\n   - Missing fclose() for fopen()\n\n2. **Socket Resources:**\n   - Socket descriptors not closed\n   - Network connections left open\n   - Unmatched socket()/close() pairs\n\n3. **Memory Mapping:**\n   - mmap() without corresponding munmap()\n   - Shared memory segments not cleaned up\n\n4. **IPC Resources:**\n   - Message queues not destroyed\n   - Semaphores not cleaned up\n   - Shared memory not detached\n\n5. **Directory Handles:**\n   - opendir() without closedir()\n   - Directory streams left open\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\n## 📋 **Report Format**\nFor each resource leak found, use this format:\n\n### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]\n- **Severity:** [Critical|High|Medium|Low]\n- **File:** [filename]\n- **Line:** [line number]\n- **Resource:** [specific resource name/variable]\n- **Description:** [what resource is leaking and why]\n- **Fix:** [specific remediation steps]\n\nFocus on Linux-specific resources and provide actionable recommendations for each finding.\n"""
@@ -226,6 +229,8 @@ class PromptHandler:
                 text = tool_result[0].text
                 if 'Resource Leak' in text or 'Linux C++ Resource Leak Analysis' in text:
                     findings.append(text)
+            
+            logger.info(f"Tool result findings: {findings}")
             if findings:
                 fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
             messages = [

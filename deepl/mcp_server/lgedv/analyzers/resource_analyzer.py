@@ -280,6 +280,11 @@ class ResourceAnalyzer:
         
         # Collect all C++ files
         cpp_files = list_cpp_files(target_dir)
+        logger.info(f"List of C++ files: {cpp_files}")
+        logger.info(f"Total C++ files found: {len(cpp_files)}")
+        #for f in cpp_files:
+        #    logger.info(f"Found C++ file: {f}")
+
         full_paths = [os.path.join(target_dir, f) for f in cpp_files]
         
         if not cpp_files:
@@ -327,7 +332,9 @@ class ResourceAnalyzer:
             "dynamic_groups": len(resource_groups),
             "analysis_completeness": "full_codebase"
         }
-        
+
+        logger.info(f"Analysis summary: {summary}")
+
         return {
             "analysis_method": "full_codebase_resource_with_dynamic_grouping",
             "directory": target_dir,
@@ -353,6 +360,7 @@ class ResourceAnalyzer:
         # Always use CPP_DIR from config, ignore passed dir_path
         target_dir = get_cpp_dir()
         analysis = self.analyze_codebase(target_dir)
+        logger.info(f"Resource leak analysis completed for directory: {target_dir}")
         return analysis.get("detected_leaks", [])
     
     def _build_resource_flow_map(self, all_resource_ops: Dict) -> Dict[str, ResourceFlow]:

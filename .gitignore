@@ -136,3 +136,4 @@ build
 a.out
 *.vsix
 out
+__pycache__

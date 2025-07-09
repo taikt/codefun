@@ -566,7 +566,8 @@ Focus on actionable recommendations that can be immediately implemented.
             
             # Analyze directory for resource leaks - analyzer will use CPP_DIR internally
             leaks = analyzer.analyze_directory()
-            
+            logger.info(f"Resource leak analysis found {len(leaks)} leaks in directory: {cpp_dir}")
+
             # Format results
             if not leaks:
                 result_text = f"✅ **Resource Leak Analysis Complete**\n\nNo resource leaks detected in {cpp_dir}\n\nAnalyzed resources:\n- File descriptors (open/close)\n- Socket connections (socket/close)\n- Memory mappings (mmap/munmap)\n- Directory handles (opendir/closedir)\n- IPC resources (shared memory, semaphores)\n- Other Linux resources\n\n📊 **Status**: CLEAN"
@@ -666,6 +667,7 @@ Focus on actionable recommendations that can be immediately implemented.
         try:
             analyzer = ResourceAnalyzer()
             leaks = analyzer.analyze_directory()
+            logger.info(f"AI resource leak analysis found {len(leaks)} leaks in directory: {cpp_dir}")
             if not leaks:
                 return [types.TextContent(
                     type="text",
