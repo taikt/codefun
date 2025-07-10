@@ -57,49 +57,70 @@ class LinuxResourceParser:
             'file_open64': r'(\w+)\s*=\s*open64\s*\(',
             'file_creat': r'(\w+)\s*=\s*creat\s*\(',
             'file_openat': r'(\w+)\s*=\s*openat\s*\(',
-            
+            # POSIX shared memory open
+            'shm_open': r'(\w+)\s*=\s*shm_open\s*\(',
+            # epoll
+            'epoll_create': r'(\w+)\s*=\s*epoll_create\s*\(',
+            'epoll_create1': r'(\w+)\s*=\s*epoll_create1\s*\(',
+            # eventfd
+            'eventfd': r'(\w+)\s*=\s*eventfd\s*\(',
+            # timerfd
+            'timerfd_create': r'(\w+)\s*=\s*timerfd_create\s*\(',
+            # signalfd
+            'signalfd': r'(\w+)\s*=\s*signalfd\s*\(',
+            # inotify
+            'inotify_init': r'(\w+)\s*=\s*inotify_init\s*\(',
+            'inotify_init1': r'(\w+)\s*=\s*inotify_init1\s*\(',
+            # POSIX message queue
+            'mq_open': r'(\w+)\s*=\s*mq_open\s*\(',
+            # POSIX semaphore
+            'sem_open': r'(\w+)\s*=\s*sem_open\s*\(',
+            # dup/dup2/dup3
+            'dup': r'(\w+)\s*=\s*dup\s*\(',
+            'dup2': r'(\w+)\s*=\s*dup2\s*\(',
+            'dup3': r'(\w+)\s*=\s*dup3\s*\(',
             # FILE streams
             'fopen': r'(\w+)\s*=\s*fopen\s*\(',
             'fdopen': r'(\w+)\s*=\s*fdopen\s*\(',
             'freopen': r'(\w+)\s*=\s*freopen\s*\(',
-            
             # Socket operations
             'socket_create': r'(\w+)\s*=\s*socket\s*\(',
             'socket_accept': r'(\w+)\s*=\s*accept\s*\(',
             'socket_accept4': r'(\w+)\s*=\s*accept4\s*\(',
-            
             # Memory mapping
             'mmap': r'(\w+)\s*=\s*mmap\s*\(',
             'mmap64': r'(\w+)\s*=\s*mmap64\s*\(',
-            
             # Directory handles
             'opendir': r'(\w+)\s*=\s*opendir\s*\(',
             'fdopendir': r'(\w+)\s*=\s*fdopendir\s*\(',
-            
             # IPC resources
             'shmget': r'(\w+)\s*=\s*shmget\s*\(',
             'semget': r'(\w+)\s*=\s*semget\s*\(',
             'msgget': r'(\w+)\s*=\s*msgget\s*\(',
             'shmat': r'(\w+)\s*=\s*shmat\s*\(',
-            
             # Pipes
             'pipe_create': r'pipe\s*\(\s*(\w+)\s*\)',
             'pipe2_create': r'pipe2\s*\(\s*(\w+)\s*,',
-            
             # Close patterns
             'close_fd': r'close\s*\(\s*(\w+)\s*\)',
             'fclose_stream': r'fclose\s*\(\s*(\w+)\s*\)',
             'munmap_mapping': r'munmap\s*\(\s*(\w+)\s*,',
             'closedir_dir': r'closedir\s*\(\s*(\w+)\s*\)',
             'shmdt_shm': r'shmdt\s*\(\s*(\w+)\s*\)',
+            # POSIX shared memory unlink
+            'shm_unlink': r'shm_unlink\s*\(\s*([\w\d_]+)\s*\)',
+            # POSIX message queue close/unlink
+            'mq_close': r'mq_close\s*\(\s*(\w+)\s*\)',
+            'mq_unlink': r'mq_unlink\s*\(\s*([\w\d_]+)\s*\)',
+            # POSIX semaphore close/unlink
+            'sem_close': r'sem_close\s*\(\s*(\w+)\s*\)',
+            'sem_unlink': r'sem_unlink\s*\(\s*([\w\d_]+)\s*\)',
             'shmctl_remove': r'shmctl\s*\([^,]+,\s*IPC_RMID',
             'semctl_remove': r'semctl\s*\([^,]+,\s*[^,]+,\s*IPC_RMID',
             'msgctl_remove': r'msgctl\s*\([^,]+,\s*IPC_RMID',
-            
             # Function signatures that return resources
             'return_resource': r'^\s*([^=]*\*[^=]*|int|FILE\*)\s+(\w+)\s*\([^)]*\)',
             'function_call': r'(\w+)\s*\([^)]*\)',
-            
             # Cross-file indicators
             'extern_decl': r'extern\s+([^;]+);',
             'include_header': r'#include\s*[<"]([^>"]+)[>"]',
@@ -155,6 +176,19 @@ class LinuxResourceParser:
             'file_open64': 'file_descriptor',
             'file_creat': 'file_descriptor',
             'file_openat': 'file_descriptor',
+            'shm_open': 'shared_memory',
+            'epoll_create': 'epoll_fd',
+            'epoll_create1': 'epoll_fd',
+            'eventfd': 'event_fd',
+            'timerfd_create': 'timer_fd',
+            'signalfd': 'signal_fd',
+            'inotify_init': 'inotify_fd',
+            'inotify_init1': 'inotify_fd',
+            'mq_open': 'posix_mq',
+            'sem_open': 'posix_sem',
+            'dup': 'file_descriptor',
+            'dup2': 'file_descriptor',
+            'dup3': 'file_descriptor',
             'fopen': 'file_stream',
             'fdopen': 'file_stream',
             'freopen': 'file_stream',
@@ -201,11 +235,16 @@ class LinuxResourceParser:
         
         # Resource close operations
         resource_close_map = {
-            'close_fd': ['file_descriptor', 'socket', 'pipe'],
+            'close_fd': ['file_descriptor', 'socket', 'pipe', 'shared_memory', 'epoll_fd', 'event_fd', 'timer_fd', 'signal_fd', 'inotify_fd'],
             'fclose_stream': ['file_stream'],
             'munmap_mapping': ['memory_mapping'],
             'closedir_dir': ['directory_handle'],
             'shmdt_shm': ['shared_memory_attach'],
+            'shm_unlink': ['shared_memory'],
+            'mq_close': ['posix_mq'],
+            'mq_unlink': ['posix_mq'],
+            'sem_close': ['posix_sem'],
+            'sem_unlink': ['posix_sem'],
         }
         
         for pattern_name, resource_types in resource_close_map.items():
