@@ -85,7 +85,6 @@ Giải pháp tổng quát để phân tích multi-thread functions và call grap
 **Tóm lại:**  
 Phương pháp hiện tại phù hợp với các dự án C++ có cấu trúc rõ ràng, hàm thread entrypoint là hàm user định nghĩa, không dùng lambda/macro phức tạp. Nếu dự án dùng nhiều lambda, macro, template, hoặc có cấu trúc lớn, cần bổ sung logic nhận diện đặc biệt hoặc dùng compile_commands.json để parse đúng context.
 
-Nếu bạn cần giải pháp cho trường hợp đặc biệt nào, hãy nêu rõ để tôi tư vấn chi tiết hơn!
 
 Đúng, với dự án C++ phức tạp sử dụng lambda, macro, template, function pointer, hoặc callback, phương pháp phân tích dựa trên Clang AST và thu thập hàm entrypoint như hiện tại sẽ không đủ chính xác.
 
