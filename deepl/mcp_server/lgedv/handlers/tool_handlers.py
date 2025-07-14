@@ -121,38 +121,42 @@ class ToolHandler:
     
     async def _handle_detect_races(self, arguments: dict) -> List[types.TextContent]:
         """Handle detect_races tool - sử dụng CPP_DIR từ config"""
-        # Sử dụng CPP_DIR trực tiếp, không nhận tham số dir_path nữa
         dir_path = get_cpp_dir()
         logger.info(f"[detect_races] Using CPP_DIR: {dir_path}")
-        
         result = analyze_race_conditions_in_codebase(dir_path)
         logger.info(f"detect_races completed for dir: {dir_path}")
-        
+        # Log markdown report for each file
+        markdown_reports = result.get('summary', {}).get('markdown_reports', {})
+        for file_path, markdown in markdown_reports.items():
+            logger.info("[THREAD ENTRY MARKDOWN] File: %s\n%s", file_path, markdown)
+        # Log file summaries (markdown + race info)
+        file_summaries = result.get('summary', {}).get('file_summaries', {})
+        for file_path, summary in file_summaries.items():
+            logger.info("[RACE FILE SUMMARY] File: %s\n%s", file_path, summary)
+        # Log detected races for debugging
+        detected_races = result.get('potential_race_conditions', [])
+        logger.info(f"[detect_races] detected_races: {detected_races}")
+        # Log thread usage for debugging
+        thread_usage = result.get('thread_usage', {})
+        logger.info(f"[detect_races] thread_usage: {thread_usage}")
         # Create rich metadata prompt for AI analysis similar to memory analyzer
         metadata_section = self._create_race_analysis_metadata(result, dir_path)
         code_context_section = self._create_race_code_context_section(result, dir_path)
-        #logger.info(f"Code context section created start")
         analysis_prompt = self._create_race_analysis_prompt_section(result)
-        #logger.info(f"Code context section created end")
+        # Remove redundant thread entrypoint summary section
         # Combine all sections into comprehensive prompt
-        full_prompt = f"""# 🔍 Race Condition Analysis Request
-
-{metadata_section}
-
-{code_context_section}
-
-{analysis_prompt}
-
-## 🔧 Please Provide:
-
-1. **Detailed Analysis**: Review each potential race condition and assess its validity
-2. **Risk Assessment**: Categorize findings by severity and likelihood  
-3. **Synchronization Strategy**: Recommend appropriate locking mechanisms
-4. **Code Examples**: Show before/after code with proper synchronization
-
-Focus on actionable recommendations that can be immediately implemented.
-"""
-        
+        full_prompt = (
+            "# 🔍 Race Condition Analysis Request\n\n"
+            f"{metadata_section}\n\n"
+            f"{code_context_section}\n"
+            f"{analysis_prompt}\n\n"
+            "## 🔧 Please Provide:\n\n"
+            "1. **Detailed Analysis**: Review each potential race condition and assess its validity\n"
+            "2. **Risk Assessment**: Categorize findings by severity and likelihood  \n"
+            "3. **Synchronization Strategy**: Recommend appropriate locking mechanisms\n"
+            "4. **Code Examples**: Show before/after code with proper synchronization\n\n"
+            "Focus on actionable recommendations that can be immediately implemented.\n"
+        )
         return [types.TextContent(type="text", text=full_prompt)]
     
     async def _handle_ai_memory_analysis(self, arguments: dict) -> List[types.TextContent]:
@@ -268,95 +272,17 @@ Focus on actionable recommendations that can be immediately implemented.
         return metadata
     
     def _create_code_context_section(self, result: dict, dir_path: str) -> str:
-        """Create OPTIMIZED code context section with smart token management and file prioritization"""
-        code_section = "## 📄 Relevant Code Context:\n\n"
-        
-        # Get files with memory leaks and prioritize them
-        files_with_leaks = self._prioritize_files_by_leak_severity(result.get('detected_leaks', []))
-        
-        # TOKEN OPTIMIZATION: Aggressive limits for better efficiency
-        max_files = 3  # Max files to include (reduced from 5)
-        max_file_size = 1000  # Max characters per file (reduced from 1500)
-        
-        processed_files = 0
-        
-        for file_path, leak_info in files_with_leaks[:max_files]:
-            if processed_files >= max_files:
-                code_section += f"### ⚠️ Additional Files ({len(files_with_leaks) - max_files} files truncated for token optimization)\n\n"
-                break
-                
-            try:
-                # logger.info("leak_info (short): %s", pprint.pformat({k: leak_info[k] for k in list(leak_info)[:5]}))
-                logger.info(f"[memory_leak] Reading file: {file_path}")
-                # Read file content with smart truncation
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                # SMART TRUNCATION: Limit file size
-                if len(content) > max_file_size:
-                    content = content[:max_file_size] + "\n\n// ... [TRUNCATED for token optimization] ..."
-                
-                filename = file_path.split('/')[-1]
-                code_section += f"### 📁 {filename}\n"
-                code_section += f"**Path**: `{file_path}`\n"
-                #code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
-                # if 'leak_lines' in leak_info:
-                #     code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
-                # else:
-                #     code_section += "**Lines with Memory Operations**: (not available)\n\n"
-
-                all_lines = []
-                for leak in leak_info['leaks']:
-                    all_lines.extend(leak.get('leak_lines', []))
-                if all_lines:
-                    unique_lines = sorted(set(all_lines))
-                    code_section += f"**Lines with Memory Operations**: {unique_lines}\n"
-                else:
-                    code_section += "**Lines with Memory Operations**: (not available)\n"
-
-                # Add leak markers to content
-                marked_content = self._add_leak_markers_to_content(content, leak_info['leaks'])
-                code_section += f"```cpp\n{marked_content}\n```\n\n"
-                
-                processed_files += 1
-                
-            except Exception as e:
-                filename = file_path.split('/')[-1] if file_path else "unknown"
-                code_section += f"### 📁 {filename}\n"
-                code_section += f"```\n// Error reading file: {e}\n```\n\n"
-        
-        return code_section
+        """Create per-file code context section for race condition analysis."""
+        file_summaries = result.get('summary', {}).get('file_summaries', {})
+        markdown_reports = result.get('summary', {}).get('markdown_reports', {})
+        section_lines = []
+        for idx, (file_path, summary) in enumerate(file_summaries.items(), 1):
+            rel_path = os.path.relpath(file_path, dir_path)
+            markdown = markdown_reports.get(file_path, "")
+            section_lines.append(f"### {idx}. 📁 **{os.path.basename(file_path)}**\n**Path**: `{file_path}`\n{summary}")
+            # Thread usage and entrypoints are already included in summary, so do not duplicate
+        return "\n\n".join(section_lines)
     
-    def _get_leak_lines_for_file(self, file_path: str, leaks: list) -> dict:
-        """Get all lines with memory operations for a specific file"""
-        leak_lines = {}
-        
-        for leak in leaks:
-            # Check allocation details
-            for alloc in leak.get('allocation_details', []):
-                if alloc.get('file') == file_path:
-                    line_num = alloc.get('line')
-                    if line_num:
-                        leak_lines[line_num] = {
-                            'type': 'allocation',
-                            'details': alloc.get('details', ''),
-                            'variable': leak.get('variable', ''),
-                            'leak_type': leak.get('type', '')
-                        }
-            
-            # Check deallocation details
-            for dealloc in leak.get('deallocation_details', []):
-                if dealloc.get('file') == file_path:
-                    line_num = dealloc.get('line')
-                    if line_num:
-                        leak_lines[line_num] = {
-                            'type': 'deallocation',
-                            'details': dealloc.get('details', ''),
-                            'variable': leak.get('variable', ''),
-                            'leak_type': leak.get('type', '')
-                        }
-        
-        return leak_lines
     def _create_analysis_prompt_section(self, result: dict) -> str:
         """Create detailed analysis prompt section with complete leak information"""
         leaks = result.get('detected_leaks', [])
@@ -844,135 +770,105 @@ Focus on actionable recommendations that can be immediately implemented.
         metadata_section += "\n"
         return metadata_section
     
-    def _create_race_code_context_section(self, race_result: dict, dir_path: str) -> str:
-        """Create rich code context section with actual source files"""
+    def _create_race_code_context_section(self, result: dict, dir_path: str) -> str:
+        """
+        Create rich code context section with actual source files and thread entry summaries.
+        Ưu tiên:
+        1. Tối đa 3 file phát hiện race (file_race_count).
+        2. Nếu < 3, bổ sung file có nhiều thread entry points nhất.
+        3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (dựa vào số dòng).
+        Đảm bảo luôn chọn đủ 3 file nếu số lượng file C++ đầu vào >= 3.
+        """
+        import collections
         context_section = "## 📁 Source Code Context\n\n"
-        
-        summary = race_result.get('summary', {})
-        detected_races = race_result.get('potential_race_conditions', [])
-        logger.info(f"[detect_races] detected_races: {detected_races}")
+        summary = result.get('summary', {})
+        detected_races = result.get('potential_race_conditions', [])
+        markdown_reports = summary.get('markdown_reports', {})
+        thread_usage = result.get('thread_usage', {})
 
-        # Tóm tắt detected_races theo file
-        from collections import defaultdict
-        race_file_map = defaultdict(list)
+        # Lấy danh sách tất cả file C++ đầu vào
+        all_cpp_files = summary.get('all_cpp_files', [])
+        if not all_cpp_files:
+            # Fallback: lấy từ file_summaries nếu không có all_cpp_files
+            all_cpp_files = list(summary.get('file_summaries', {}).keys())
+
+        # 1. Ưu tiên file phát hiện race
+        file_race_count = collections.defaultdict(int)
         for race in detected_races:
             for file_path in race.get('files_involved', []):
-                race_file_map[file_path].append(race)
-
-        logger.info("[detect_races] Race condition summary:")
-        for file_path, races in race_file_map.items():
-            race_types = [r.get('type', 'unknown') for r in races[:3]]
-            logger.info(
-                "File: %s | Race count: %d | Race types: %s%s",
-                file_path,
-                len(races),
-                ', '.join(race_types),
-                f" (+{len(races)-3} more)" if len(races) > 3 else ""
-            )
-        
-        thread_usage = race_result.get('thread_usage', {})
-   
-        #logger.info(f"[detect_races] thread_usage:\n{pprint.pformat(thread_usage)}")
-        logger.info("[detect_races] Thread usage summary:")
-        for file_path, threads in thread_usage.items():
-            logger.info(
-                "File: %s | Thread-related operations: %d | Thread types: %s%s",
-                file_path,
-                len(threads),
-                ', '.join(str(t) for t in threads[:3]),
-                f" (+{len(threads)-3} more)" if len(threads) > 3 else ""
-            )
-
-        files_analyzed = summary.get('total_files_analyzed', 0)
-        
-        if files_analyzed == 0:
-            context_section += f"❌ No C++ files found in: {dir_path}\n\n"
-            return context_section
-        
-        import collections
-
-        # Tạo map: file_path -> count số lượng race
-        file_race_count = collections.defaultdict(int)
-
-        # Get files with race conditions or thread usage
-        # priority_files = set()
-        for race in detected_races:
-            # logger.info("[detect_races] race:\n%s", pprint.pformat(race))
-            # tra lai danh sach cac files involved in
-            files_involved = race.get('files_involved', [])
-
-            for file_path in files_involved:
                 file_race_count[file_path] += 1
+        top_files = sorted(file_race_count.items(), key=lambda x: x[1], reverse=True)
+        selected_files = [file_path for file_path, _ in top_files]
 
-            logger.info(f"[detect_races] files_involved: {files_involved}")
-            # priority_files.update(files_involved)
-        
-        # Add files with thread usage
-        for file_path, threads in thread_usage.items():
-            if threads:  # Has thread usage
-                # priority_files.add(file_path)
-                file_race_count[file_path] += 1
-        
-        
-        logger.info("[detect_races] file_race_count:\n%s", pprint.pformat(dict(file_race_count)))
-        if file_race_count:
-            logger.info("[detect_races] file_race_count summary:")
-            for file_path, count in sorted(file_race_count.items(), key=lambda x: x[1], reverse=True):
-                logger.info("File: %s | Race/Thread-related issues: %d", file_path, count)
+        # 2. Nếu < 3, bổ sung file có nhiều thread entry points nhất
+        if len(selected_files) < 3:
+            remaining_files = [f for f in all_cpp_files if f not in selected_files]
+            thread_entry_counts = {f: len(thread_usage.get(f, [])) for f in remaining_files}
+            thread_sorted = sorted(thread_entry_counts.items(), key=lambda x: x[1], reverse=True)
+            for f, _ in thread_sorted:
+                if f not in selected_files:
+                    selected_files.append(f)
+                if len(selected_files) == 3:
+                    break
 
-        # Sắp xếp map theo số lượng race giảm dần và lấy 3 file đầu tiên
-        max_files = 3  # Limit for token efficiency
-        top_files = sorted(file_race_count.items(), key=lambda x: x[1], reverse=True)[:max_files]
-        logger.info(f"[detect_races] top_files (file, race_count): {top_files}")
-        # top_files là list các tuple (file_path, count)
-        logger.info("[detect_races] Top files with most race/thread issues:")
-        for file_path, count in top_files:
-            logger.info("File: %s | Race/Thread-related issues: %d", file_path, count)
+        # 3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (số dòng)
+        if len(selected_files) < 3:
+            code_line_counts = {}
+            for f in all_cpp_files:
+                if f not in selected_files:
+                    try:
+                        with open(f, 'r', encoding='utf-8') as file:
+                            code_line_counts[f] = sum(1 for _ in file)
+                    except Exception:
+                        code_line_counts[f] = 0
+            code_sorted = sorted(code_line_counts.items(), key=lambda x: x[1], reverse=True)
+            for f, _ in code_sorted:
+                if f not in selected_files:
+                    selected_files.append(f)
+                if len(selected_files) == 3:
+                    break
 
-        # Lấy ra danh sách 3 file có số lượng race lớn nhất
-        top_file_paths = [file_path for file_path, count in top_files]
+        # Nếu số lượng file đầu vào < 3 thì lấy hết
+        if len(all_cpp_files) < 3:
+            final_files = list(dict.fromkeys(all_cpp_files))  # Giữ thứ tự, loại trùng
+        else:
+            final_files = selected_files[:3]
 
-        # Show actual source code for priority files
+        # Build context_section
         file_count = 0
-        
-        # for file_path in list(priority_files)[:max_files]:
-        for file_path in top_file_paths:
+        for file_path in final_files:
             file_count += 1
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                
-                # Truncate if too long
                 if len(content) > 1200:
                     content = content[:1200] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
-                
                 filename = os.path.basename(file_path)
                 context_section += f"### {file_count}. 📁 **{filename}**\n"
                 context_section += f"**Path**: `{file_path}`\n"
-                
-                # Show race conditions for this file
+                # Race summary
                 file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
                 if file_races:
                     context_section += f"**Race Conditions**: {len(file_races)} found\n"
                     for race in file_races[:2]:
                         context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
-                
-                # Show thread usage
+                # Thread usage summary
                 file_threads = thread_usage.get(file_path, [])
                 if file_threads:
                     context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
-                
+                # Thread entry markdown
+                markdown = markdown_reports.get(file_path, "")
+                if markdown:
+                    context_section += f"**Thread Entry Points**:\n{markdown}\n"
+                # Actual code
                 context_section += f"\n```cpp\n{content}\n```\n\n"
-                
             except Exception as e:
                 filename = os.path.basename(file_path)
                 context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
-        
-        # Show summary if we have more files
-        remaining_files = files_analyzed - len(top_files)
+        files_analyzed = summary.get('total_files_analyzed', 0)
+        remaining_files = files_analyzed - len(final_files)
         if remaining_files > 0:
             context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
-        
         return context_section
     
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:

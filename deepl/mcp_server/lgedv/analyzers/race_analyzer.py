@@ -61,12 +61,15 @@ class CppParser:
         Returns:
             Dict: Kết quả phân tích file
         """
+        logger.info(f"Đang phân tích file: {file_path}")
         result = {
             "shared_resources": [],
             "thread_usage": [],
             "mutex_usage": [],
-            "atomic_usage": []
+            "atomic_usage": [],
+            "thread_entry_functions": []  # Thông tin các hàm chạy trong context multi-thread
         }
+        thread_vector_names = set()  # Lưu tên biến vector kiểu thread
         global_vars = set()
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -81,6 +84,8 @@ class CppParser:
             in_binder_stub = False
             current_function = ""
             entry_func_map = {}
+            # Chỉ track các hàm entrypoint thread, ghi ra file và line, không check bên trong nữa
+            # Clean code: chỉ lưu thông tin hàm entrypoint
             for i, line in enumerate(lines, 1):
                 stripped_line = line.strip()
                 # Skip empty lines and comments
@@ -109,12 +114,52 @@ class CppParser:
                 # ServiceStub method
                 if re.search(self.patterns['tiger_binder_stub_method'], stripped_line):
                     current_function = "ServiceStub"
-                # Nếu phát hiện dòng tạo thread, lưu tên hàm entrypoint
-                if re.search(self.patterns['thread_create'], stripped_line):
+                # Nhận diện tên biến vector kiểu thread
+                m_vec = re.search(r'std::vector\s*<\s*std::thread\s*>\s+(\w+)', stripped_line)
+                if m_vec:
+                    thread_vector_names.add(m_vec.group(1))
+                # Nếu phát hiện dòng tạo thread, lưu tên hàm entrypoint hoặc lambda
+                if re.search(self.patterns['thread_create'], stripped_line) or re.search(r'emplace_back', stripped_line):
                     entry_func = self.extract_entrypoint_func(stripped_line)
                     if entry_func:
                         self.thread_entrypoints.add(entry_func)
-                        entry_func_map[i] = entry_func
+                        # Tìm vị trí khai báo hàm entrypoint trong file hiện tại
+                        for j, l in enumerate(lines, 1):
+                            if re.search(rf'\b{entry_func}\b\s*\(', l):
+                                result["thread_entry_functions"].append({
+                                    "file": file_path,
+                                    "function": entry_func,
+                                    "line": j
+                                })
+                                break
+                    # Nhận diện emplace_back với tên hàm, chỉ khi biến là vector thread
+                    m_emp = re.search(r'(\w+)\.emplace_back\s*\((\w+)\)', stripped_line)
+                    if m_emp:
+                        vec_name = m_emp.group(1)
+                        func_name = m_emp.group(2)
+                        if vec_name in thread_vector_names:
+                            for j, l in enumerate(lines, 1):
+                                if re.search(rf'\b{func_name}\b\s*\(', l):
+                                    result["thread_entry_functions"].append({
+                                        "file": file_path,
+                                        "function": func_name,
+                                        "line": j
+                                    })
+                                    break
+                    # Nếu là lambda thì chỉ log vị trí dòng
+                    elif re.search(r'\[.*\]\s*\(.*\)\s*\{', stripped_line):
+                        result["thread_entry_functions"].append({
+                            "file": file_path,
+                            "function": "lambda",
+                            "line": i
+                        })
+                # Nhận diện tạo thread trực tiếp
+                if re.search(r'std::thread\s+\w+\s*\(', stripped_line):
+                    result["thread_entry_functions"].append({
+                        "file": file_path,
+                        "function": "lambda_or_func",
+                        "line": i
+                    })
                 # Reset scope flags when braces close
                 if brace_level == 0:
                     in_function = False
@@ -157,8 +202,17 @@ class CppParser:
                 context = self.get_thread_context(stripped_line, in_function, current_function, in_tiger_handler, in_binder_stub, entry_func_map, i)
                 self._analyze_line(stripped_line, i, file_path, result, 
                                  in_function, in_class, in_namespace, in_tiger_handler, in_binder_stub, current_function, context)
+            # Xóa toàn bộ logic cache hàm, không còn dùng file_path_def
+            # Danh sách các keyword C++ cần loại bỏ khi nhận diện hàm
+            cpp_keywords = {"for", "if", "while", "switch", "return", "sizeof", "catch", "try", "else", "case", "break", "continue", "do", "goto", "new", "delete", "throw", "static_cast", "dynamic_cast", "reinterpret_cast", "const_cast", "typedef", "struct", "class", "enum", "union", "namespace", "public", "private", "protected", "template", "typename", "using", "this", "operator", "default", "virtual", "override", "final", "noexcept", "static", "const", "volatile", "extern", "inline", "friend", "explicit", "register", "mutable", "thread_local", "asm", "export"}
+            # Danh sách các hàm thực sự chạy trong multi-thread context
+            multi_thread_functions = []
+            # Xóa toàn bộ phần truy vết hàm bên trong, chỉ giữ lại log entrypoint
+            result["multi_thread_functions"] = []
         except Exception as e:
             logger.error(f"Error parsing {file_path}: {e}")
+        if result["thread_entry_functions"]:
+            logger.info(f"[THREAD ENTRY] Thread entry functions in {file_path}: {result['thread_entry_functions']}")
         return result
 
     def extract_entrypoint_func(self, line: str) -> str:
@@ -271,6 +325,23 @@ class CppParser:
                 'code': line[:100]
             })
 
+    def generate_thread_entry_markdown(self, thread_entry_functions: List[Dict]) -> str:
+        """
+        Sinh chuỗi markdown report cho các hàm entrypoint thread của một file
+        Args:
+            thread_entry_functions: List các dict chứa thông tin hàm entrypoint thread
+        Returns:
+            str: Chuỗi markdown
+        """
+        if not thread_entry_functions:
+            return "No detect thread entrypoint functions."
+        lines = []
+        for entry in thread_entry_functions:
+            func = entry.get("function", "?")
+            line = entry.get("line", "?")
+            lines.append(f"- {func} (line {line})")
+        return '\n'.join(lines)
+
 class RaceConditionAnalyzer:
     """Analyzer chính để phát hiện race conditions"""
     
@@ -297,24 +368,48 @@ class RaceConditionAnalyzer:
         # Phân tích từng file
         all_resources = {}
         all_threads = {}
-        
+        markdown_reports = {}
         for file_path in full_paths:
             analysis = self.parser.parse_file(file_path)
             all_resources[file_path] = analysis["shared_resources"]
             all_threads[file_path] = analysis["thread_usage"]
-        
+            # Sinh markdown cho hàm entrypoint thread
+            markdown_md = self.parser.generate_thread_entry_markdown(analysis.get("thread_entry_functions", []))
+            markdown_reports[file_path] = markdown_md
+            # Log thông tin markdown cho từng file
+            logger.info("[THREAD ENTRY MARKDOWN] File: %s\n%s", file_path, markdown_md)
+            thread_entry_md = markdown_reports[file_path]
+            logger.info(f"[THREAD_ENTRY_MD] File: {file_path} | Value:\n{thread_entry_md}")
         # Tìm potential race conditions
         resource_access_map = self._build_resource_access_map(all_resources)
         potential_races = self._detect_race_conditions(resource_access_map, all_threads)
-        
-        # Tạo summary
+        # Tạo summary chi tiết cho từng file
+        file_summaries = {}
+        for file_path in full_paths:
+            file_name = os.path.basename(file_path)
+            thread_count = len(all_threads.get(file_path, []))
+            race_count = sum(1 for rc in potential_races if file_path in rc.files_involved)
+            races = [f"{rc.type}: {rc.description}" for rc in potential_races if file_path in rc.files_involved]
+            thread_entry_md = markdown_reports[file_path]
+            summary_text = (
+                f"### 1. 📁 **{file_name}**\n"
+                f"**Path**: `{file_path}`\n"
+                f"**Race Conditions**: {race_count} found\n" + '\n'.join(races) +
+                f"\n**Thread Usage**: {thread_count} thread-related operations"
+            )
+            if thread_entry_md and thread_entry_md.strip() and thread_entry_md.strip() != "No detect thread entrypoint functions.":
+                summary_text += f"\n**Thread Entrypoints:**\n{thread_entry_md}"
+            summary_text += "\n"
+            file_summaries[file_path] = summary_text
+        # Tạo summary tổng hợp
         summary = {
             "total_files_analyzed": len(cpp_files),
             "total_shared_resources": len(resource_access_map),
             "potential_races": len(potential_races),
-            "files_with_threads": len([f for f, threads in all_threads.items() if threads])
+            "files_with_threads": len([f for f, threads in all_threads.items() if threads]),
+            "markdown_reports": markdown_reports,
+            "file_summaries": file_summaries
         }
-        
         return AnalysisResult(
             shared_resources=resource_access_map,
             thread_usage=all_threads,
