@@ -82,7 +82,9 @@ class CppParser:
             in_namespace = False
             in_tiger_handler = False
             in_binder_stub = False
+            in_binder_stub_class = False
             current_function = ""
+            current_class_name = ""
             entry_func_map = {}
             # Chỉ track các hàm entrypoint thread, ghi ra file và line, không check bên trong nữa
             # Clean code: chỉ lưu thông tin hàm entrypoint
@@ -91,13 +93,47 @@ class CppParser:
                 # Skip empty lines and comments
                 if not stripped_line or stripped_line.startswith('//') or stripped_line.startswith('/*'):
                     continue
-                
                 # Count braces để track scope
                 brace_level += stripped_line.count('{') - stripped_line.count('}')
-                
+                # --- Detect ServiceStub method outside class scope ---
+                m_servicestub_func = re.search(r'(\w+)::ServiceStub::(\w+)\s*\(', stripped_line)
+                if m_servicestub_func:
+                    class_name = m_servicestub_func.group(1)
+                    func_name = m_servicestub_func.group(2)
+                    result["thread_entry_functions"].append({
+                        "file": file_path,
+                        "function": f"{class_name}::ServiceStub::{func_name}",
+                        "line": i
+                    })
+                # --- Detect handleMessage method outside class scope ---
+                m_handlemsg_func = re.search(r'(\w+)::(\w+)::handleMessage\s*\(', stripped_line)
+                if m_handlemsg_func:
+                    class_name = m_handlemsg_func.group(1)
+                    handler_name = m_handlemsg_func.group(2)
+                    result["thread_entry_functions"].append({
+                        "file": file_path,
+                        "function": f"{class_name}::{handler_name}::handleMessage",
+                        "line": i
+                    })
+                # Detect class start
+                m_class = re.search(self.patterns['class_start'], stripped_line)
+                if m_class:
+                    current_class_name = m_class.group(1)
+                    if current_class_name.endswith('ServiceStub'):
+                        in_binder_stub_class = True
                 # Detect function/class/namespace starts
                 if re.search(self.patterns['function_start'], stripped_line):
                     in_function = True
+                    m_func = re.search(self.patterns['function_start'], stripped_line)
+                    if m_func:
+                        func_name = m_func.group(1)
+                        # Đánh dấu hàm trong ServiceStub là thread entrypoint
+                        if in_binder_stub_class:
+                            result["thread_entry_functions"].append({
+                                "file": file_path,
+                                "function": f"{current_class_name}::{func_name}",
+                                "line": i
+                            })
                 elif re.search(self.patterns['class_start'], stripped_line):
                     in_class = True
                 elif re.search(self.patterns['namespace_start'], stripped_line):
@@ -105,13 +141,13 @@ class CppParser:
                 # Tiger handler class
                 if re.search(self.patterns['tiger_handler_class'], stripped_line):
                     in_tiger_handler = True
-                # Binder ServiceStub class
+                # Binder ServiceStub class (legacy)
                 if re.search(self.patterns['tiger_binder_stub_class'], stripped_line):
                     in_binder_stub = True
                 # handleMessage function
                 if re.search(self.patterns['tiger_handle_message'], stripped_line):
                     current_function = "handleMessage"
-                # ServiceStub method
+                # ServiceStub method (legacy)
                 if re.search(self.patterns['tiger_binder_stub_method'], stripped_line):
                     current_function = "ServiceStub"
                 # Nhận diện tên biến vector kiểu thread
@@ -166,7 +202,9 @@ class CppParser:
                     in_class = False
                     in_tiger_handler = False
                     in_binder_stub = False
+                    in_binder_stub_class = False
                     current_function = ""
+                    current_class_name = ""
                 # Analyze patterns with context
                 context = self.get_thread_context(stripped_line, in_function, current_function, in_tiger_handler, in_binder_stub, entry_func_map, i)
                 # Ghi nhận biến toàn cục

@@ -603,7 +603,7 @@ Focus on actionable recommendations that can be immediately implemented.
             prioritized_files = self._prioritize_files_by_resource_leak_severity(leaks)
             file_contents = ""
             max_files = 3
-            max_file_size = 1200
+            max_file_size = 1200 # 1200 characters per file
             for i, (file_path, info) in enumerate(prioritized_files[:max_files]):
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
@@ -836,13 +836,14 @@ Focus on actionable recommendations that can be immediately implemented.
 
         # Build context_section
         file_count = 0
+        max_file_size = 50000
         for file_path in final_files:
             file_count += 1
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
-                if len(content) > 1200:
-                    content = content[:1200] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+                if len(content) > max_file_size:
+                    content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
                 filename = os.path.basename(file_path)
                 context_section += f"### {file_count}. 📁 **{filename}**\n"
                 context_section += f"**Path**: `{file_path}`\n"
@@ -872,33 +873,33 @@ Focus on actionable recommendations that can be immediately implemented.
         return context_section
     
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
-        """Create analysis prompt section with detailed race condition information (no grouping, no limit)"""
-        detected_races = race_result.get('potential_race_conditions', [])
-        prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
-        prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
-        if not detected_races:
-            prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
-            prompt_section += "However, please perform a manual review focusing on:\n"
-            prompt_section += "1. Shared state access patterns\n"
-            prompt_section += "2. Thread synchronization mechanisms\n"
-            prompt_section += "3. Atomic operations usage\n"
-            prompt_section += "4. Lock-free programming patterns\n\n"
-            return prompt_section
-        # Show all race conditions in detail
-        for i, race in enumerate(detected_races, 1):
-            severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
-            prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
-            prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
-            prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
-            prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
-            prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
-            if 'potential_causes' in race:
-                prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
-            if 'recommended_actions' in race:
-                prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
-            prompt_section += "\n" + "─" * 60 + "\n\n"
-        # Add summary recommendations
-        prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
+        """Create analysis prompt section with only Priority Analysis Guidelines (comment out detailed findings)"""
+        # Commented out: Detailed Race Condition Findings
+        # detected_races = race_result.get('potential_race_conditions', [])
+        # prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
+        # prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
+        # if not detected_races:
+        #     prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
+        #     prompt_section += "However, please perform a manual review focusing on:\n"
+        #     prompt_section += "1. Shared state access patterns\n"
+        #     prompt_section += "2. Thread synchronization mechanisms\n"
+        #     prompt_section += "3. Atomic operations usage\n"
+        #     prompt_section += "4. Lock-free programming patterns\n\n"
+        #     return prompt_section
+        # for i, race in enumerate(detected_races, 1):
+        #     severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
+        #     prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
+        #     prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
+        #     prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
+        #     prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
+        #     prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
+        #     if 'potential_causes' in race:
+        #         prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
+        #     if 'recommended_actions' in race:
+        #         prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
+        #     prompt_section += "\n" + "─" * 60 + "\n\n"
+        # Only keep Priority Analysis Guidelines
+        prompt_section = "## 🎯 Priority Analysis Guidelines:\n\n"
         prompt_section += "1. Focus on shared state accessed by multiple threads.\n"
         prompt_section += "2. Ensure proper synchronization (mutexes, locks, atomics).\n"
         prompt_section += "3. Review thread creation and join/detach logic.\n"

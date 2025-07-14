@@ -148,7 +148,28 @@ class PromptHandler:
             # logger.info(f"Tool result findings: {findings}")
 
             # Compose fallback-style prompt
-            fallback_prompt = f"""You are an expert C++ concurrency analyst.\n\nPlease use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential race conditions, focusing on:\n1. Unprotected shared state modifications\n2. Missing synchronization mechanisms\n3. Thread-unsafe patterns\n4. Potential deadlock scenarios\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\nUse this format for each issue found:\n\n## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n**Type:** [data_race|deadlock|missing_sync]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
+            fallback_prompt = (
+                f"You are an expert C++ concurrency analyst.\n\n"
+                f"Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\n"
+                "Then provide your expert analysis of potential race conditions, focusing on:\n"
+                "1. Unprotected shared state modifications\n"
+                "2. Missing synchronization mechanisms\n"
+                "3. Thread-unsafe patterns\n"
+                "4. Potential deadlock scenarios\n\n"
+                "Only provide your expert analysis. Do not repeat the Automated Findings section.\n\n"
+                "IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads "
+                "(e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only potential or speculative. "
+                "If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'\n\n"
+                "This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.\n\n"
+                "Additionally, propose refactored code for all relevant C++ files.\n\n"
+                "Use this format for each issue found:\n\n"
+                "## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n"
+                "**Type:** [data_race|deadlock|missing_sync]\n"
+                "**Severity:** [Critical|High|Medium|Low]\n"
+                "**Files Involved:** [list of files]\n"
+                "**Problem Description:** [explanation]\n"
+                "**Fix Recommendation:** [suggested solution]\n"
+            )
             if findings:
                 fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
             
@@ -215,7 +236,7 @@ class PromptHandler:
 
             findings = []
             # Compose fallback prompt
-            fallback_prompt = f"""You are an expert Linux C++ resource management analyst.\n\nPlease use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential resource leaks, focusing on:\n\n## 🎯 **Analysis Focus Areas**\n\n1. **File Resources:**\n   - Unmatched open()/close() calls\n   - FILE* streams not properly closed\n   - Missing fclose() for fopen()\n\n2. **Socket Resources:**\n   - Socket descriptors not closed\n   - Network connections left open\n   - Unmatched socket()/close() pairs\n\n3. **Memory Mapping:**\n   - mmap() without corresponding munmap()\n   - Shared memory segments not cleaned up\n\n4. **IPC Resources:**\n   - Message queues not destroyed\n   - Semaphores not cleaned up\n   - Shared memory not detached\n\n5. **Directory Handles:**\n   - opendir() without closedir()\n   - Directory streams left open\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\n## 📋 **Report Format**\nFor each resource leak found, use this format:\n\n### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]\n- **Severity:** [Critical|High|Medium|Low]\n- **File:** [filename]\n- **Line:** [line number]\n- **Resource:** [specific resource name/variable]\n- **Description:** [what resource is leaking and why]\n- **Fix:** [specific remediation steps]\n\nFocus on Linux-specific resources and provide actionable recommendations for each finding.\n"""
+            fallback_prompt = f"""You are an expert Linux C++ resource management analyst.\n\nPlease use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential resource leaks, focusing on:\n\n## 🎯 **Analysis Focus Areas**\n\n1. **File Resources:**\n   - Unmatched open()/close() calls\n   - FILE* streams not properly closed\n   - Missing fclose() for fopen()\n\n2. **Socket Resources:**\n   - Socket descriptors not closed\n   - Network connections left open\n   - Unmatched socket()/close() pairs\n\n3. **Memory Mapping:**\n   - mmap() without corresponding munmap()\n   - Shared memory segments not cleaned up\n\n4. **IPC Resources:**\n   - Message queues not destroyed\n   - Semaphores not cleaned up\n   - Shared memory not detached\n\n5. **Directory Handles:**\n   - opendir() without closedir()\n   - Directory streams left open\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\n## 📋 **Report Format**\nFor each resource leak found, use this format:\n\n### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]\n- **Severity:** [Critical|High|Medium|Low]\n- **File:** [filename]\n- **Line:** [line number]\n- **Resource:** [specific resource name/variable]\n- **Description:** [what resource is leaking and why]\n- **Fix:** [specific remediation steps]\n"""
             # Add detailed leak info with line numbers
             if leaks:
                 for i, leak in enumerate(leaks, 1):
@@ -282,6 +303,12 @@ Then provide your expert analysis of potential race conditions, focusing on:
 2. Missing synchronization mechanisms
 3. Thread-unsafe patterns
 4. Potential deadlock scenarios
+
+IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads
+(e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only potential or speculative.
+If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'
+
+This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.
 
 Use this format for each issue found:
 
@@ -418,32 +445,32 @@ Focus on Linux-specific resources and provide actionable recommendations for eac
     
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
         """Create analysis prompt section with detailed race condition information (no grouping, no limit)"""
-        detected_races = race_result.get('potential_race_conditions', [])
-        prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
-        prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
-        if not detected_races:
-            prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
-            prompt_section += "However, please perform a manual review focusing on:\n"
-            prompt_section += "1. Shared state access patterns\n"
-            prompt_section += "2. Thread synchronization mechanisms\n"
-            prompt_section += "3. Atomic operations usage\n"
-            prompt_section += "4. Lock-free programming patterns\n\n"
-            return prompt_section
-        # Show all race conditions in detail
-        for i, race in enumerate(detected_races, 1):
-            severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
-            prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
-            prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
-            prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
-            prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
-            prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
-            if 'potential_causes' in race:
-                prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
-            if 'recommended_actions' in race:
-                prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
-            prompt_section += "\n" + "─" * 60 + "\n\n"
-        # Add summary recommendations
-        prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
+        # Comment out the main prompt generation logic
+        # detected_races = race_result.get('potential_race_conditions', [])
+        # prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
+        # prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
+        # if not detected_races:
+        #     prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
+        #     prompt_section += "However, please perform a manual review focusing on:\n"
+        #     prompt_section += "1. Shared state access patterns\n"
+        #     prompt_section += "2. Thread synchronization mechanisms\n"
+        #     prompt_section += "3. Atomic operations usage\n"
+        #     prompt_section += "4. Lock-free programming patterns\n\n"
+        #     return prompt_section
+        # for i, race in enumerate(detected_races, 1):
+        #     severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
+        #     prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
+        #     prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
+        #     prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
+        #     prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
+        #     prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
+        #     if 'potential_causes' in race:
+        #         prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
+        #     if 'recommended_actions' in race:
+        #         prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
+        #     prompt_section += "\n" + "─" * 60 + "\n\n"
+        # Chỉ giữ lại phần hướng dẫn ưu tiên
+        prompt_section = "## 🎯 Priority Analysis Guidelines:\n\n"
         prompt_section += "1. Focus on shared state accessed by multiple threads.\n"
         prompt_section += "2. Ensure proper synchronization (mutexes, locks, atomics).\n"
         prompt_section += "3. Review thread creation and join/detach logic.\n"
