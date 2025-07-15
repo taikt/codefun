@@ -207,8 +207,8 @@ class ToolHandler:
         
         # Create rich metadata prompt for AI analysis
         metadata_section = self._create_memory_analysis_metadata(result, dir_path)
-        code_context_section = self._create_code_context_section(result, dir_path)
-        analysis_prompt = self._create_analysis_prompt_section(result)
+        code_context_section = self._create_memory_code_context_section(result, dir_path)
+        analysis_prompt = self._create_memory_analysis_prompt_section(result)
         
         # Combine all sections into comprehensive prompt
         full_prompt = f"""# 🔍 Memory Leak Analysis Request
@@ -306,19 +306,66 @@ Focus on actionable recommendations that can be immediately implemented.
         
         return metadata
     
-    def _create_code_context_section(self, result: dict, dir_path: str) -> str:
-        """Create per-file code context section for race condition analysis."""
-        file_summaries = result.get('summary', {}).get('file_summaries', {})
-        markdown_reports = result.get('summary', {}).get('markdown_reports', {})
-        section_lines = []
-        for idx, (file_path, summary) in enumerate(file_summaries.items(), 1):
-            rel_path = os.path.relpath(file_path, dir_path)
-            markdown = markdown_reports.get(file_path, "")
-            section_lines.append(f"### {idx}. 📁 **{os.path.basename(file_path)}**\n**Path**: `{file_path}`\n{summary}")
-            # Thread usage and entrypoints are already included in summary, so do not duplicate
-        return "\n\n".join(section_lines)
+    def _create_memory_code_context_section(self, result: dict, dir_path: str) -> str:
+        """Create OPTIMIZED code context section with smart token management and file prioritization"""
+        code_section = "## 📄 Relevant Code Context:\n\n"
+        
+        # Get files with memory leaks and prioritize them
+        files_with_leaks = self._prioritize_files_by_leak_severity(result.get('detected_leaks', []), dir_path)
+        
+        # TOKEN OPTIMIZATION: Aggressive limits for better efficiency
+        max_files = 3  # Max files to include (reduced from 5)
+        max_file_size = 50000  # Max characters per file 
+        processed_files = 0
+        
+        for file_path, leak_info in files_with_leaks[:max_files]:
+            if processed_files >= max_files:
+                code_section += f"### ⚠️ Additional Files ({len(files_with_leaks) - max_files} files truncated for token optimization)\n\n"
+                break
+                
+            try:
+                # logger.info("leak_info (short): %s", pprint.pformat({k: leak_info[k] for k in list(leak_info)[:5]}))
+                logger.info(f"[memory_leak] Reading file: {file_path}")
+                # Read file content with smart truncation
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # SMART TRUNCATION: Limit file size
+                if len(content) > max_file_size:
+                    content = content[:max_file_size] + "\n\n// ... [TRUNCATED for token optimization] ..."
+                
+                filename = file_path.split('/')[-1]
+                code_section += f"### 📁 {filename}\n"
+                code_section += f"**Path**: `{file_path}`\n"
+                #code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
+                # if 'leak_lines' in leak_info:
+                #     code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
+                # else:
+                #     code_section += "**Lines with Memory Operations**: (not available)\n\n"
+
+                all_lines = []
+                for leak in leak_info['leaks']:
+                    all_lines.extend(leak.get('leak_lines', []))
+                if all_lines:
+                    unique_lines = sorted(set(all_lines))
+                    code_section += f"**Lines with Memory Operations**: {unique_lines}\n"
+                else:
+                    code_section += "**Lines with Memory Operations**: (not available)\n"
+
+                # Add leak markers to content
+                marked_content = self._add_leak_markers_to_content(content, leak_info['leaks'])
+                code_section += f"```cpp\n{marked_content}\n```\n\n"
+                
+                processed_files += 1
+                
+            except Exception as e:
+                filename = file_path.split('/')[-1] if file_path else "unknown"
+                code_section += f"### 📁 {filename}\n"
+                code_section += f"```\n// Error reading file: {e}\n```\n\n"
+        
+        return code_section
     
-    def _create_analysis_prompt_section(self, result: dict) -> str:
+    def _create_memory_analysis_prompt_section(self, result: dict) -> str:
         """Create detailed analysis prompt section with complete leak information"""
         leaks = result.get('detected_leaks', [])
         
@@ -385,7 +432,7 @@ Focus on actionable recommendations that can be immediately implemented.
         
         return prompt_section
     
-    def _prioritize_files_by_leak_severity(self, leaks: list) -> list:
+    def _prioritize_files_by_leak_severity(self, leaks: list, dir_path: str) -> list:
         """Prioritize files by number of critical/high severity memory leaks"""
         file_leak_map = {}
         for leak in leaks:
@@ -429,12 +476,36 @@ Focus on actionable recommendations that can be immediately implemented.
                 f" (+{len(info['leaks'])-3} more)" if len(info['leaks']) > 3 else ""
             )
 
-        prioritized_files = sorted(
-            file_leak_map.items(),
-            key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
-            reverse=True
-        )
-        return prioritized_files
+        if all(info['total_leaks'] == 0 for info in file_leak_map.values()):
+            # Không có leak, lấy danh sách file C++ và sắp xếp theo số dòng
+            cpp_files = list_cpp_files(dir_path)  # dir_path là thư mục đang phân tích
+            file_line_counts = []
+            for file_path in cpp_files:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        line_count = sum(1 for _ in f)
+                except Exception:
+                    line_count = 0
+                file_line_counts.append((file_path, line_count))
+            # Sắp xếp giảm dần theo số dòng
+            sorted_files = sorted(file_line_counts, key=lambda x: x[1], reverse=True)
+            # Trả về [(file_path, empty_leak_info), ...]
+            return [(file_path, {'leaks': []}) for file_path, _ in sorted_files]
+        else:
+            # Sắp xếp như cũ theo critical_count, high_count, total_leaks
+            prioritized_files = sorted(
+                file_leak_map.items(),
+                key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
+                reverse=True
+            )
+            return prioritized_files
+        
+        # prioritized_files = sorted(
+        #     file_leak_map.items(),
+        #     key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
+        #     reverse=True
+        # )
+        # return prioritized_files
     
     def _prioritize_files_by_resource_leak_severity(self, leaks: list) -> list:
         """Prioritize files by number and severity of resource leaks (critical/high first)"""
