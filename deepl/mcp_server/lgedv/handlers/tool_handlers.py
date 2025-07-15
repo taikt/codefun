@@ -145,18 +145,53 @@ class ToolHandler:
         analysis_prompt = self._create_race_analysis_prompt_section(result)
         # Remove redundant thread entrypoint summary section
         # Combine all sections into comprehensive prompt
+
+        # full_prompt = (
+        #     "# 🔍 Race Condition Analysis Request\n\n"
+        #     f"{metadata_section}\n\n"
+        #     f"{code_context_section}\n"
+        #     f"{analysis_prompt}\n\n"
+        #     "## 🔧 Please Provide:\n\n"
+        #     "1. **Detailed Analysis**: Review each potential race condition and assess its validity\n"
+        #     "2. **Risk Assessment**: Categorize findings by severity and likelihood  \n"
+        #     "3. **Synchronization Strategy**: Recommend appropriate locking mechanisms\n"
+        #     "4. **Code Examples**: Show before/after code with proper synchronization\n\n"
+        #     "Focus on actionable recommendations that can be immediately implemented.\n"
+        # )
+
         full_prompt = (
-            "# 🔍 Race Condition Analysis Request\n\n"
+            f"You are an expert C++ concurrency analyst.\n\n"
+            f"Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}.\n\n"
+            f"Then provide your expert analysis of potential race conditions, focusing on:\n"
+            f"- Shared state accessed by multiple threads\n"
+            f"- Unprotected shared state modifications\n"
+            f"- Missing synchronization mechanisms (mutexes, locks, atomics)\n"
+            f"- Thread-unsafe patterns\n"
+            f"- Potential deadlock scenarios\n"
+            f"- Review thread creation and join/detach logic\n"
+            f"- Check for lock-free and concurrent data structure usage\n"
+            f"- Provide before/after code examples for fixes\n\n"
+            f"IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads (e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only potential or speculative. If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'\n\n"
+            f"This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.\n\n"
+            f"# Automated Findings (for your review):\n"
             f"{metadata_section}\n\n"
-            f"{code_context_section}\n"
-            f"{analysis_prompt}\n\n"
-            "## 🔧 Please Provide:\n\n"
-            "1. **Detailed Analysis**: Review each potential race condition and assess its validity\n"
-            "2. **Risk Assessment**: Categorize findings by severity and likelihood  \n"
-            "3. **Synchronization Strategy**: Recommend appropriate locking mechanisms\n"
-            "4. **Code Examples**: Show before/after code with proper synchronization\n\n"
-            "Focus on actionable recommendations that can be immediately implemented.\n"
+            f"{code_context_section}\n\n"
+            f"## 🔧 Please Provide\n"
+            f"1. **Detailed Analysis**: Review each potential race condition and assess its validity\n"
+            f"2. **Risk Assessment**: Categorize findings by severity and likelihood\n"
+            f"3. **Synchronization Strategy**: Recommend appropriate locking mechanisms\n"
+            f"4. **Code Examples**: Show before/after code with proper synchronization\n\n"
+            f"**For each issue found, use this format:**\n\n"
+            f"## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n"
+            f"**Type:** [data_race|deadlock|missing_sync]\n"
+            f"**Severity:** [Critical|High|Medium|Low]\n"
+            f"**Files Involved:** [list of files]\n"
+            f"**Function Name:** [function name or global scope/unknown]\n"
+            f"**Problem Description:** [explanation]\n"
+            f"**Fix Recommendation:** [suggested solution]\n"
+            f"\nFocus on actionable recommendations that can be immediately implemented.\n"
         )
+        
         return [types.TextContent(type="text", text=full_prompt)]
     
     async def _handle_ai_memory_analysis(self, arguments: dict) -> List[types.TextContent]:

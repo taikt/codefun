@@ -136,55 +136,24 @@ class PromptHandler:
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
             tool_result = await tool_handler._handle_detect_races({})
-            # Parse findings from tool_result
-            findings = []
+           
             if tool_result and hasattr(tool_result[0], 'text'):
-                text = tool_result[0].text
-                # Try to extract findings from the tool_result text (very simple, can be improved)
-                # If no findings, text will mention no race conditions
-                if 'Race Condition' in text or 'Race Condition Details' in text:
-                    findings.append(text)
-
-            # logger.info(f"Tool result findings: {findings}")
-
-            # Compose fallback-style prompt
-            fallback_prompt = (
-                f"You are an expert C++ concurrency analyst.\n\n"
-                f"Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\n"
-                "Then provide your expert analysis of potential race conditions, focusing on:\n"
-                "1. Unprotected shared state modifications\n"
-                "2. Missing synchronization mechanisms\n"
-                "3. Thread-unsafe patterns\n"
-                "4. Potential deadlock scenarios\n\n"
-                "Only provide your expert analysis. Do not repeat the Automated Findings section.\n\n"
-                "IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads "
-                "(e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only potential or speculative. "
-                "If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'\n\n"
-                "This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.\n\n"
-                "Additionally, propose refactored code for all relevant C++ files.\n\n"
-                "Use this format for each issue found:\n\n"
-                "## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n"
-                "**Type:** [data_race|deadlock|missing_sync]\n"
-                "**Severity:** [Critical|High|Medium|Low]\n"
-                "**Files Involved:** [list of files]\n"
-                "**Problem Description:** [explanation]\n"
-                "**Fix Recommendation:** [suggested solution]\n"
-            )
-            if findings:
-                fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
-            
-            messages = [
-                types.PromptMessage(
-                    role="user",
-                    content=types.TextContent(type="text", text=fallback_prompt),
+                tool_text = tool_result[0].text
+                messages = [
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=tool_text),
+                    )
+                ]
+                result = types.GetPromptResult(
+                    messages=messages,
+                    description="Race condition analysis (full result)",
                 )
-            ]
-            result = types.GetPromptResult(
-                messages=messages,
-                description="Race condition analysis (fallback style, always consistent)",
-            )
-            logger.info("Race condition analysis prompt (fallback style) completed")
-            return result
+                logger.info("Race condition analysis prompt (fallback style) completed")
+                return result
+            else:
+                 return self._create_fallback_race_prompt(dir_path, "No result from tool")
+            
         except Exception as e:
             logger.error(f"Error in race condition analysis: {e}")
             return self._create_fallback_race_prompt(dir_path, str(e))
@@ -295,30 +264,46 @@ class PromptHandler:
     
     def _create_fallback_race_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
         """Tạo fallback prompt khi có lỗi"""
-        fallback_prompt = f"""You are an expert C++ concurrency analyst. 
-Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}
+        # Lấy danh sách file C++ trong dir_path
+        try:
+            cpp_files = [f for f in os.listdir(dir_path) if f.endswith('.cpp')]
+            code_snippets = []
+            for f in cpp_files[:2]:  # Chỉ lấy 2 file đầu cho ngắn gọn
+                file_path = os.path.join(dir_path, f)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    code = file.read()
+                code_snippets.append(f"### {f}\n```cpp\n{code[:1000]}\n```\n")
+            code_context = "\n".join(code_snippets)
+        except Exception:
+            code_context = "Cannot get file C++."
 
-Then provide your expert analysis of potential race conditions, focusing on:
-1. Unprotected shared state modifications
-2. Missing synchronization mechanisms
-3. Thread-unsafe patterns
-4. Potential deadlock scenarios
-
-IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads
-(e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only potential or speculative.
-If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'
-
-This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.
-
-Use this format for each issue found:
-
-## 🚨 **RACE CONDITION #[number]**: [Brief Description]
-**Type:** [data_race|deadlock|missing_sync]
-**Severity:** [Critical|High|Medium|Low]
-**Files Involved:** [list of files]
-**Problem Description:** [explanation]
-**Fix Recommendation:** [suggested solution]
-"""
+        fallback_prompt = (
+            f"You are an expert C++ concurrency analyst.\n"
+            f"Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\n"
+            f"Then provide your expert analysis of potential race conditions, focusing on:\n"
+            f"1. Unprotected shared state modifications\n"
+            f"2. Missing synchronization mechanisms\n"
+            f"3. Thread-unsafe patterns\n"
+            f"4. Potential deadlock scenarios\n\n"
+            f"IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads\n"
+            f"(e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only potential or speculative.\n"
+            f"If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'\n\n"
+            f"This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.\n"
+            f"\n"
+            f"Use this format for each issue found:\n"
+            f"\n"
+            f"## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n"
+            f"**Type:** [data_race|deadlock|missing_sync]\n"
+            f"**Severity:** [Critical|High|Medium|Low]\n"
+            f"**Files Involved:** [list of files]\n"
+            f"**Function Name:** [function name or global scope/unknown]\n"
+            f"**Problem Description:** [explanation]\n"
+            f"**Fix Recommendation:** [suggested solution]\n\n"
+            f"Target Directory: {dir_path}\n"
+            f"Files Found: {', '.join(cpp_files)}\n"
+            f"# Source Code Context\n"
+            f"{code_context}"
+        )
         messages = [
             types.PromptMessage(
                 role="user", 
