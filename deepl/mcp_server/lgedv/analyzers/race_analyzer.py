@@ -419,20 +419,20 @@ class RaceConditionAnalyzer:
             thread_entry_md = markdown_reports[file_path]
             logger.info(f"[THREAD_ENTRY_MD] File: {file_path} | Value:\n{thread_entry_md}")
         # Tìm potential race conditions
-        resource_access_map = self._build_resource_access_map(all_resources)
-        potential_races = self._detect_race_conditions(resource_access_map, all_threads)
+        # resource_access_map = self._build_resource_access_map(all_resources)
+        # potential_races = self._detect_race_conditions(resource_access_map, all_threads)
         # Tạo summary chi tiết cho từng file
         file_summaries = {}
         for file_path in full_paths:
             file_name = os.path.basename(file_path)
             thread_count = len(all_threads.get(file_path, []))
-            race_count = sum(1 for rc in potential_races if file_path in rc.files_involved)
-            races = [f"{rc.type}: {rc.description}" for rc in potential_races if file_path in rc.files_involved]
+            # race_count = sum(1 for rc in potential_races if file_path in rc.files_involved)
+            # races = [f"{rc.type}: {rc.description}" for rc in potential_races if file_path in rc.files_involved]
             thread_entry_md = markdown_reports[file_path]
             summary_text = (
                 f"### 1. 📁 **{file_name}**\n"
                 f"**Path**: `{file_path}`\n"
-                f"**Race Conditions**: {race_count} found\n" + '\n'.join(races) +
+                #f"**Race Conditions**: {race_count} found\n" + '\n'.join(races) +
                 f"\n**Thread Usage**: {thread_count} thread-related operations"
             )
             if thread_entry_md and thread_entry_md.strip() and thread_entry_md.strip() != "No detect thread entrypoint functions.":
@@ -442,16 +442,16 @@ class RaceConditionAnalyzer:
         # Tạo summary tổng hợp
         summary = {
             "total_files_analyzed": len(cpp_files),
-            "total_shared_resources": len(resource_access_map),
-            "potential_races": len(potential_races),
+            #"total_shared_resources": len(resource_access_map),
+            #"potential_races": len(potential_races),
             "files_with_threads": len([f for f, threads in all_threads.items() if threads]),
             "markdown_reports": markdown_reports,
             "file_summaries": file_summaries
         }
         return AnalysisResult(
-            shared_resources=resource_access_map,
+            #shared_resources=resource_access_map,
             thread_usage=all_threads,
-            potential_race_conditions=potential_races,
+            #potential_race_conditions=potential_races,
             summary=summary
         )
     

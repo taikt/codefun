@@ -38,27 +38,27 @@ class RaceCondition:
 @dataclass
 class AnalysisResult:
     """Kết quả phân tích toàn bộ codebase"""
-    shared_resources: Dict[str, List[dict]]
+    # shared_resources: Dict[str, List[dict]]
     thread_usage: Dict[str, List[dict]]
-    potential_race_conditions: List[RaceCondition]
+    # potential_race_conditions: List[RaceCondition]
     summary: Dict[str, any]
     
     def to_dict(self) -> Dict:
         """Convert to dictionary for JSON serialization"""
         return {
-            "shared_resources": self.shared_resources,
+            # "shared_resources": self.shared_resources,
             "thread_usage": self.thread_usage,
-            "potential_race_conditions": [
-                {
-                    "severity": rc.severity,
-                    "type": rc.type,
-                    "description": rc.description,
-                    "files_involved": rc.files_involved,
-                    "resources_involved": rc.resources_involved,
-                    "line_numbers": rc.line_numbers,
-                    "fix_recommendation": rc.fix_recommendation
-                } for rc in self.potential_race_conditions
-            ],
+            # "potential_race_conditions": [
+            #     {
+            #         "severity": rc.severity,
+            #         "type": rc.type,
+            #         "description": rc.description,
+            #         "files_involved": rc.files_involved,
+            #         "resources_involved": rc.resources_involved,
+            #         "line_numbers": rc.line_numbers,
+            #         "fix_recommendation": rc.fix_recommendation
+            #     } for rc in self.potential_race_conditions
+            # ],
             "summary": self.summary
         }
 

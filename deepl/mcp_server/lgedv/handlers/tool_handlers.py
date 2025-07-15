@@ -134,8 +134,8 @@ class ToolHandler:
         for file_path, summary in file_summaries.items():
             logger.info("[RACE FILE SUMMARY] File: %s\n%s", file_path, summary)
         # Log detected races for debugging
-        detected_races = result.get('potential_race_conditions', [])
-        logger.info(f"[detect_races] detected_races: {detected_races}")
+        # detected_races = result.get('potential_race_conditions', [])
+        # logger.info(f"[detect_races] detected_races: {detected_races}")
         # Log thread usage for debugging
         thread_usage = result.get('thread_usage', {})
         logger.info(f"[detect_races] thread_usage: {thread_usage}")
@@ -750,22 +750,22 @@ Focus on actionable recommendations that can be immediately implemented.
         metadata_section += f"**Target Directory:** `{dir_path}`\n"
         
         summary = race_result.get('summary', {})
-        detected_races = race_result.get('potential_race_conditions', [])
+        #detected_races = race_result.get('potential_race_conditions', [])
         
         metadata_section += f"**Files Analyzed:** {summary.get('total_files_analyzed', 0)} C++ files\n"
-        metadata_section += f"**Race Conditions Found:** {len(detected_races)}\n"
+        #metadata_section += f"**Race Conditions Found:** {len(detected_races)}\n"
         
-        if detected_races:
-            # Count by severity
-            severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
-            for race in detected_races:
-                severity = race.get('severity', 'medium').lower()
-                if severity in severity_counts:
-                    severity_counts[severity] += 1
+        # if detected_races:
+        #     # Count by severity
+        #     severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+        #     for race in detected_races:
+        #         severity = race.get('severity', 'medium').lower()
+        #         if severity in severity_counts:
+        #             severity_counts[severity] += 1
             
-            metadata_section += f"**Severity Breakdown:** {severity_counts['critical']} Critical, "
-            metadata_section += f"{severity_counts['high']} High, {severity_counts['medium']} Medium, "
-            metadata_section += f"{severity_counts['low']} Low\n"
+        #     metadata_section += f"**Severity Breakdown:** {severity_counts['critical']} Critical, "
+        #     metadata_section += f"{severity_counts['high']} High, {severity_counts['medium']} Medium, "
+        #     metadata_section += f"{severity_counts['low']} Low\n"
         
         metadata_section += "\n"
         return metadata_section
