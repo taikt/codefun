@@ -209,38 +209,47 @@ class ToolHandler:
         metadata_section = self._create_memory_analysis_metadata(result, dir_path)
         code_context_section = self._create_memory_code_context_section(result, dir_path)
         analysis_prompt = self._create_memory_analysis_prompt_section(result)
-        
-        # Combine all sections into comprehensive prompt
-        full_prompt = f"""# 🔍 Memory Leak Analysis Request
+          
+        full_prompt = (
+            f"You are an expert C++ memory management analyst.\n\n"
+            f"Please use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}.\n\n"
+            f"Then provide your expert analysis of potential memory leaks, focusing on:\n"
+            f"- **Unreleased memory allocations**\n"
+            f"- **Dangling pointers**\n"
+            f"- **Memory corruption issues**\n"
+            f"- **Inefficient memory usage patterns**\n"
+            f"- **Focus on leaks with 0 deallocations first:** These are guaranteed leaks\n"
+            f"- **Check allocation/deallocation type mismatches:** `new`/`delete[]`, `malloc`/`delete`, etc.\n"
+            f"- **Look for exception safety issues:** Leaks when exceptions occur\n"
+            f"- **Verify RAII compliance:** Use smart pointers where possible\n"
+            f"- **Check constructor/destructor pairs:** Ensure proper cleanup in class destructors\n\n"
+            f"Only provide your expert analysis. Do not repeat the Automated Findings section.\n"
+            f"Additionally, propose refactored code for all relevant C++ files.\n\n"
 
-{metadata_section}
-
-{code_context_section}
-
-{analysis_prompt}
-
-## 🔧 Please Provide:
-
-1. **Detailed Analysis**: Review each potential memory leak and assess its validity
-2. **Risk Assessment**: Categorize findings by severity and likelihood  
-3. **Fix Recommendations**: Specific code changes for each issue
-4. **Best Practices**: Suggest modern C++ approaches (RAII, smart pointers)
-5. **Prevention Strategies**: How to avoid similar issues in the future
-
-## 📋 Expected Output Format:
-
-For each memory leak found:
-- **Issue Type**: (e.g., Missing delete, Mismatched allocation)
-- **Severity**: Critical/High/Medium/Low
-- **Location**: File and line number
-- **Current Code**: Show the problematic code
-- **Fixed Code**: Show the corrected version
-- **Explanation**: Why this is a problem and how the fix works
-
-Focus on actionable recommendations that can be immediately implemented.
-"""
+            f"# Automated Findings (for your review):\n"
+            f"{metadata_section}\n\n"
+            f"{code_context_section}\n\n"
+            f"{analysis_prompt}\n\n"
+            f"## 🔧 Please Provide\n"
+            f"1. **Detailed Analysis:** Review each potential memory leak and assess its validity\n"
+            f"2. **Risk Assessment:** Categorize findings by severity and likelihood \n"
+            f"3. **Fix Recommendations:** Specific code changes for each issue\n"
+            f"4. **Best Practices:** Suggest modern C++ approaches (RAII, smart pointers)\n"
+            f"5. **Prevention Strategies:** How to avoid similar issues in the future\n\n"
+            f"**For each issue found, use this format:**\n\n"
+            f"## 🚨 **MEMORY LEAK #[number]**: [Brief Description]\n"
+            f"**Type:** [Missing delete|Mismatched allocation|etc]\n"
+            f"**Severity:** [Critical|High|Medium|Low]\n"
+            f"**Files Involved:** [list of files]\n"
+            f"**Function Name:** [function name or global scope/unknown]\n"
+            f"**Problem Description:** [explanation]\n"
+            f"**Current Code**: Show the problematic code\n"
+            f"**Fix Recommendation:** [suggested solution]\n"
+            f"\nFocus on actionable recommendations that can be immediately implemented.\n"
+        )
         
         return [types.TextContent(type="text", text=full_prompt)]
+      
     
     def _create_memory_analysis_metadata(self, result: dict, dir_path: str) -> str:
         """Create rich metadata section for memory analysis"""
@@ -266,44 +275,31 @@ Focus on actionable recommendations that can be immediately implemented.
         memory_flows = result.get('memory_flows', {})
         cross_file_flows = len([f for f in memory_flows.values() if f.get('is_cross_file', False)])
         
-        metadata = f"""## 🎯 Key Areas to Focus:
-1. **Unmatched Allocations**: `new`/`malloc` without corresponding `delete`/`free`
-2. **Mismatched Operations**: `new[]` with `delete`, `malloc` with `delete`, etc.
-3. **Exception Safety**: Memory leaks in exception paths
-4. **Class Destructors**: Missing deallocations in destructors
-5. **Smart Pointer Usage**: Areas that could benefit from RAII
-
-## 📊 Comprehensive Analysis Results:
-
-### 🗂️ Project Overview:
-- **Directory Analyzed**: `{dir_path}`
-- **Total Files Processed**: {files_analyzed}
-- **Total Variables Tracked**: {len(memory_flows)}
-- **Analysis Scope**: Full codebase with dynamic grouping
-
-### 📈 Memory Operations Summary:
-- **Total Allocations Found**: {total_allocations}
-- **Total Deallocations Found**: {total_deallocations}
-- **Allocation/Deallocation Ratio**: {ratio:.2f} {'✅' if ratio >= 0.9 else '⚠️' if ratio >= 0.5 else '🔴'}
-- **Memory Operations Balance**: {'Good' if ratio >= 0.9 else 'Poor' if ratio < 0.5 else 'Fair'}
-
-### 🚨 Leak Severity Distribution:
-- **Critical**: {len(critical_leaks)} leaks (Immediate action required)
-- **High**: {len(high_leaks)} leaks (Review soon)  
-- **Medium**: {len(medium_leaks)} leaks (Monitor and fix)
-- **Total Issues**: {len(leaks)} potential memory leaks
-
-### 🔍 Leak Pattern Analysis:
-- **Definite Leaks** (No cleanup): {len(no_dealloc_leaks)} cases 🔴
-- **Partial Leaks** (Incomplete cleanup): {len(partial_dealloc_leaks)} cases 🟡
-- **Cross-File Memory Flows**: {cross_file_flows} complex cases
-- **Single-File Leaks**: {len(leaks) - cross_file_flows} localized cases
-
-### 🎯 Risk Assessment:
-- **Immediate Risk**: {'HIGH' if len(no_dealloc_leaks) > 5 else 'MEDIUM' if len(no_dealloc_leaks) > 0 else 'LOW'}
-- **Code Quality**: {'Poor' if ratio < 0.3 else 'Fair' if ratio < 0.7 else 'Good'}
-- **Maintenance Burden**: {'High' if len(leaks) > 10 else 'Medium' if len(leaks) > 5 else 'Low'}"""
-        
+        metadata = (
+            f"## 📊 Comprehensive Analysis Results:\n"
+            f"### 🗂️ Project Overview:\n"
+            f"- **Directory Analyzed**: `{dir_path}`\n"
+            f"- **Total Files Processed**: {files_analyzed}\n"
+            f"- **Total Variables Tracked**: {len(memory_flows)}\n"
+            f"- **Analysis Scope**: Full codebase with dynamic grouping\n\n"
+            f"### 📈 Memory Operations Summary:\n"
+            f"- **Total Allocations Found**: {total_allocations}\n"
+            f"- **Total Deallocations Found**: {total_deallocations}\n"
+            f"- **Allocation/Deallocation Ratio**: {ratio:.2f} "
+            f"{'✅' if ratio >= 0.9 else '⚠️' if ratio >= 0.5 else '🔴'}\n"
+            f"- **Memory Operations Balance**: "
+            f"{'Good' if ratio >= 0.9 else 'Poor' if ratio < 0.5 else 'Fair'}\n\n"
+            f"### 🚨 Leak Severity Distribution:\n"
+            f"- **Critical**: {len(critical_leaks)} leaks (Immediate action required)\n"
+            f"- **High**: {len(high_leaks)} leaks (Review soon)\n"
+            f"- **Medium**: {len(medium_leaks)} leaks (Monitor and fix)\n"
+            f"- **Total Issues**: {len(leaks)} potential memory leaks\n\n"
+            f"### 🔍 Leak Pattern Analysis:\n"
+            f"- **Definite Leaks** (No cleanup): {len(no_dealloc_leaks)} cases 🔴\n"
+            f"- **Partial Leaks** (Incomplete cleanup): {len(partial_dealloc_leaks)} cases 🟡\n"
+            f"- **Cross-File Memory Flows**: {cross_file_flows} complex cases\n"
+            f"- **Single-File Leaks**: {len(leaks) - cross_file_flows} localized cases\n"
+        )
         return metadata
     
     def _create_memory_code_context_section(self, result: dict, dir_path: str) -> str:
@@ -423,12 +419,12 @@ Focus on actionable recommendations that can be immediately implemented.
             prompt_section += "\n" + "─" * 60 + "\n\n"
         
         # Add summary recommendations
-        prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
-        prompt_section += "1. **Focus on leaks with 0 deallocations first** - These are guaranteed leaks\n"
-        prompt_section += "2. **Check allocation/deallocation type mismatches** - `new`/`delete[]`, `malloc`/`delete`, etc.\n"
-        prompt_section += "3. **Look for exception safety issues** - Leaks when exceptions occur\n"
-        prompt_section += "4. **Verify RAII compliance** - Use smart pointers where possible\n"
-        prompt_section += "5. **Check constructor/destructor pairs** - Ensure proper cleanup in class destructors\n\n"
+        # prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
+        # prompt_section += "1. **Focus on leaks with 0 deallocations first** - These are guaranteed leaks\n"
+        # prompt_section += "2. **Check allocation/deallocation type mismatches** - `new`/`delete[]`, `malloc`/`delete`, etc.\n"
+        # prompt_section += "3. **Look for exception safety issues** - Leaks when exceptions occur\n"
+        # prompt_section += "4. **Verify RAII compliance** - Use smart pointers where possible\n"
+        # prompt_section += "5. **Check constructor/destructor pairs** - Ensure proper cleanup in class destructors\n\n"
         
         return prompt_section
     

@@ -166,26 +166,23 @@ class PromptHandler:
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
             tool_result = await tool_handler._handle_ai_memory_analysis({"dir_path": dir_path})
-            findings = []
+            
             if tool_result and hasattr(tool_result[0], 'text'):
-                text = tool_result[0].text
-                if 'Memory Leak' in text or 'Detailed Memory Leak Findings' in text:
-                    findings.append(text)
-            fallback_prompt = f"""You are an expert C++ memory management analyst.\n\nPlease use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}\n\nThen provide your expert analysis of potential memory leaks, focusing on:\n1. Unreleased memory allocations\n2. Dangling pointers\n3. Memory corruption issues\n4. Inefficient memory usage patterns\n\nOnly provide your expert analysis. Do not repeat the Automated Findings section.\n\nAdditionally, propose refactored code for all relevant C++ files.\n\nUse this format for each issue found:\n\n## 🚨 **MEMORY LEAK #[number]**: [Brief Description]\n**Severity:** [Critical|High|Medium|Low]\n**Files Involved:** [list of files]\n**Problem Description:** [explanation]\n**Fix Recommendation:** [suggested solution]\n"""
-            if findings:
-                fallback_prompt += "\n---\n\n# Automated Findings (for your review):\n\n" + "\n\n".join(findings)
-            messages = [
-                types.PromptMessage(
-                    role="user",
-                    content=types.TextContent(type="text", text=fallback_prompt),
+                tool_text = tool_result[0].text
+                messages = [
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=tool_text),
+                    )
+                ]
+                result = types.GetPromptResult(
+                    messages=messages,
+                    description="Memory leak analysis (full result)",
                 )
-            ]
-            result = types.GetPromptResult(
-                messages=messages,
-                description="Memory leak analysis (fallback style, always consistent)",
-            )
-            logger.info("Memory leak analysis prompt (fallback style) completed")
-            return result
+                logger.info("Memory leak analysis prompt")
+                return result
+            else:
+                 return self._create_fallback_memory_leak_prompt(dir_path, "No result from tool")
         except Exception as e:
             logger.error(f"Error in memory leak analysis: {e}")
             return self._create_fallback_memory_leak_prompt(dir_path, str(e))
@@ -322,29 +319,28 @@ class PromptHandler:
     def _create_fallback_memory_leak_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
         """Tạo fallback prompt cho phân tích rò rỉ bộ nhớ"""
         fallback_prompt = f"""You are an expert C++ memory management analyst. 
+            There was an error analyzing the codebase for memory leaks automatically: {error_msg}
 
-There was an error analyzing the codebase for memory leaks automatically: {error_msg}
+            Please use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}
 
-Please use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}
+            Then provide your expert analysis of potential memory leaks, focusing on:
+            1. Unreleased memory allocations
+            2. Dangling pointers
+            3. Memory corruption issues
+            4. Inefficient memory usage patterns
 
-Then provide your expert analysis of potential memory leaks, focusing on:
-1. Unreleased memory allocations
-2. Dangling pointers
-3. Memory corruption issues
-4. Inefficient memory usage patterns
+            Only provide your expert analysis. Do not repeat the Automated Findings section.
 
-Only provide your expert analysis. Do not repeat the Automated Findings section.
+            Additionally, propose refactored code for all relevant C++ files.
 
-Additionally, propose refactored code for all relevant C++ files.
+            Use this format for each issue found:
 
-Use this format for each issue found:
-
-## 🚨 **MEMORY LEAK #[number]**: [Brief Description]
-**Severity:** [Critical|High|Medium|Low]
-**Files Involved:** [list of files]
-**Problem Description:** [explanation]
-**Fix Recommendation:** [suggested solution]
-"""
+            ## 🚨 **MEMORY LEAK #[number]**: [Brief Description]
+            **Severity:** [Critical|High|Medium|Low]
+            **Files Involved:** [list of files]
+            **Problem Description:** [explanation]
+            **Fix Recommendation:** [suggested solution]
+            """
         messages = [
             types.PromptMessage(
                 role="user", 
