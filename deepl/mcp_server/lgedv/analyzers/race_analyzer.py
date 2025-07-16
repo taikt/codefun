@@ -106,13 +106,33 @@ class CppParser:
                         "line": i
                     })
                 # --- Detect handleMessage method outside class scope ---
-                m_handlemsg_func = re.search(r'(\w+)::(\w+)::handleMessage\s*\(', stripped_line)
-                if m_handlemsg_func:
-                    class_name = m_handlemsg_func.group(1)
-                    handler_name = m_handlemsg_func.group(2)
+                # m_handlemsg_func = re.search(r'(\w+)::(\w+)::handleMessage\s*\(', stripped_line)
+                # if m_handlemsg_func:
+                #     class_name = m_handlemsg_func.group(1)
+                #     handler_name = m_handlemsg_func.group(2)
+                #     result["thread_entry_functions"].append({
+                #         "file": file_path,
+                #         "function": f"{class_name}::{handler_name}::handleMessage",
+                #         "line": i
+                #     })
+                # --- Detect handleMessage method outside class scope ---
+                # Trường hợp 1: SomeClass::SomeHandler::handleMessage(
+                m_handlemsg_func2 = re.search(r'(\w+)::(\w+)::handleMessage\s*\(', stripped_line)
+                if m_handlemsg_func2:
+                    class_name = m_handlemsg_func2.group(1)
+                    handler_name = m_handlemsg_func2.group(2)
                     result["thread_entry_functions"].append({
                         "file": file_path,
                         "function": f"{class_name}::{handler_name}::handleMessage",
+                        "line": i
+                    })
+                # Trường hợp 2: ECallNGCallProcess::handleMessage(
+                m_handlemsg_func1 = re.search(r'(\w+)::handleMessage\s*\(', stripped_line)
+                if m_handlemsg_func1:
+                    class_name = m_handlemsg_func1.group(1)
+                    result["thread_entry_functions"].append({
+                        "file": file_path,
+                        "function": f"{class_name}::handleMessage",
                         "line": i
                     })
                 # Detect class start
