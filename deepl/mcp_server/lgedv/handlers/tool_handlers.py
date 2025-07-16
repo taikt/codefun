@@ -59,10 +59,9 @@ class ToolHandler:
             elif name == "detect_races":
                 return await self._handle_detect_races(arguments)
             elif name == "analyze_leaks":
-                return await self._handle_ai_memory_analysis(arguments)
+                return await self._handle_memory_analysis(arguments)
             elif name == "analyze_resources":
-                # return await self._handle_analyze_resources(arguments)
-                return await self._handle_ai_resource_analysis(arguments)
+                return await self._handle_resource_analysis(arguments)
             
             else:
                 raise ValueError(f"Unknown tool: {name}")
@@ -143,23 +142,8 @@ class ToolHandler:
         # Create rich metadata prompt for AI analysis similar to memory analyzer
         metadata_section = self._create_race_analysis_metadata(result, dir_path)
         code_context_section = self._create_race_code_context_section(result, dir_path)
-        analysis_prompt = self._create_race_analysis_prompt_section(result)
-        # Remove redundant thread entrypoint summary section
-        # Combine all sections into comprehensive prompt
-
-        # full_prompt = (
-        #     "# 🔍 Race Condition Analysis Request\n\n"
-        #     f"{metadata_section}\n\n"
-        #     f"{code_context_section}\n"
-        #     f"{analysis_prompt}\n\n"
-        #     "## 🔧 Please Provide:\n\n"
-        #     "1. **Detailed Analysis**: Review each potential race condition and assess its validity\n"
-        #     "2. **Risk Assessment**: Categorize findings by severity and likelihood  \n"
-        #     "3. **Synchronization Strategy**: Recommend appropriate locking mechanisms\n"
-        #     "4. **Code Examples**: Show before/after code with proper synchronization\n\n"
-        #     "Focus on actionable recommendations that can be immediately implemented.\n"
-        # )
-
+        # analysis_prompt = self._create_race_analysis_prompt_section(result)
+       
         full_prompt = (
             f"You are an expert C++ concurrency analyst.\n\n"
             f"Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}.\n\n"
@@ -195,63 +179,7 @@ class ToolHandler:
         
         return [types.TextContent(type="text", text=full_prompt)]
     
-    async def _handle_ai_memory_analysis(self, arguments: dict) -> List[types.TextContent]:
-        """Handle AI-powered memory leak analysis - sử dụng CPP_DIR từ config"""
-        # Sử dụng CPP_DIR trực tiếp, không nhận tham số dir_path nữa
-        dir_path = get_cpp_dir()
-        logger.info(f"[analyze_leaks] Using CPP_DIR: {dir_path}")
-        
-        # Use the new MemoryAnalyzer
-        analyzer = MemoryAnalyzer()
-        result = analyzer.analyze_codebase(dir_path)
-        logger.info(f"AI memory leak analysis v2 completed for dir: {dir_path}")
-        
-        # Create rich metadata prompt for AI analysis
-        metadata_section = self._create_memory_analysis_metadata(result, dir_path)
-        code_context_section = self._create_memory_code_context_section(result, dir_path)
-        analysis_prompt = self._create_memory_analysis_prompt_section(result)
-          
-        full_prompt = (
-            f"You are an expert C++ memory management analyst.\n\n"
-            f"Please use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}.\n\n"
-            f"Then provide your expert analysis of potential memory leaks, focusing on:\n"
-            f"- **Unreleased memory allocations**\n"
-            f"- **Dangling pointers**\n"
-            f"- **Memory corruption issues**\n"
-            f"- **Inefficient memory usage patterns**\n"
-            f"- **Focus on leaks with 0 deallocations first:** These are guaranteed leaks\n"
-            f"- **Check allocation/deallocation type mismatches:** `new`/`delete[]`, `malloc`/`delete`, etc.\n"
-            f"- **Look for exception safety issues:** Leaks when exceptions occur\n"
-            f"- **Verify RAII compliance:** Use smart pointers where possible\n"
-            f"- **Check constructor/destructor pairs:** Ensure proper cleanup in class destructors\n\n"
-            f"Only provide your expert analysis. Do not repeat the Automated Findings section.\n"
-            f"Additionally, propose refactored code for all relevant C++ files.\n\n"
 
-            f"# Automated Findings (for your review):\n"
-            f"{metadata_section}\n\n"
-            f"{code_context_section}\n\n"
-            f"{analysis_prompt}\n\n"
-            f"## 🔧 Please Provide\n"
-            f"1. **Detailed Analysis:** Review each potential memory leak and assess its validity\n"
-            f"2. **Risk Assessment:** Categorize findings by severity and likelihood \n"
-            f"3. **Fix Recommendations:** Specific code changes for each issue\n"
-            f"4. **Best Practices:** Suggest modern C++ approaches (RAII, smart pointers)\n"
-            f"5. **Prevention Strategies:** How to avoid similar issues in the future\n\n"
-            f"**For each issue found, use this format:**\n\n"
-            f"## 🚨 **MEMORY LEAK #[number]**: [Brief Description]\n"
-            f"**Type:** [Missing delete|Mismatched allocation|etc]\n"
-            f"**Severity:** [Critical|High|Medium|Low]\n"
-            f"**Files Involved:** [list of files]\n"
-            f"**Function Name:** [function name or global scope/unknown]\n"
-            f"**Problem Description:** [explanation]\n"
-            f"**Current Code**: Show the problematic code\n"
-            f"**Fix Recommendation:** [suggested solution]\n"
-            f"\nFocus on actionable recommendations that can be immediately implemented.\n"
-        )
-        
-        return [types.TextContent(type="text", text=full_prompt)]
-      
-    
     def _create_memory_analysis_metadata(self, result: dict, dir_path: str) -> str:
         """Create rich metadata section for memory analysis"""
         summary = result.get('summary', {})
@@ -323,8 +251,12 @@ class ToolHandler:
             try:
                 # logger.info("leak_info (short): %s", pprint.pformat({k: leak_info[k] for k in list(leak_info)[:5]}))
                 logger.info(f"[memory_leak] Reading file: {file_path}")
+                if not os.path.isabs(file_path):
+                    abs_path = os.path.join(dir_path, file_path)
+                else:
+                    abs_path = file_path
                 # Read file content with smart truncation
-                with open(file_path, 'r', encoding='utf-8') as f:
+                with open(abs_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
                 # SMART TRUNCATION: Limit file size
@@ -475,11 +407,14 @@ class ToolHandler:
 
         if all(info['total_leaks'] == 0 for info in file_leak_map.values()):
             # Không có leak, lấy danh sách file C++ và sắp xếp theo số dòng
+            logger.info("No memory leaks found, listing C++ files by line count")
             cpp_files = list_cpp_files(dir_path)  # dir_path là thư mục đang phân tích
             file_line_counts = []
             for file_path in cpp_files:
+                abs_path = os.path.join(dir_path, file_path)
+                logger.info(f"Counting lines in file: {abs_path}")
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(abs_path, 'r', encoding='utf-8') as f:
                         line_count = sum(1 for _ in f)
                 except Exception:
                     line_count = 0
@@ -551,8 +486,12 @@ class ToolHandler:
             cpp_files = list_cpp_files(dir_path)  # dir_path là thư mục đang phân tích
             file_line_counts = []
             for file_path in cpp_files:
+                if not os.path.isabs(file_path):
+                    abs_path = os.path.join(dir_path, file_path)
+                else:
+                    abs_path = file_path
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(abs_path, 'r', encoding='utf-8') as f:
                         line_count = sum(1 for _ in f)
                 except Exception:
                     line_count = 0
@@ -602,78 +541,6 @@ class ToolHandler:
                 marked_lines.append(line)
         return '\n'.join(marked_lines)
     
-    # ham nay co ve khong duoc goi tu prompt handler?
-    async def _handle_analyze_resources(self, arguments: dict) -> List[types.TextContent]:
-        """
-        Handle resource leak analysis tool
-        
-        Returns:
-            List[types.TextContent]: Analysis results
-        """
-        cpp_dir = get_cpp_dir()
-        logger.info(f"Starting resource leak analysis on directory: {cpp_dir}")
-        
-        try:
-            # Initialize resource analyzer
-            analyzer = ResourceAnalyzer()
-            
-            # Analyze directory for resource leaks - analyzer will use CPP_DIR internally
-            leaks = analyzer.analyze_directory()
-            logger.info(f"Resource leak analysis found {len(leaks)} leaks in directory: {cpp_dir}")
-
-            # Format results
-            if not leaks:
-                result_text = f"✅ **Resource Leak Analysis Complete**\n\nNo resource leaks detected in {cpp_dir}\n\nAnalyzed resources:\n- File descriptors (open/close)\n- Socket connections (socket/close)\n- Memory mappings (mmap/munmap)\n- Directory handles (opendir/closedir)\n- IPC resources (shared memory, semaphores)\n- Other Linux resources\n\n📊 **Status**: CLEAN"
-            else:
-                result_text = f"🔍 **Resource Leak Analysis Results**\n\nDirectory: {cpp_dir}\nTotal leaks found: {len(leaks)}\n\n"
-                
-                # Group leaks by type and severity
-                leak_summary = self._summarize_resource_leaks(leaks)
-                result_text += f"📋 **Summary by Type:**\n{leak_summary}\n\n"
-                
-                # Detailed leak information
-                result_text += "📝 **Detailed Findings:**\n\n"
-                for i, leak in enumerate(leaks, 1):
-                    result_text += f"**{i}. {leak['resource_type'].upper().replace('_', ' ')} Leak**\n"
-                    result_text += f"   - Variable: {leak['variable']}\n"
-                    result_text += f"   - Resource Type: {leak['resource_type']}\n"
-                    result_text += f"   - Files Involved: {len(leak['files_involved'])} file(s)\n"
-                    result_text += f"   - Severity: {leak['severity']}\n"
-                    result_text += f"   - Open Operations: {leak['open_operations']}\n"
-                    result_text += f"   - Close Operations: {leak['close_operations']}\n"
-                    
-                    # Show file details
-                    for file_info in leak.get('files_involved', []):
-                        file_short = file_info.split('/')[-1] if isinstance(file_info, str) else str(file_info)
-                        result_text += f"   - File: {file_short}\n"
-                    
-                    # Show open details
-                    if leak.get('open_details'):
-                        result_text += f"   - Open Locations:\n"
-                        for detail in leak['open_details'][:3]:  # Limit to first 3
-                            file_short = detail['file'].split('/')[-1]
-                            result_text += f"     • {file_short}:{detail['line']} ({detail['details']})\n"
-                    
-                    # Show recommendation
-                    if leak.get('recommendation'):
-                        result_text += f"   - Fix: {leak['recommendation']}\n"
-                    result_text += "\n"
-            
-            logger.info(f"Resource leak analysis completed. Found {len(leaks)} leaks")
-            
-            return [types.TextContent(
-                type="text",
-                text=result_text
-            )]
-            
-        except Exception as e:
-            error_msg = f"❌ Resource leak analysis failed: {str(e)}"
-            logger.error(error_msg)
-            return [types.TextContent(
-                type="text", 
-                text=error_msg
-            )]
-    
     def _summarize_resource_leaks(self, leaks: list) -> str:
         """
         Summarize resource leaks by type and severity
@@ -710,7 +577,7 @@ class ToolHandler:
         
         return result
     
-    async def _handle_ai_memory_analysis(self, arguments: dict) -> List[types.TextContent]:
+    async def _handle_memory_analysis(self, arguments: dict) -> List[types.TextContent]:
         """Handle AI-powered memory leak analysis - sử dụng CPP_DIR từ config"""
         # Sử dụng CPP_DIR trực tiếp, không nhận tham số dir_path nữa
         dir_path = get_cpp_dir()
@@ -767,7 +634,7 @@ class ToolHandler:
         return [types.TextContent(type="text", text=full_prompt)]
     
     # ham nay duoc goi tu prompt handler
-    async def _handle_ai_resource_analysis(self, arguments: dict) -> List[types.TextContent]:
+    async def _handle_resource_analysis(self, arguments: dict) -> List[types.TextContent]:
         """
         Handle AI resource leak analysis - tạo rich prompt cho Copilot analysis
         Prioritize files by leak severity for code context (like memory analyzer)
@@ -794,54 +661,6 @@ class ToolHandler:
         analysis_prompt = self._create_resource_findings_section(result)
         # logger.info(f"analysis_prompt: {analysis_prompt}")
 
-        # full_prompt = (
-        #     f"You are an expert Linux C++ resource management analyst.\n\n"
-        #     f"**Task:**\n"
-        #     f"Please use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {cpp_dir}.\n\n"
-        #     f"Then provide your expert analysis of potential resource leaks, focusing on:\n\n"
-        #     f"**File Resources:**\n" 
-        #     f"- Unmatched open()/close() calls\n"
-        #     f"- FILE streams not properly closed\n"
-        #     f"- Missing fclose() for fopen()\n\n"
-        #     f"**Socket Resources:**\n"
-        #     f"- Socket descriptors not closed\n"
-        #     f"- Network connections left open\n"
-        #     f"- Unmatched socket()/close() pairs\n\n"
-        #     f"**Memory Mapping:**\n"
-        #     f"- mmap() without corresponding munmap()\n"
-        #     f"- Shared memory segments not cleaned up\n\n"
-        #     f"**IPC Resources:**\n"
-        #     f"- Message queues not destroyed\n"
-        #     f"- Semaphores not cleaned up\n"
-        #     f"- Shared memory not detached\n\n"
-        #     f"**Directory Handles:**\n"
-        #     f"- opendir() without closedir()\n"
-        #     f"- Directory streams left open\n\n"
-            
-        #     f"Only provide your expert analysis. Do not repeat the Automated Findings section.\n"
-        #     f"Additionally, propose refactored code for all relevant C++ files.\n\n"
-
-        #     f"# Automated Findings (for your review):\n"
-        #     f"{metadata_section}\n\n"
-        #     f"{code_context_section}\n\n"
-        #     f"{analysis_prompt}\n\n"
-        #     f"## 🔧 Please Provide\n"
-        #     f"1. **Detailed Analysis:** Review each potential leak resource and assess its validity\n"
-        #     f"2. **Risk Assessment:** Categorize findings by severity and likelihood \n"
-        #     f"3. **Fix Recommendations:** Specific code changes for each issue\n"
-        #     f"4. **Best Practices:** Suggest modern C++ approaches\n"
-        #     f"5. **Prevention Strategies:** How to avoid similar issues in the future\n\n"
-        #     f"**For each issue found, use this format:**\n\n"
-        #     f"## 🚨 **RESOUCE LEAK #[number]**: [Brief Description]\n"
-        #     f"**Type:** [resource type]\n"
-        #     f"**Severity:** [Critical|High|Medium|Low]\n"
-        #     f"**Files Involved:** [list of files]\n"
-        #     f"**Function Name:** [function name or global scope/unknown]\n"
-        #     f"**Problem Description:** [explanation]\n"
-        #     f"**Current Code**: Show the problematic code\n"
-        #     f"**Fix Recommendation:** [suggested solution]\n"
-        #     f"\nFocus on actionable recommendations that can be immediately implemented.\n"
-        # )
         full_prompt = (
             f"You are an expert Linux C++ resource management analyst.\n\n"
             f"**Task:**\n"
@@ -878,57 +697,8 @@ class ToolHandler:
         )
         
         return [types.TextContent(type="text", text=full_prompt)]
-        
-        
-    # # ham nay duoc goi tu prompt handler
-    # async def _handle_ai_resource_analysis(self, arguments: dict) -> List[types.TextContent]:
-    #     """
-    #     Handle AI resource leak analysis - tạo rich prompt cho Copilot analysis
-    #     Prioritize files by leak severity for code context (like memory analyzer)
-    #     """
-    #     cpp_dir = get_cpp_dir()
-    #     logger.info(f"Starting AI resource leak analysis on directory: {cpp_dir}")
-    #     try:
-    #         analyzer = ResourceAnalyzer()
-    #         leaks = analyzer.analyze_directory()
-    #         logger.info(f"AI resource leak analysis found {len(leaks)} leaks in directory: {cpp_dir}")
-    #         if not leaks:
-    #             return [types.TextContent(
-    #                 type="text",
-    #                 text=f"# 🔍 Linux C++ Resource Leak Analysis\n\n❌ No resource leaks detected in: {cpp_dir}"
-    #             )]
-    #         # Prioritize files by leak severity
-    #         prioritized_files = self._prioritize_files_by_resource_leak_severity(leaks,cpp_dir)
-    #         file_contents = ""
-    #         max_files = 3
-    #         max_file_size = 50000 # characters per file
-    #         for i, (file_path, info) in enumerate(prioritized_files[:max_files]):
-    #             try:
-    #                 with open(file_path, 'r', encoding='utf-8') as f:
-    #                     content = f.read()
-    #                 if len(content) > max_file_size:
-    #                     content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
-    #                 file_name = os.path.basename(file_path)
-    #                 file_contents += f"### {i+1}. `{file_name}`\n\n```cpp\n{content}\n```\n\n"
-    #             except Exception as e:
-    #                 file_name = os.path.basename(file_path)
-    #                 file_contents += f"### {i+1}. `{file_name}` (Error: {e})\n\n"
-    #         prompt_content = f"""# 🔍 Linux C++ Resource Leak Analysis Request\n\n## 📊 **Analysis Metadata**\n\n- **Directory**: `{cpp_dir}`\n- **Analysis Type**: Linux C++ Resource Leak Detection\n- **Files Found**: {len(prioritized_files)}\n- **Files Shown**: {min(len(prioritized_files), max_files)}\n\n## 📝 **Source Code Context**\n\n{file_contents}\n## 🎯 **Analysis Guidelines**\n\nPlease analyze the above C++ code for Linux resource management issues:\n\n1. **File Descriptors**: Check for unmatched open()/close() calls\n2. **Sockets**: Verify socket descriptors are properly closed  \n3. **Memory Mappings**: Ensure mmap() has corresponding munmap()\n4. **Directory Handles**: Check opendir()/closedir() pairs\n5. **IPC Resources**: Verify shared memory, semaphores, message queues cleanup\n\n## 📋 **Expected Output Format**\n\nFor each potential resource leak:\n- **Resource Type**: File descriptor, socket, mmap, etc.\n- **Severity**: Critical/High/Medium/Low based on system impact\n- **Location**: File and line number\n- **Problem**: What resource is not being cleaned up\n- **Fix**: Specific code changes needed\n- **RAII Solution**: Modern C++ wrapper suggestions\n\nFocus on Linux-specific resources and provide actionable recommendations.\n"""
-    #         logger.info(f"AI resource leak analysis content generated: {len(prompt_content)} chars")
-    #         return [types.TextContent(
-    #             type="text",
-    #             text=prompt_content
-    #         )]
-    #     except Exception as e:
-    #         error_msg = f"❌ AI resource leak analysis failed: {str(e)}"
-    #         logger.error(error_msg)
-    #         return [types.TextContent(
-    #             type="text",
-    #             text=error_msg
-    #         )]
     
-  
-    
+        
     def _create_resource_analysis_metadata(self, analysis_result: dict, cpp_dir: str) -> str:
         """Create metadata section for resource analysis"""
         detected_leaks = analysis_result.get("detected_leaks", [])
@@ -980,7 +750,11 @@ class ToolHandler:
                 # logger.info("leak_info (short): %s", pprint.pformat({k: leak_info[k] for k in list(leak_info)[:5]}))
                 logger.info(f"[memory_leak] Reading file: {file_path}")
                 # Read file content with smart truncation
-                with open(file_path, 'r', encoding='utf-8') as f:
+                if not os.path.isabs(file_path):
+                    abs_path = os.path.join(cpp_dir, file_path)
+                else:
+                    abs_path = file_path
+                with open(abs_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
                 # SMART TRUNCATION: Limit file size
@@ -1162,7 +936,11 @@ class ToolHandler:
         for file_path in final_files:
             file_count += 1
             try:
-                with open(file_path, 'r', encoding='utf-8') as f:
+                if not os.path.isabs(file_path):
+                    abs_path = os.path.join(dir_path, file_path)
+                else:
+                    abs_path = file_path
+                with open(abs_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 if len(content) > max_file_size:
                     content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."

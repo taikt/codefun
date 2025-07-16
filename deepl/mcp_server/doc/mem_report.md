@@ -437,7 +437,7 @@ python -c "
 import asyncio
 from lgedv.handlers.tool_handlers import ToolHandler
 handler = ToolHandler()
-result = asyncio.run(handler._handle_ai_memory_analysis({
+result = asyncio.run(handler._handle_memory_analysis({
     'dir_path': '/home/worker/src/code_test/memory_leak/test_1'
 }))
 print(f'Token count: ~{len(result[0].text) // 4}')

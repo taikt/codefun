@@ -11,7 +11,7 @@ participant "Storage" as storage #yellow
 autonumber
 copilot -> controller : get_prompt (check_leaks)
 controller -> promptHandler : handle_prompt("check_leaks")
-promptHandler -> toolHandler : _handle_ai_memory_analysis()
+promptHandler -> toolHandler : _handle_memory_analysis()
 toolHandler -> memoryAnalyzer : analyze_codebase()
 memoryAnalyzer -> storage : read C++ files
 storage --> memoryAnalyzer : file contents
