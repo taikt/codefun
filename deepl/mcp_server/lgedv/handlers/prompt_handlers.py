@@ -245,7 +245,7 @@ class PromptHandler:
             tool_handler = ToolHandler()
             # Also append the original findings text for reference
             tool_result = await tool_handler._handle_ai_resource_analysis({})
-            logger.info(f"tool_result: {tool_result}")
+            # logger.info(f"tool_result: {tool_result}")
             if tool_result and hasattr(tool_result[0], 'text'):
                 tool_text = tool_result[0].text
                 messages = [

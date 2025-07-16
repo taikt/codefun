@@ -358,8 +358,8 @@ class ResourceAnalyzer:
         
         # Detect resource leaks
         detected_leaks = self._detect_resource_leaks(resource_groups, resource_flows)
-        for i, leak in enumerate(detected_leaks):
-            logger.info(f"[taikt] Leak {i}: type={type(leak)}, value={leak}")
+        # for i, leak in enumerate(detected_leaks):
+        #     logger.info(f"[taikt] Leak {i}: type={type(leak)}, value={leak}")
 
         # AI context for complex cases
         ai_context = self._prepare_ai_context_for_complex_cases(detected_leaks, resource_groups)
