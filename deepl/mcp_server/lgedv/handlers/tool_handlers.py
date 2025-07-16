@@ -866,15 +866,128 @@ class ToolHandler:
         metadata_section += "\n"
         return metadata_section
     
+    # def _create_race_code_context_section(self, result: dict, dir_path: str) -> str:
+    #     """
+    #     Create rich code context section with actual source files and thread entry summaries.
+    #     Ưu tiên:
+    #     1. Tối đa 3 file phát hiện race (file_race_count).
+    #     2. Nếu < 3, bổ sung file có nhiều thread entry points nhất.
+    #     3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (dựa vào số dòng).
+    #     Đảm bảo luôn chọn đủ 3 file nếu số lượng file C++ đầu vào >= 3.
+    #     """
+    #     import collections
+    #     context_section = "## 📁 Source Code Context\n\n"
+    #     summary = result.get('summary', {})
+    #     detected_races = result.get('potential_race_conditions', [])
+    #     markdown_reports = summary.get('markdown_reports', {})
+    #     thread_usage = result.get('thread_usage', {})
+
+    #     for file_path, usage in thread_usage.items():
+    #         logger.info(f"taikt- [thread_usage] File: {file_path} | Thread usage count: {len(usage)}")
+
+    #     # Lấy danh sách tất cả file C++ đầu vào
+    #     all_cpp_files = summary.get('all_cpp_files', [])
+    #     if not all_cpp_files:
+    #         # Fallback: lấy từ file_summaries nếu không có all_cpp_files
+    #         all_cpp_files = list(summary.get('file_summaries', {}).keys())
+
+    #     logger.info(f"taikt- [all_cpp_files] Total: {len(all_cpp_files)} files: {all_cpp_files}")
+    #     for file_path in all_cpp_files:
+    #         markdown = markdown_reports.get(file_path, "")
+            
+    #         if markdown.strip() == "No detect thread entrypoint functions." or not markdown.strip():
+    #             entry_points_count = 0
+    #         else:
+    #             entry_points_count = len([line for line in markdown.splitlines() if line.strip()])
+            
+    #         logger.info(f"[thread_entry_points] File: {file_path} | Entry points: {entry_points_count}\n{markdown}")
+        
+
+    #     # 1. Ưu tiên file phát hiện race
+    #     file_race_count = collections.defaultdict(int)
+    #     for race in detected_races:
+    #         for file_path in race.get('files_involved', []):
+    #             file_race_count[file_path] += 1
+    #     top_files = sorted(file_race_count.items(), key=lambda x: x[1], reverse=True)
+    #     selected_files = [file_path for file_path, _ in top_files]
+
+    #     # 2. Nếu < 3, bổ sung file có nhiều thread entry points nhất
+    #     if len(selected_files) < 3:
+    #         remaining_files = [f for f in all_cpp_files if f not in selected_files]
+    #         thread_entry_counts = {f: len(thread_usage.get(f, [])) for f in remaining_files}
+    #         thread_sorted = sorted(thread_entry_counts.items(), key=lambda x: x[1], reverse=True)
+    #         for f, _ in thread_sorted:
+    #             if f not in selected_files:
+    #                 selected_files.append(f)
+    #             if len(selected_files) == 3:
+    #                 break
+
+    #     # 3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (số dòng)
+    #     if len(selected_files) < 3:
+    #         code_line_counts = {}
+    #         for f in all_cpp_files:
+    #             if f not in selected_files:
+    #                 try:
+    #                     with open(f, 'r', encoding='utf-8') as file:
+    #                         code_line_counts[f] = sum(1 for _ in file)
+    #                 except Exception:
+    #                     code_line_counts[f] = 0
+    #         code_sorted = sorted(code_line_counts.items(), key=lambda x: x[1], reverse=True)
+    #         for f, _ in code_sorted:
+    #             if f not in selected_files:
+    #                 selected_files.append(f)
+    #             if len(selected_files) == 3:
+    #                 break
+
+    #     # Nếu số lượng file đầu vào < 3 thì lấy hết
+    #     if len(all_cpp_files) < 3:
+    #         final_files = list(dict.fromkeys(all_cpp_files))  # Giữ thứ tự, loại trùng
+    #     else:
+    #         final_files = selected_files[:3]
+
+    #     # Build context_section
+    #     file_count = 0
+    #     max_file_size = 50000
+    #     for file_path in final_files:
+    #         file_count += 1
+    #         try:
+    #             if not os.path.isabs(file_path):
+    #                 abs_path = os.path.join(dir_path, file_path)
+    #             else:
+    #                 abs_path = file_path
+    #             with open(abs_path, 'r', encoding='utf-8') as f:
+    #                 content = f.read()
+    #             if len(content) > max_file_size:
+    #                 content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+    #             filename = os.path.basename(file_path)
+    #             context_section += f"### {file_count}. 📁 **{filename}**\n"
+    #             context_section += f"**Path**: `{file_path}`\n"
+    #             # Race summary
+    #             file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
+    #             if file_races:
+    #                 context_section += f"**Race Conditions**: {len(file_races)} found\n"
+    #                 for race in file_races[:2]:
+    #                     context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
+    #             # Thread usage summary
+    #             file_threads = thread_usage.get(file_path, [])
+    #             if file_threads:
+    #                 context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
+    #             # Thread entry markdown
+    #             markdown = markdown_reports.get(file_path, "")
+    #             if markdown:
+    #                 context_section += f"**Thread Entry Points**:\n{markdown}\n"
+    #             # Actual code
+    #             context_section += f"\n```cpp\n{content}\n```\n\n"
+    #         except Exception as e:
+    #             filename = os.path.basename(file_path)
+    #             context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
+    #     files_analyzed = summary.get('total_files_analyzed', 0)
+    #     remaining_files = files_analyzed - len(final_files)
+    #     if remaining_files > 0:
+    #         context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
+    #     return context_section
+    
     def _create_race_code_context_section(self, result: dict, dir_path: str) -> str:
-        """
-        Create rich code context section with actual source files and thread entry summaries.
-        Ưu tiên:
-        1. Tối đa 3 file phát hiện race (file_race_count).
-        2. Nếu < 3, bổ sung file có nhiều thread entry points nhất.
-        3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (dựa vào số dòng).
-        Đảm bảo luôn chọn đủ 3 file nếu số lượng file C++ đầu vào >= 3.
-        """
         import collections
         context_section = "## 📁 Source Code Context\n\n"
         summary = result.get('summary', {})
@@ -885,93 +998,90 @@ class ToolHandler:
         # Lấy danh sách tất cả file C++ đầu vào
         all_cpp_files = summary.get('all_cpp_files', [])
         if not all_cpp_files:
-            # Fallback: lấy từ file_summaries nếu không có all_cpp_files
             all_cpp_files = list(summary.get('file_summaries', {}).keys())
 
-        # 1. Ưu tiên file phát hiện race
-        file_race_count = collections.defaultdict(int)
-        for race in detected_races:
-            for file_path in race.get('files_involved', []):
-                file_race_count[file_path] += 1
-        top_files = sorted(file_race_count.items(), key=lambda x: x[1], reverse=True)
-        selected_files = [file_path for file_path, _ in top_files]
+        logger.info(f"taikt- [all_cpp_files] Total: {len(all_cpp_files)} files: {all_cpp_files}")
 
-        # 2. Nếu < 3, bổ sung file có nhiều thread entry points nhất
-        if len(selected_files) < 3:
-            remaining_files = [f for f in all_cpp_files if f not in selected_files]
-            thread_entry_counts = {f: len(thread_usage.get(f, [])) for f in remaining_files}
-            thread_sorted = sorted(thread_entry_counts.items(), key=lambda x: x[1], reverse=True)
-            for f, _ in thread_sorted:
-                if f not in selected_files:
-                    selected_files.append(f)
-                if len(selected_files) == 3:
-                    break
-
-        # 3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (số dòng)
-        if len(selected_files) < 3:
-            code_line_counts = {}
-            for f in all_cpp_files:
-                if f not in selected_files:
-                    try:
-                        with open(f, 'r', encoding='utf-8') as file:
-                            code_line_counts[f] = sum(1 for _ in file)
-                    except Exception:
-                        code_line_counts[f] = 0
-            code_sorted = sorted(code_line_counts.items(), key=lambda x: x[1], reverse=True)
-            for f, _ in code_sorted:
-                if f not in selected_files:
-                    selected_files.append(f)
-                if len(selected_files) == 3:
-                    break
-
-        # Nếu số lượng file đầu vào < 3 thì lấy hết
-        if len(all_cpp_files) < 3:
-            final_files = list(dict.fromkeys(all_cpp_files))  # Giữ thứ tự, loại trùng
+        # Nếu số lượng file <= 3 thì lấy hết
+        if len(all_cpp_files) <= 3:
+            final_files = list(dict.fromkeys(all_cpp_files))
         else:
-            final_files = selected_files[:3]
-
-        # Build context_section
-        file_count = 0
-        max_file_size = 50000
-        for file_path in final_files:
-            file_count += 1
-            try:
-                if not os.path.isabs(file_path):
-                    abs_path = os.path.join(dir_path, file_path)
-                else:
-                    abs_path = file_path
-                with open(abs_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                if len(content) > max_file_size:
-                    content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
-                filename = os.path.basename(file_path)
-                context_section += f"### {file_count}. 📁 **{filename}**\n"
-                context_section += f"**Path**: `{file_path}`\n"
-                # Race summary
-                file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
-                if file_races:
-                    context_section += f"**Race Conditions**: {len(file_races)} found\n"
-                    for race in file_races[:2]:
-                        context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
-                # Thread usage summary
-                file_threads = thread_usage.get(file_path, [])
-                if file_threads:
-                    context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
-                # Thread entry markdown
+            # Tính entry_points_count và số dòng code cho từng file
+            file_stats = []
+            for file_path in all_cpp_files:
                 markdown = markdown_reports.get(file_path, "")
-                if markdown:
-                    context_section += f"**Thread Entry Points**:\n{markdown}\n"
-                # Actual code
-                context_section += f"\n```cpp\n{content}\n```\n\n"
-            except Exception as e:
-                filename = os.path.basename(file_path)
-                context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
-        files_analyzed = summary.get('total_files_analyzed', 0)
-        remaining_files = files_analyzed - len(final_files)
-        if remaining_files > 0:
-            context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
-        return context_section
-    
+                if markdown.strip() == "No detect thread entrypoint functions." or not markdown.strip():
+                    entry_points_count = 0
+                else:
+                    entry_points_count = len([line for line in markdown.splitlines() if line.strip()])
+                # Đếm số dòng code
+                try:
+                    if not os.path.isabs(file_path):
+                        abs_path = os.path.join(dir_path, file_path)
+                    else:
+                        abs_path = file_path
+                    with open(abs_path, 'r', encoding='utf-8') as f:
+                        code_lines = sum(1 for _ in f)
+                except Exception:
+                    code_lines = 0
+                file_stats.append((file_path, entry_points_count, code_lines))
+            # Sắp xếp ưu tiên: entry_points_count giảm dần, nếu bằng thì code_lines giảm dần
+            file_stats_sorted = sorted(
+                file_stats,
+                key=lambda x: (x[1], x[2]),
+                reverse=True
+            )
+            final_files = [f[0] for f in file_stats_sorted[:3]]
+
+            # Log selected files with entry_points_count and code_lines
+            for file_path, entry_points_count, code_lines in file_stats_sorted[:3]:
+                logger.info(
+                    "[race_context_selection] File: %s | Entry points: %d | Code lines: %d",
+                    file_path, entry_points_count, code_lines
+                )
+
+            # Build context_section
+            file_count = 0
+            max_file_size = 50000
+            for file_path in final_files:
+                file_count += 1
+                try:
+                    if not os.path.isabs(file_path):
+                        abs_path = os.path.join(dir_path, file_path)
+                    else:
+                        abs_path = file_path
+                    with open(abs_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    if len(content) > max_file_size:
+                        content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+                    filename = os.path.basename(file_path)
+                    context_section += f"### {file_count}. 📁 **{filename}**\n"
+                    context_section += f"**Path**: `{file_path}`\n"
+                    # Race summary
+                    file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
+                    if file_races:
+                        context_section += f"**Race Conditions**: {len(file_races)} found\n"
+                        for race in file_races[:2]:
+                            context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
+                    # Thread usage summary
+                    file_threads = thread_usage.get(file_path, [])
+                    if file_threads:
+                        context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
+                    # Thread entry markdown
+                    markdown = markdown_reports.get(file_path, "")
+                    if markdown:
+                        context_section += f"**Thread Entry Points**:\n{markdown}\n"
+                    # Actual code
+                    context_section += f"\n```cpp\n{content}\n```\n\n"
+                except Exception as e:
+                    filename = os.path.basename(file_path)
+                    context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
+            files_analyzed = summary.get('total_files_analyzed', 0)
+            remaining_files = files_analyzed - len(final_files)
+            if remaining_files > 0:
+                context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
+            return context_section
+
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
         """Create analysis prompt section with only Priority Analysis Guidelines (comment out detailed findings)"""
         # Commented out: Detailed Race Condition Findings
