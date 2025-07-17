@@ -156,8 +156,12 @@ class ToolHandler:
             f"- Review thread creation and join/detach logic\n"
             f"- Check for lock-free and concurrent data structure usage\n"
             f"- Provide before/after code examples for fixes\n\n"
-            f"IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads (e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only speculative or lack evidence. If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'\n\n"
-            f"This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.\n\n"
+            f"IMPORTANT: Only list race conditions or deadlocks if there is clear evidence " 
+            f"in the code that a variable or resource is accessed from multiple threads "
+            f"(e.g., thread creation, callback, or handler running on a different thread). "
+            f"Do not warn about cases that are only speculative or lack evidence. "
+            f"If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'"
+            f" This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.\n\n"
             f"# Automated Findings (for your review):\n"
             f"{metadata_section}\n\n"
             f"{code_context_section}\n\n"
@@ -1040,47 +1044,47 @@ class ToolHandler:
                     file_path, entry_points_count, code_lines
                 )
 
-            # Build context_section
-            file_count = 0
-            max_file_size = 50000
-            for file_path in final_files:
-                file_count += 1
-                try:
-                    if not os.path.isabs(file_path):
-                        abs_path = os.path.join(dir_path, file_path)
-                    else:
-                        abs_path = file_path
-                    with open(abs_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                    if len(content) > max_file_size:
-                        content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
-                    filename = os.path.basename(file_path)
-                    context_section += f"### {file_count}. 📁 **{filename}**\n"
-                    context_section += f"**Path**: `{file_path}`\n"
-                    # Race summary
-                    file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
-                    if file_races:
-                        context_section += f"**Race Conditions**: {len(file_races)} found\n"
-                        for race in file_races[:2]:
-                            context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
-                    # Thread usage summary
-                    file_threads = thread_usage.get(file_path, [])
-                    if file_threads:
-                        context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
-                    # Thread entry markdown
-                    markdown = markdown_reports.get(file_path, "")
-                    if markdown:
-                        context_section += f"**Thread Entry Points**:\n{markdown}\n"
-                    # Actual code
-                    context_section += f"\n```cpp\n{content}\n```\n\n"
-                except Exception as e:
-                    filename = os.path.basename(file_path)
-                    context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
-            files_analyzed = summary.get('total_files_analyzed', 0)
-            remaining_files = files_analyzed - len(final_files)
-            if remaining_files > 0:
-                context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
-            return context_section
+        # Build context_section
+        file_count = 0
+        max_file_size = 50000
+        for file_path in final_files:
+            file_count += 1
+            try:
+                if not os.path.isabs(file_path):
+                    abs_path = os.path.join(dir_path, file_path)
+                else:
+                    abs_path = file_path
+                with open(abs_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                if len(content) > max_file_size:
+                    content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
+                filename = os.path.basename(file_path)
+                context_section += f"### {file_count}. 📁 **{filename}**\n"
+                context_section += f"**Path**: `{file_path}`\n"
+                # Race summary
+                file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
+                if file_races:
+                    context_section += f"**Race Conditions**: {len(file_races)} found\n"
+                    for race in file_races[:2]:
+                        context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
+                # Thread usage summary
+                file_threads = thread_usage.get(file_path, [])
+                if file_threads:
+                    context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
+                # Thread entry markdown
+                markdown = markdown_reports.get(file_path, "")
+                if markdown:
+                    context_section += f"**Thread Entry Points**:\n{markdown}\n"
+                # Actual code
+                context_section += f"\n```cpp\n{content}\n```\n\n"
+            except Exception as e:
+                filename = os.path.basename(file_path)
+                context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
+        files_analyzed = summary.get('total_files_analyzed', 0)
+        remaining_files = files_analyzed - len(final_files)
+        if remaining_files > 0:
+            context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
+        return context_section
 
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
         """Create analysis prompt section with only Priority Analysis Guidelines (comment out detailed findings)"""
