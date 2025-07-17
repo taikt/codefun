@@ -6,13 +6,13 @@
   }
 ],
 "servers": {
-  // The "servers" section defines the MCP servers you want to use
-  "mcp_server": {
+  "lgedv": {
      "command": "/home/worker/src/codefun/deepl/mcp_server/venv/bin/codeguard",
      "args": ["--transport", "stdio"],
      "env": {
-      "CPP_DIR": "/home/worker/src/code_test/src"
-    }
+      "CPP_DIR": "/home/worker/src/code_test/race_condition/test_3",
+      "CUSTOM_RULE_PATH": "/home/worker/src/copilot_md/Custom.md" 
   }
  }
+}
 }
