@@ -11,12 +11,13 @@ import mcp.types as types
 # Thiết lập cấu hình logging
 def setup_logging():
     """Setup logging configuration"""
+    log_path = os.path.join(os.getcwd(), "mcp_simple_prompt.log")
     logging.basicConfig(
         level=logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
             logging.StreamHandler(sys.stderr),
-            logging.FileHandler("/tmp/mcp_simple_prompt.log")
+            logging.FileHandler(log_path)
         ]
     )
     return logging.getLogger(__name__)

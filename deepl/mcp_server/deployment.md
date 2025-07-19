@@ -1,4 +1,4 @@
-## upload package
+# Build and upload package
 Truy cập https://pypi.org/account/register/
 Đăng ký tài khoản và xác thực email.
 
@@ -17,18 +17,81 @@ Kết quả: thư mục dist/ sẽ có file .whl và .tar.gz
 upload len PyPI
 twine upload dist/*
 
-## user install
+# Instation by user
+## on Linux
 python3 -m venv venv
 source venv/bin/activate
 pip install codeguard-lgedv
 
-## user setup mcp.json
+### mcp.json
 "servers": {
   "codeguard": {
     "command": "/duong_dan_toi_venv/bin/codeguard",
     "args": ["--transport", "stdio"]
   }
 }
+
+
+## on window
+### 1. Cài đặt Python và pip
+- Truy cập trang chủ Python: https://www.python.org/downloads/windows/
+- Tải bản Python 3.9+ (khuyến nghị 3.10 hoặc mới hơn).
+- Chạy file cài đặt, chọn **Add Python to PATH** trước khi nhấn Install.
+- Sau khi cài xong, mở Command Prompt (cmd) và kiểm tra:
+  ```bash
+  python --version
+  pip --version
+  ```
+---
+
+### 2. Tạo môi trường ảo (venv)
+
+- Tạo thư mục dự án (ví dụ: `C:\mcp_test`)
+- Mở cmd tại thư mục đó, chạy:
+  ```bash
+  python -m venv venv
+  ```
+- Kích hoạt venv:
+  ```bash
+  venv\Scripts\activate
+  ```
+- Kiểm tra lại:
+  ```bash
+  python --version
+  pip --version
+  ```
+
+### 3. Cài đặt MCP server từ PyPI
+
+- Cài đặt package (ví dụ: `codeguard-lgedv` hoặc tên package bạn đã upload):
+  ```bash
+  pip install codeguard-lgedv
+  ```
+- Kiểm tra file thực thi đã cài:
+  ```bash
+  dir venv\Scripts\codeguard.exe
+  ```
+  Nếu thấy file `codeguard.exe` là đã cài thành công.
+
+---
+
+### 4. Cấu hình file mcp.json (nếu dùng với extension hoặc cần custom rule)
+- create folder .vscode on current codebase
+- create file mcp.json in .vscode folder
+- Ví dụ nội dung:
+  ```json
+  "servers": {
+  "lgedv": {
+     "command": "C:\\Users\\tai2.tran\\mcp_server\\venv\\Scripts\\codeguard.exe",
+     "args": ["--transport", "stdio"],
+     "env": {
+      "CPP_DIR": "E:\\src\\code_test\\mem_leak",
+      "CUSTOM_RULE_PATH": "E:\\src\\codefun\\deepl\\mcp_server\\lgedv\\resources\\CustomRule.md" 
+  }
+  }
+  }
+  ```
+
 
 
 
@@ -115,17 +178,6 @@ File thực thi sẽ nằm ở `dist/codeguard`.
 - Đường dẫn file markdown là đường dẫn tương đối hoặc tuyệt đối, tùy cách bạn đóng gói.
 
 ---
-
-### 5. Lưu ý
-
-- Build trên Ubuntu 18.04 để đảm bảo chạy được trên nhiều bản Linux mới hơn.
-- Nếu file markdown cần chỉnh sửa, hướng dẫn user copy vào đúng vị trí hoặc sửa code để nhận đường dẫn từ biến môi trường.
-
----
-
-Nếu bạn cần ví dụ sửa code cụ thể cho file nào trong MCP server, hãy chỉ rõ file đó!
-
-
 Để triển khai đồng thời cả hai cách (pip package và PyInstaller + VSCode extension) mà không phải thay đổi nhiều code MCP server, bạn nên:
 
 ### 1. Thiết kế code lấy đường dẫn file rule linh hoạt
