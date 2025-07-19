@@ -195,6 +195,8 @@ Truy cập https://pypi.org/account/register/
 (xoa existing venv)
 rm -rf venv
 
+sudo apt install python3.12-venv
+source venv/bin/activate
 pip install build twine
 (trong thu muc chua pyproject.toml)
 pip install build
