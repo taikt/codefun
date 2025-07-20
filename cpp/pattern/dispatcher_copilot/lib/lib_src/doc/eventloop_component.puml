@@ -1,0 +1,21 @@
+@startuml
+package "EventLoop" {
+  [tasks_ : queue<function<void()>>]
+  [mutex_ : mutex]
+  [cond_ : condition_variable]
+  [worker_ : thread]
+  [stopped_ : bool]
+}
+
+[EventLoop] -down-> [tasks_]
+[EventLoop] -down-> [mutex_]
+[EventLoop] -down-> [cond_]
+[EventLoop] -down-> [worker_]
+[EventLoop] -down-> [stopped_]
+
+[EventLoop] ..> [tasks_] : push/pop task
+[EventLoop] ..> [mutex_] : lock/unlock
+[EventLoop] ..> [cond_] : wait/notify
+[EventLoop] ..> [worker_] : run()
+[EventLoop] ..> [stopped_] : check/modify
+@enduml

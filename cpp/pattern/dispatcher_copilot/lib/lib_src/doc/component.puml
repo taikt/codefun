@@ -1,0 +1,20 @@
+@startuml
+package "Promise System" {
+  [PromiseT] as promiseT
+  [PromiseVoid] as promiseVoid
+  [EventLoop] as eventLoop
+}
+
+package "User Code" {
+  [User Callback] as usercb
+}
+
+promiseT --down--> eventLoop : uses
+promiseVoid --down--> eventLoop : uses
+usercb ..> promiseT : registers then/catchError
+usercb ..> promiseVoid : registers then/catchError
+promiseT ..> promiseT : next_promise_ (chain)
+promiseVoid ..> promiseVoid : next_promise_ (chain)
+eventLoop --> usercb : invokes callback
+
+@enduml
