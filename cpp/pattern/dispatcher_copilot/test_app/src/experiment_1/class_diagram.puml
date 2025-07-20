@@ -1,3 +1,6 @@
+' 
+' sudo apt install graphviz
+' 
 @startuml
 class PromiseT {
     - State state_
