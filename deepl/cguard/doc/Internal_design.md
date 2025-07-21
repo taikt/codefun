@@ -14,23 +14,6 @@ graph TD
     F --> G[Final Report]
 
 
-# Installation guide
-sudo apt-get update
-sudo su
-apt-get install -y ninja-build build-essential cmake clang git python3 libstdc++-12-dev zlib1g-dev cppcheck clang && sudo apt-get install npm && sudo npm install -g vsce && sudo npm install typescript -g
-&& apt-get install graphviz
-
-# check port
-sudo netstat -tulpn | grep :8080
-
-# start server
-python3 optimized_viewer.py
-
-# build
-npm run compile
-vsce package
-code --install-extension lgedv-codeguard-1.0.0.vsix
--> reload vscode
 
 # "check LGEDV Rules" flow
 Khi bạn click "Check LGEDV Rules" trong extension này, luồng hoạt động như sau:
