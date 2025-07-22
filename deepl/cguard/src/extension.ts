@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
 import * as zlib from 'zlib';
+import * as os from 'os';
+
 
 // Import moved helpers
 import { 
@@ -299,40 +301,72 @@ export function activate(context: vscode.ExtensionContext) {
   // COMMAND: Start Web Server (use start_server.sh)
   let startWebServerCommand = vscode.commands.registerCommand('lgedv.startWebServer', async () => {
     const webSrvDir = getWebServerDirectory();
-    const scriptPath = path.join(webSrvDir, 'start_server.sh');
+    let scriptPath: string;
+    let command: string;
+
+    if (os.platform() === 'win32') {
+      // Windows: dùng PowerShell script
+      scriptPath = path.join(webSrvDir, 'start_server.ps1');
+      command = `powershell -ExecutionPolicy Bypass -File "${scriptPath}" start`;
+    } else {
+      // Linux/macOS: dùng shell script
+      scriptPath = path.join(webSrvDir, 'start_server.sh');
+      command = `bash "${scriptPath}" start`;
+    }
+
     const terminal = vscode.window.createTerminal({
       name: 'LGEDV Web Server',
       cwd: webSrvDir
     });
     terminal.show();
-    terminal.sendText(`bash ${scriptPath} start`);
-    vscode.window.showInformationMessage('🌐 LGEDV Web Server started via start_server.sh (check terminal for output).');
+    terminal.sendText(command);
+    vscode.window.showInformationMessage(`🌐 LGEDV Web Server started via ${os.platform() === 'win32' ? 'start_server.ps1' : 'start_server.sh'} (check terminal for output).`);
   });
   
   // COMMAND: Stop Web Server (use start_server.sh)
   let stopWebServerCommand = vscode.commands.registerCommand('lgedv.stopWebServer', async () => {
     const webSrvDir = getWebServerDirectory();
-    const scriptPath = path.join(webSrvDir, 'start_server.sh');
+    let scriptPath: string;
+    let command: string;
+
+    if (os.platform() === 'win32') {
+      scriptPath = path.join(webSrvDir, 'start_server.ps1');
+      command = `powershell -ExecutionPolicy Bypass -File "${scriptPath}" stop`;
+    } else {
+      scriptPath = path.join(webSrvDir, 'start_server.sh');
+      command = `bash "${scriptPath}" stop`;
+    }
+
     const terminal = vscode.window.createTerminal({
       name: 'LGEDV Web Server',
       cwd: webSrvDir
     });
     terminal.show();
-    terminal.sendText(`bash ${scriptPath} stop`);
-    vscode.window.showInformationMessage('🛑 LGEDV Web Server stopped via start_server.sh.');
+    terminal.sendText(command);
+    vscode.window.showInformationMessage(`🛑 LGEDV Web Server stopped via ${os.platform() === 'win32' ? 'start_server.ps1' : 'start_server.sh'}.`);
   });
 
   // COMMAND: Restart Web Server (use start_server.sh)
   let restartWebServerCommand = vscode.commands.registerCommand('lgedv.restartWebServer', async () => {
     const webSrvDir = getWebServerDirectory();
-    const scriptPath = path.join(webSrvDir, 'start_server.sh');
+    let scriptPath: string;
+    let command: string;
+
+    if (os.platform() === 'win32') {
+      scriptPath = path.join(webSrvDir, 'start_server.ps1');
+      command = `powershell -ExecutionPolicy Bypass -File "${scriptPath}" restart`;
+    } else {
+      scriptPath = path.join(webSrvDir, 'start_server.sh');
+      command = `bash "${scriptPath}" restart`;
+    }
+
     const terminal = vscode.window.createTerminal({
       name: 'LGEDV Web Server',
       cwd: webSrvDir
     });
     terminal.show();
-    terminal.sendText(`bash ${scriptPath} restart`);
-    vscode.window.showInformationMessage('🔄 LGEDV Web Server restarted via start_server.sh.');
+    terminal.sendText(command);
+    vscode.window.showInformationMessage(`🔄 LGEDV Web Server restarted via ${os.platform() === 'win32' ? 'start_server.ps1' : 'start_server.sh'}.`);
   });
 
   context.subscriptions.push(

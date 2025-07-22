@@ -52,16 +52,15 @@ if ! $PYTHON_BIN -m venv --help >/dev/null 2>&1; then
     fi
 fi
 
-# Tạo lại venv nếu thiếu hoặc lỗi
-if [ ! -f "$VENV_DIR/bin/activate" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
-    print_status "Creating new venv with --copies..."
-    rm -rf "$VENV_DIR"
-    $PYTHON_BIN -m venv --copies "$VENV_DIR"
+if [ ! -d "$VENV_DIR" ]; then
+    python3 -m venv "$VENV_DIR"
+    if [ ! -f "$VENV_DIR/bin/activate" ]; then
+        print_error "Failed to create venv! Please check python3-venv, permissions, and Python version."
+        exit 1
+    fi
 fi
-
-# Kích hoạt venv
 source "$VENV_DIR/bin/activate"
-PYTHON_BIN="python"
+pip install -r "$SCRIPT_DIR/requirements.txt"
 
 # Đảm bảo pip có sẵn
 if ! command -v pip >/dev/null 2>&1; then
@@ -69,11 +68,6 @@ if ! command -v pip >/dev/null 2>&1; then
     $PYTHON_BIN -m ensurepip --upgrade
 fi
 
-# Cài aiohttp nếu thiếu
-if ! $PYTHON_BIN -c "import aiohttp" 2>/dev/null; then
-    print_status "Installing aiohttp in venv..."
-    pip install --break-system-packages aiohttp
-fi
 # ---[ End Python env check ]---
 
 # Check if we're in the right directory
