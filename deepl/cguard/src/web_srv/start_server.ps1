@@ -107,18 +107,10 @@ function Start-Server {
     Write-Info "Server location: $ScriptDir"
     Write-Status "Starting server..."
     $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
-    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $startInfo.FileName = $PythonExe
-    $startInfo.Arguments = "`"$ServerScript`""
-    $startInfo.WorkingDirectory = $ScriptDir
-    $startInfo.RedirectStandardOutput = $true
-    $startInfo.RedirectStandardError = $true
-    $startInfo.UseShellExecute = $false
-    $startInfo.CreateNoWindow = $true
-    $process = [System.Diagnostics.Process]::Start($startInfo)
+    # Chạy server và ghi stdout/stderr vào file log
+    $cmd = "& `\"$PythonExe`\" `\"$ServerScript`\" *>$LogFile 2>&1"
+    $process = Start-Process -FilePath "powershell" -ArgumentList "-NoProfile", "-Command", $cmd -WorkingDirectory $ScriptDir -NoNewWindow -PassThru
     $processId = $process.Id
-    $process.BeginOutputReadLine()
-    $process.BeginErrorReadLine()
     Set-Content $PidFile $processId
     Start-Sleep -Seconds 2
     if (Get-Process -Id $processId -ErrorAction SilentlyContinue) {
