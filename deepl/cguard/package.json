@@ -242,7 +242,15 @@
   "files": [
     "out",
     "out/rule_set",
-    "src/web_srv"
+    "src/web_srv/server_aiohttp.py",
+    "src/web_srv/start_server.sh",
+    "src/web_srv/start_server.ps1",
+    "src/web_srv/requirements.txt",
+    "src/web_srv/index.html",
+    "package.json",
+    "README.md",
+    "src/logo.png",
+    "src/rule_set/**"
   ],
   "devDependencies": {
     "@types/vscode": "^1.74.0",
