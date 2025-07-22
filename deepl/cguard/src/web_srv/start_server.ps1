@@ -15,10 +15,30 @@ function Write-WarningMsg($msg) { Write-Host "[WARN] $msg" -ForegroundColor Yell
 function Write-ErrorMsg($msg) { Write-Host "[ERROR] $msg" -ForegroundColor Red }
 function Write-Info($msg) { Write-Host "[DEBUG] $msg" -ForegroundColor Cyan }
 
+# function Ensure-Venv {
+#     if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
+#     python -m venv $VenvDir
+#     }
+#     & "$VenvDir\Scripts\Activate.ps1"
+#     pip install -r "$ScriptDir\requirements.txt"
+# }
+
 function Ensure-Venv {
     if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
-    python -m venv $VenvDir
+        Write-Info "Creating virtual environment..."
+        python -m venv $VenvDir
+        # Chờ cho đến khi file Activate.ps1 xuất hiện (timeout 10s)
+        $count = 0
+        while (!(Test-Path "$VenvDir\Scripts\Activate.ps1") -and $count -lt 10) {
+            Start-Sleep -Seconds 1
+            $count++
+        }
+        if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
+            Write-ErrorMsg "Failed to create virtual environment! Please check Python installation."
+            exit 1
+        }
     }
+    Write-Info "Activating virtual environment..."
     & "$VenvDir\Scripts\Activate.ps1"
     pip install -r "$ScriptDir\requirements.txt"
 }

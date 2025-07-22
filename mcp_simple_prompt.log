@@ -1,0 +1,115 @@
+2025-07-21 17:40:34,459 [INFO] Server started and ready to receive requests
+2025-07-21 17:40:34,459 [INFO] Starting server with transport: stdio, port: 8000
+2025-07-21 17:40:34,459 [DEBUG] Initializing server 'mcp-misra-tool'
+2025-07-21 17:40:34,459 [DEBUG] App server object created
+2025-07-21 17:40:34,459 [DEBUG] Registering handler for CallToolRequest
+2025-07-21 17:40:34,459 [DEBUG] Registering handler for ListToolsRequest
+2025-07-21 17:40:34,459 [DEBUG] Registering handler for PromptListRequest
+2025-07-21 17:40:34,459 [DEBUG] Registering handler for GetPromptRequest
+2025-07-21 17:40:34,459 [DEBUG] Registering handler for ListResourcesRequest
+2025-07-21 17:40:34,459 [INFO] All handlers registered. Entering main event loop...
+2025-07-21 17:40:34,464 [DEBUG] Using proactor: IocpProactor
+2025-07-21 17:40:34,466 [INFO] Running stdio server
+2025-07-21 17:40:34,474 [DEBUG] Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-07-21 17:40:34,475 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x00000277B74C6990>
+2025-07-21 17:40:34,475 [INFO] Processing request of type ListToolsRequest
+2025-07-21 17:40:34,476 [DEBUG] Dispatching request of type ListToolsRequest
+2025-07-21 17:40:34,476 [INFO] list_tools called
+2025-07-21 17:40:34,476 [DEBUG] Response sent
+2025-07-21 17:40:34,476 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x00000277B74C7390>
+2025-07-21 17:40:34,477 [INFO] Processing request of type ListPromptsRequest
+2025-07-21 17:40:34,477 [DEBUG] Dispatching request of type ListPromptsRequest
+2025-07-21 17:40:34,477 [INFO] list_prompts called
+2025-07-21 17:40:34,478 [DEBUG] Response sent
+2025-07-21 17:41:12,978 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x00000277B74ACE90>
+2025-07-21 17:41:12,978 [INFO] Processing request of type GetPromptRequest
+2025-07-21 17:41:12,978 [DEBUG] Dispatching request of type GetPromptRequest
+2025-07-21 17:41:12,978 [INFO] Prompt called: check_misra with arguments: {}
+2025-07-21 17:41:12,978 [INFO] MISRA check prompt completed
+2025-07-21 17:41:12,978 [DEBUG] Response sent
+2025-07-21 17:41:22,766 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x00000277B74AD350>
+2025-07-21 17:41:22,767 [INFO] Processing request of type CallToolRequest
+2025-07-21 17:41:22,767 [DEBUG] Dispatching request of type CallToolRequest
+2025-07-21 17:41:22,768 [INFO] Tool called: fetch_misra_rule with arguments: {'url': ''}
+2025-07-21 17:41:22,768 [DEBUG] Fetching misra rule from: C:\Users\tai2.tran\mcp_server\venv\Lib\site-packages\lgedv\resources\Misracpp2008Guidelines_en.md
+2025-07-21 17:41:22,769 [DEBUG] Fetched rule from local file successfully
+2025-07-21 17:41:22,769 [INFO] fetch_misra_rule completed for url: 
+2025-07-21 17:41:22,769 [DEBUG] Response sent
+2025-07-21 17:43:25,741 [INFO] stdio server run completed
+2025-07-21 17:43:25,742 [INFO] Server stopped
+2025-07-21 17:43:40,975 [INFO] Server started and ready to receive requests
+2025-07-21 17:43:40,975 [INFO] Starting server with transport: stdio, port: 8000
+2025-07-21 17:43:40,975 [DEBUG] Initializing server 'mcp-misra-tool'
+2025-07-21 17:43:40,975 [DEBUG] App server object created
+2025-07-21 17:43:40,975 [DEBUG] Registering handler for CallToolRequest
+2025-07-21 17:43:40,975 [DEBUG] Registering handler for ListToolsRequest
+2025-07-21 17:43:40,975 [DEBUG] Registering handler for PromptListRequest
+2025-07-21 17:43:40,975 [DEBUG] Registering handler for GetPromptRequest
+2025-07-21 17:43:40,975 [DEBUG] Registering handler for ListResourcesRequest
+2025-07-21 17:43:40,975 [INFO] All handlers registered. Entering main event loop...
+2025-07-21 17:43:40,979 [DEBUG] Using proactor: IocpProactor
+2025-07-21 17:43:40,981 [INFO] Running stdio server
+2025-07-21 17:43:40,989 [DEBUG] Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-07-21 17:43:40,990 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x000001D0670E5F90>
+2025-07-21 17:43:40,990 [INFO] Processing request of type ListToolsRequest
+2025-07-21 17:43:40,990 [DEBUG] Dispatching request of type ListToolsRequest
+2025-07-21 17:43:40,990 [INFO] list_tools called
+2025-07-21 17:43:40,991 [DEBUG] Response sent
+2025-07-21 17:43:40,991 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x000001D0670E6990>
+2025-07-21 17:43:40,991 [INFO] Processing request of type ListPromptsRequest
+2025-07-21 17:43:40,991 [DEBUG] Dispatching request of type ListPromptsRequest
+2025-07-21 17:43:40,991 [INFO] list_prompts called
+2025-07-21 17:43:40,992 [DEBUG] Response sent
+2025-07-21 17:43:49,865 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x000001D066FF7CE0>
+2025-07-21 17:43:49,865 [INFO] Processing request of type GetPromptRequest
+2025-07-21 17:43:49,865 [DEBUG] Dispatching request of type GetPromptRequest
+2025-07-21 17:43:49,865 [INFO] Prompt called: check_leaks with arguments: {}
+2025-07-21 17:43:49,865 [INFO] [check_leaks] Using CPP_DIR: D:\src\codefun\code_test
+2025-07-21 17:43:49,865 [INFO] [analyze_leaks] Using CPP_DIR: D:\src\codefun\code_test
+2025-07-21 17:43:49,865 [INFO] Starting full codebase memory leak analysis: D:\src\codefun\code_test
+2025-07-21 17:43:49,866 [INFO] Analyzing 1 files...
+2025-07-21 17:43:49,867 [INFO] AI memory leak analysis v2 completed for dir: D:\src\codefun\code_test
+2025-07-21 17:43:49,867 [INFO] Prioritized file leak map:
+2025-07-21 17:43:49,867 [INFO] File: D:\src\codefun\code_test\test_leak.cpp | Critical: 0 | High: 0 | Medium: 2 | Low: 0 | Total: 2 | Leak Vars: data, holder
+2025-07-21 17:43:49,867 [INFO] [memory_leak] Reading file: D:\src\codefun\code_test\test_leak.cpp
+2025-07-21 17:43:49,868 [INFO] Memory leak analysis prompt
+2025-07-21 17:43:49,868 [DEBUG] Response sent
+2025-07-21 18:02:49,800 [INFO] Server started and ready to receive requests
+2025-07-21 18:02:49,800 [INFO] Starting server with transport: stdio, port: 8000
+2025-07-21 18:02:49,800 [DEBUG] Initializing server 'mcp-misra-tool'
+2025-07-21 18:02:49,800 [DEBUG] App server object created
+2025-07-21 18:02:49,800 [DEBUG] Registering handler for CallToolRequest
+2025-07-21 18:02:49,800 [DEBUG] Registering handler for ListToolsRequest
+2025-07-21 18:02:49,800 [DEBUG] Registering handler for PromptListRequest
+2025-07-21 18:02:49,801 [DEBUG] Registering handler for GetPromptRequest
+2025-07-21 18:02:49,801 [DEBUG] Registering handler for ListResourcesRequest
+2025-07-21 18:02:49,801 [INFO] All handlers registered. Entering main event loop...
+2025-07-21 18:02:49,805 [DEBUG] Using proactor: IocpProactor
+2025-07-21 18:02:49,808 [INFO] Running stdio server
+2025-07-21 18:02:49,818 [DEBUG] Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-07-21 18:02:49,818 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x000001DC64205F90>
+2025-07-21 18:02:49,819 [INFO] Processing request of type ListToolsRequest
+2025-07-21 18:02:49,819 [DEBUG] Dispatching request of type ListToolsRequest
+2025-07-21 18:02:49,819 [INFO] list_tools called
+2025-07-21 18:02:49,819 [DEBUG] Response sent
+2025-07-21 18:02:49,820 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x000001DC64206990>
+2025-07-21 18:02:49,820 [INFO] Processing request of type ListPromptsRequest
+2025-07-21 18:02:49,820 [DEBUG] Dispatching request of type ListPromptsRequest
+2025-07-21 18:02:49,821 [INFO] list_prompts called
+2025-07-21 18:02:49,821 [DEBUG] Received message: <mcp.shared.session.RequestResponder object at 0x000001DC64117BB0>
+2025-07-21 18:02:49,822 [INFO] Processing request of type GetPromptRequest
+2025-07-21 18:02:49,822 [DEBUG] Dispatching request of type GetPromptRequest
+2025-07-21 18:02:49,822 [INFO] Prompt called: check_leaks with arguments: {}
+2025-07-21 18:02:49,822 [INFO] [check_leaks] Using CPP_DIR: D:\src\codefun\code_test
+2025-07-21 18:02:49,822 [INFO] [analyze_leaks] Using CPP_DIR: D:\src\codefun\code_test
+2025-07-21 18:02:49,822 [INFO] Starting full codebase memory leak analysis: D:\src\codefun\code_test
+2025-07-21 18:02:49,822 [INFO] Analyzing 1 files...
+2025-07-21 18:02:49,824 [INFO] AI memory leak analysis v2 completed for dir: D:\src\codefun\code_test
+2025-07-21 18:02:49,824 [INFO] Prioritized file leak map:
+2025-07-21 18:02:49,825 [INFO] File: D:\src\codefun\code_test\test_leak.cpp | Critical: 0 | High: 0 | Medium: 2 | Low: 0 | Total: 2 | Leak Vars: data, holder
+2025-07-21 18:02:49,825 [INFO] [memory_leak] Reading file: D:\src\codefun\code_test\test_leak.cpp
+2025-07-21 18:02:49,825 [INFO] Memory leak analysis prompt
+2025-07-21 18:02:49,826 [DEBUG] Response sent
+2025-07-21 18:02:49,826 [DEBUG] Response sent
+2025-07-21 18:04:18,644 [INFO] stdio server run completed
+2025-07-21 18:04:18,644 [INFO] Server stopped
