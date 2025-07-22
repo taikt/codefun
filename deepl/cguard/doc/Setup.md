@@ -12,6 +12,18 @@ vsce ls   (=> to show what is packaged)
 code --install-extension lgedv-codeguard-1.0.0.vsix
 -> reload vscode
 
+# start server manually
+cd d:\src\codefun\deepl\cguard\src\web_srv
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+python server_aiohttp.py
+
+# kiem tra status web server
+## win:
+netstat -ano | findstr :8888
+curl http://localhost:8888/api/health
+powershell -ExecutionPolicy Bypass -File "start_server.ps1" status
+
 # upload
 https://marketplace.visualstudio.com/manage/publishers/trananhtai-lge
 (username: tai2.tran@lge.com, pw: lg's login)
