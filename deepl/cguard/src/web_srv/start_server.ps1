@@ -107,9 +107,8 @@ function Start-Server {
     Write-Info "Server location: $ScriptDir"
     Write-Status "Starting server..."
     $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
-    # Chạy server và ghi stdout/stderr vào file log
-    $cmd = "& `\"$PythonExe`\" `\"$ServerScript`\" *>$LogFile 2>&1"
-    $process = Start-Process -FilePath "powershell" -ArgumentList "-NoProfile", "-Command", $cmd -WorkingDirectory $ScriptDir -NoNewWindow -PassThru
+    # Chạy server và ghi stdout/stderr vào file log (cách chuẩn PowerShell)
+    $process = Start-Process -FilePath $PythonExe -ArgumentList $ServerScript -WorkingDirectory $ScriptDir -RedirectStandardOutput $LogFile -RedirectStandardError $LogFile -NoNewWindow -PassThru
     $processId = $process.Id
     Set-Content $PidFile $processId
     Start-Sleep -Seconds 2
