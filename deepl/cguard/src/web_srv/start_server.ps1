@@ -39,8 +39,8 @@ function Ensure-Venv {
         }
     }
     Write-Info "Activating virtual environment..."
-    & "$VenvDir\Scripts\Activate.ps1"
-    pip install -r "$ScriptDir\requirements.txt"
+    $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
+    & $PythonExe -m pip install -r "$ScriptDir\requirements.txt"
 }
 
 function Check-Environment {
@@ -106,8 +106,9 @@ function Start-Server {
     }
     Write-Info "Server location: $ScriptDir"
     Write-Status "Starting server..."
+    $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $startInfo.FileName = "python"
+    $startInfo.FileName = $PythonExe
     $startInfo.Arguments = "`"$ServerScript`""
     $startInfo.WorkingDirectory = $ScriptDir
     $startInfo.RedirectStandardOutput = $true
