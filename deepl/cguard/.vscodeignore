@@ -1,13 +1,13 @@
-src/web_srv/venv/**
-tsconfig.json
-workflow.md
-doc/*
-src/web_srv/server.log
-src/web_srv/server_aiohttp.log
-src/web_srv/README.md
-src/commands/*.ts
-src/helpers/*.ts
-src/rule_set/*.md
-src/extension.ts
-src/web_srv/server.pid
-src/web_srv/start_and_exit.sh
+# src/web_srv/venv/**
+# tsconfig.json
+# workflow.md
+# doc/*
+# src/web_srv/server.log
+# src/web_srv/server_aiohttp.log
+# src/web_srv/README.md
+# src/commands/*.ts
+# src/helpers/*.ts
+# src/rule_set/*.md
+# src/extension.ts
+# src/web_srv/server.pid
+# src/web_srv/start_and_exit.sh
