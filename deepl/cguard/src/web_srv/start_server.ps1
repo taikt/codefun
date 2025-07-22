@@ -29,7 +29,7 @@ function Ensure-Venv {
         python -m venv $VenvDir
         # Chờ cho đến khi file Activate.ps1 xuất hiện (timeout 10s)
         $count = 0
-        while (!(Test-Path "$VenvDir\Scripts\Activate.ps1") -and $count -lt 10) {
+        while (!(Test-Path "$VenvDir\Scripts\Activate.ps1") -and $count -lt 1) {
             Start-Sleep -Seconds 1
             $count++
         }
@@ -172,16 +172,16 @@ function Restart-Server {
     }
     Write-Info "Waiting for port $Port to be released..."
     $count = 0
-    while ($count -lt 30) {
+    while ($count -lt 5) {
         $tcp = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
         if (!$tcp) {
             Write-Info "Port $Port is now free"
             break
         }
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 1
         $count++
     }
-    if ($count -eq 30) {
+    if ($count -eq 5) {
         Write-WarningMsg "Port may still be in use, but proceeding..."
     }
     Remove-Item $PidFile, $LogFile -ErrorAction SilentlyContinue
