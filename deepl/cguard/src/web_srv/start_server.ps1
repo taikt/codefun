@@ -1,6 +1,8 @@
 # start_server.ps1
 param(
-    [string]$Action = "start"
+    [string]$Action = "start",
+    [string]$Mode = "venv",  # venv (default) or system
+    [string]$RunMode = "background" # background (default) or foreground
 )
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
@@ -15,24 +17,16 @@ function Write-WarningMsg($msg) { Write-Host "[WARN] $msg" -ForegroundColor Yell
 function Write-ErrorMsg($msg) { Write-Host "[ERROR] $msg" -ForegroundColor Red }
 function Write-Info($msg) { Write-Host "[DEBUG] $msg" -ForegroundColor Cyan }
 
-# function Ensure-Venv {
-#     if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
-#     python -m venv $VenvDir
-#     }
-#     & "$VenvDir\Scripts\Activate.ps1"
-#     pip install -r "$ScriptDir\requirements.txt"
-# }
-
 function Ensure-Venv {
     if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
         Write-Info "Creating virtual environment..."
         python -m venv $VenvDir
         # Chờ cho đến khi file Activate.ps1 xuất hiện (timeout 10s)
-        $count = 0
-        while (!(Test-Path "$VenvDir\Scripts\Activate.ps1") -and $count -lt 1) {
-            Start-Sleep -Seconds 1
-            $count++
-        }
+        # $count = 0
+        # while (!(Test-Path "$VenvDir\Scripts\Activate.ps1") -and $count -lt 5) {
+        #     Start-Sleep -Seconds 1
+        #     $count++
+        # }
         if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
             Write-ErrorMsg "Failed to create virtual environment! Please check Python installation."
             exit 1
@@ -40,7 +34,14 @@ function Ensure-Venv {
     }
     Write-Info "Activating virtual environment..."
     $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
-    & $PythonExe -m pip install -r "$ScriptDir\requirements.txt"
+    & $PythonExe -m pip install -r "$ScriptDir\requirements.txt" | Out-Null
+    return $PythonExe
+}
+
+function Ensure-SystemPython {
+    Write-Info "Using system-wide Python and pip..."
+    python -m pip install -r "$ScriptDir\requirements.txt" | Out-Null
+    return "python"
 }
 
 function Check-Environment {
@@ -96,7 +97,17 @@ function Status-Server {
 }
 
 function Start-Server {
-    Ensure-Venv
+    $PythonExe = $null
+    if ($Mode -eq "system") {
+        $PythonExe = [string](Ensure-SystemPython)
+    } else {
+        $PythonExe = [string](Ensure-Venv)
+    }
+    # Đảm bảo đường dẫn tuyệt đối
+    $PythonExe = (Resolve-Path $PythonExe).Path
+    $ServerScript = (Resolve-Path $ServerScript).Path
+    Write-Info "PythonExe: $PythonExe"
+    Write-Info "ServerScript: $ServerScript"
     $serverpid = Get-ServerPid
     if ($serverpid) {
         Write-WarningMsg "Server is already running (PID: $serverpid)"
@@ -106,26 +117,30 @@ function Start-Server {
     }
     Write-Info "Server location: $ScriptDir"
     Write-Status "Starting server..."
-    $PythonExe = Join-Path $VenvDir "Scripts\python.exe"
-    # Chạy server và ghi stdout/stderr vào file log (cách chuẩn PowerShell)
-    $process = Start-Process -FilePath $PythonExe -ArgumentList $ServerScript -WorkingDirectory $ScriptDir -RedirectStandardOutput $LogFile -RedirectStandardError $LogFile -NoNewWindow -PassThru
-    $processId = $process.Id
-    Set-Content $PidFile $processId
-    Start-Sleep -Seconds 2
-    if (Get-Process -Id $processId -ErrorAction SilentlyContinue) {
-        Write-Status "Server started successfully (PID: $processId)"
-        Start-Sleep -Seconds 1
-        Status-Server
-        Write-Status "Server startup completed."
-    } else {
-        Write-ErrorMsg "Failed to start server"
-        Remove-Item $PidFile -ErrorAction SilentlyContinue
-        if (Test-Path $LogFile) {
-            Write-ErrorMsg "Check log file for details: $LogFile"
-            Write-ErrorMsg "Last few log lines:"
-            Get-Content $LogFile | Select-Object -Last 5 | ForEach-Object { Write-Host "  $_" }
+    if ($RunMode -eq "background") {
+        Write-Info "Starting server in BACKGROUND mode..."
+        $LogFileErr = Join-Path $ScriptDir "server_aiohttp.err.log"
+        $process = Start-Process -FilePath $PythonExe -ArgumentList $ServerScript `
+            -WorkingDirectory $ScriptDir `
+            -RedirectStandardOutput $LogFile `
+            -RedirectStandardError $LogFileErr `
+            -NoNewWindow `
+            -PassThru
+        if ($process) {
+            Set-Content $PidFile $process.Id
+            Write-Status "Server started in background (PID: $($process.Id))"
+            Write-Info "Log file (stdout): $LogFile"
+            Write-Info "Log file (stderr): $LogFileErr"
+        } else {
+            Write-ErrorMsg "Failed to start server in background. Check permissions and paths."
         }
+    } else {
+        Write-Info "Starting server in FOREGROUND mode..."
+        & $PythonExe $ServerScript *> $LogFile
     }
+    # Sau khi chạy, kiểm tra trạng thái
+    Status-Server
+    Write-Status "Server startup completed."
 }
 
 function Stop-Server {
@@ -190,6 +205,6 @@ switch ($Action.ToLower()) {
     "status"  { Status-Server }
     default   {
         Write-ErrorMsg "Unknown command: $Action"
-        Write-Host "Usage: .\start_server.ps1 [start|stop|restart|status]"
+        Write-Host "Usage: .\start_server.ps1 [start|stop|restart|status] [-Mode venv|system]"
     }
 }

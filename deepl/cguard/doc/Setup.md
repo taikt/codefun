@@ -9,7 +9,7 @@ apt-get install -y ninja-build build-essential cmake clang git python3 libstdc++
 npm run compile
 vsce package
 vsce ls   (=> to show what is packaged)
-code --install-extension lgedv-codeguard-1.0.0.vsix
+code --install-extension lgedv-codeguard-1.0.5.vsix
 -> reload vscode
 
 # start server manually

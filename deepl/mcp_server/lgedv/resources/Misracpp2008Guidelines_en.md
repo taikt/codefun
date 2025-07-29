@@ -412,11 +412,11 @@
 **Exception**: None
 
 ### Rule 6-4-1 
-**Description**: An if (condition) construct shall be followed by a compound statement.Â Â  The else keyword shall be followed by either a compound statement, or another if statement 
+**Description**: An if ( condition ) construct shall be followed by a compound statement. The else keyword shall be followed by either a compound statement, or another if statement
 **Exception**: None
 
 ### Rule 6-4-2 
-**Description**: All if â€¦ else if constructs shall be terminated with an else clause. 
+**Description**: All if ... else if constructs shall be terminated with an else clause. 
 **Exception**: None
 
 ### Rule 6-4-3 

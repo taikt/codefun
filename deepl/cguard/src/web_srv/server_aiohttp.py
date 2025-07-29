@@ -15,6 +15,12 @@ async def get_report_directory():
         os.path.expanduser('~/.config/Code/User/settings.json'),
         os.path.expanduser('~/.vscode/settings.json'),
     ]
+    # Thêm đường dẫn settings cho Windows
+    if os.name == 'nt':
+        appdata = os.environ.get('APPDATA')
+        if appdata:
+            win_settings = os.path.join(appdata, 'Code', 'User', 'settings.json')
+            settings_paths.append(win_settings)
     for settings_path in settings_paths:
         if os.path.exists(settings_path):
             try:
@@ -119,3 +125,6 @@ if __name__ == '__main__':
     import asyncio
     app = asyncio.run(create_app())
     aiohttp.web.run_app(app, port=8888)
+    print("[INFO] Server startup completed.")
+    print(f"[INFO] Report directory in use: {app['report_dir']}")
+    sys.stdout.flush()
