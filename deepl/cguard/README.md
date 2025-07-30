@@ -53,8 +53,8 @@ Create `.vscode/mcp.json` in your project codebase with the following format:
       "command": "C:\\mcp_test\\venv\\Scripts\\codeguard.exe",
       "args": ["--transport", "stdio"],
       "env": {
-        "CPP_DIR": "C:\\path\\to\\source_code", // Path to C++ source files for analysis 
-        "CUSTOM_RULE_PATH": "C:\\path\\to\\CustomRule.md" // Path to user-defined custom rule file
+        "CPP_DIR": "C:\\path\\to\\source_code", 
+        "CUSTOM_RULE_PATH": "C:\\path\\to\\CustomRule.md" 
       }
     }
   }
