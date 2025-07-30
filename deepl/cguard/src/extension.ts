@@ -369,10 +369,34 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage(`🔄 LGEDV Web Server restarted via ${os.platform() === 'win32' ? 'start_server.ps1' : 'start_server.sh'}.`);
   });
 
+  // start MCP server command
+  let installMCPServerCommand = vscode.commands.registerCommand('lgedv.installMCPServer', async () => {
+  const resourcesDir = path.join(__dirname, '..', 'src', 'resources');
+  let scriptPath: string;
+  let command: string;
+
+  if (os.platform() === 'win32') {
+    scriptPath = path.join(resourcesDir, 'install_mcp.ps1');
+    command = `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`;
+  } else {
+    scriptPath = path.join(resourcesDir, 'install_mcp.sh');
+    command = `bash "${scriptPath}"`;
+  }
+
+  const terminal = vscode.window.createTerminal({
+    name: 'LGEDV MCP Server Installer',
+    cwd: resourcesDir
+  });
+  terminal.show();
+  terminal.sendText(command);
+  vscode.window.showInformationMessage(`🚀 Đang cài MCP server qua script (${os.platform() === 'win32' ? 'install_mcp.ps1' : 'install_mcp.sh'})!`);
+});
+
   context.subscriptions.push(
     startWebServerCommand,
     stopWebServerCommand,
-    restartWebServerCommand
+    restartWebServerCommand,
+    installMCPServerCommand
   );
 }
 

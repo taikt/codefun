@@ -80,15 +80,17 @@ pip install codeguard-lgedv
 - create file mcp.json in .vscode folder
 - Ví dụ nội dung:
   ```json
-  "servers": {
-  "lgedv": {
-     "command": "C:\\Users\\tai2.tran\\mcp_server\\venv\\Scripts\\codeguard.exe",
-     "args": ["--transport", "stdio"],
-     "env": {
-      "CPP_DIR": "E:\\src\\code_test\\mem_leak",
-      "CUSTOM_RULE_PATH": "E:\\src\\codefun\\deepl\\mcp_server\\lgedv\\resources\\CustomRule.md" 
-  }
-  }
+  {
+    "servers": {
+        "lgedv": {
+            "command": "C:\\Users\\tai2.tran\\mcp_server\\venv\\Scripts\\codeguard.exe",
+            "args": ["--transport", "stdio"],
+            "env": {
+            "CPP_DIR": "E:\\src\\code_test\\mem_leak",
+            "CUSTOM_RULE_PATH": "E:\\src\\codefun\\deepl\\mcp_server\\lgedv\\resources\\CustomRule.md" 
+            }
+        }
+    }
   }
   ```
 
