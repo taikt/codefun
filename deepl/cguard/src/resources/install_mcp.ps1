@@ -1,5 +1,5 @@
 param(
-    [string]$ProjectDir = "C:\mcp_test",
+    [string]$ProjectDir = "C:\mcp_server",
     [string]$PackageName = "codeguard-lgedv"
 )
 
@@ -64,11 +64,11 @@ $mcpJsonContent = @'
 {
   "servers": {
     "lgedv": {
-      "command": "C:\\mcp_test\\venv\\Scripts\\codeguard.exe",
+      "command": "C:\\mcp_server\\venv\\Scripts\\codeguard.exe",
       "args": ["--transport", "stdio"],
       "env": {
-        "CPP_DIR": "C:\\path\\to\\cpp_dir",
-        "CUSTOM_RULE_PATH": "C:\\path\\to\\CustomRule.md"
+        "CPP_DIR": "\\path\\to\\cpp_dir",
+        "CUSTOM_RULE_PATH": "\\path\\to\\CustomRule.md"
       }
     }
   }

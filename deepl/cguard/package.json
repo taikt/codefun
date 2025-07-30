@@ -4,7 +4,7 @@
   "displayName": "LGEDV Code Guard",
   "publisher": "TranAnhTai-LGE",
   "description": "Find C++ defects using MISRA, CERT C++ and user-defined custom Rules",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -127,6 +127,11 @@
         "command": "lgedv.restartWebServer",
         "title": "🔄 Restart Web Server",
         "category": "LGEDV CodeGuard"
+      },
+      {
+      "command": "lgedv.installMCPServer",
+      "title": "LGEDV: Install MCP Server",
+      "category": "LGEDV"
       }
     ],
     "menus": {

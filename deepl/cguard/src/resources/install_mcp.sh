@@ -1,7 +1,7 @@
 #!/bin/bash
 # install_mcp.sh - Auto install MCP server on Linux
 
-PROJECT_DIR="${1:-$HOME/mcp_test}"
+PROJECT_DIR="${1:-$HOME/mcp_server}"
 PACKAGE_NAME="${2:-codeguard-lgedv}"
 
 echo "[INFO] MCP Server Auto Installer (Linux)"
