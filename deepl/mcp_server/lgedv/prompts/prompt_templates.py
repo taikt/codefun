@@ -8,10 +8,12 @@ class PromptTemplates:
     
     @staticmethod
     def get_lgedv_analysis_prompt() -> str:
-        """Template cho LGEDV analysis"""
+    """Template cho LGEDV analysis"""
         return (
             "You are a C++ static analysis expert. Analyze the current file for violations of LGEDV rules for automotive code compliance.\n"
-            "If the rule file is not existed, please calling fetch_lgedv_rule from MCP server.\n\n"
+            "If the rule file is not existed, please call fetch_lgedv_rule from MCP server.\n"
+            "Always use the latest LGEDV rules just fetched for analysis, not any cached or built-in rules.\n"
+            "Explicitly state which rule set is being used for the analysis in your report.\n\n"
             "**ANALYSIS REQUIREMENTS:**\n"
             "- Find ALL violations of the rules above\n"
             "- Focus specifically on LGEDV rule violations\n"
@@ -42,10 +44,12 @@ class PromptTemplates:
         
     @staticmethod
     def get_misra_analysis_prompt() -> str:
-        """Template cho MISRA analysis"""
+    """Template cho MISRA analysis"""
         return (
             "You are a C++ static analysis expert. Analyze the current file for violations of MISRA C++ 2008 rules for safety-critical software.\n"
-            "If the rule file is not existed, please calling fetch_misra_rule from MCP server.\n\n"
+            "If the rule file is not existed, please call fetch_misra_rule from MCP server.\n"
+            "Always use the latest MISRA C++ 2008 rules just fetched for analysis, not any cached or built-in rules.\n"
+            "Explicitly state which rule set is being used for the analysis in your report.\n\n"
             "**ANALYSIS REQUIREMENTS:**\n"
             "- Find ALL violations of the rules above\n"
             "- Focus specifically on MISRA rule violations\n"
@@ -79,7 +83,9 @@ class PromptTemplates:
         """Template cho CERT C++ analysis"""
         return (
             "You are a C++ static analysis expert. Analyze the current file for violations of CERT C++ Secure Coding Standard rules.\n"
-            "If the rule file is not existed, please calling fetch_certcpp_rule from MCP server.\n\n"
+            "If the rule file is not existed, please call fetch_certcpp_rule from MCP server.\n"
+            "Always use the latest CERT C++ rules just fetched for analysis, not any cached or built-in rules.\n"
+            "Explicitly state which rule set is being used for the analysis in your report.\n\n"
             "**ANALYSIS REQUIREMENTS:**\n"
             "- Find ALL violations of the rules above\n"
             "- Focus specifically on CERT rule violations\n"
@@ -110,10 +116,12 @@ class PromptTemplates:
     
     @staticmethod
     def get_custom_analysis_prompt() -> str:
-        """Template cho Custom rule analysis"""
+    """Template cho Custom rule analysis"""
         return (
             "You are a C++ static analysis expert. Analyze the current file for violations of the following custom rules.\n"
-            "If the rule file is not existed, please calling fetch_custom_rule from MCP server.\n\n"
+            "If the rule file is not existed, please call fetch_custom_rule from MCP server.\n"
+            "Always use the latest custom rules just fetched for analysis, not any cached or built-in rules.\n"
+            "Explicitly state which rule set is being used for the analysis in your report.\n\n"
             "**ANALYSIS REQUIREMENTS:**\n"
             "- Find ALL violations of the rules above\n"
             "- Focus specifically on custom rule violations\n"
