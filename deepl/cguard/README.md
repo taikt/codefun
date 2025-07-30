@@ -50,7 +50,7 @@ Create `.vscode/mcp.json` in your project codebase with the following format:
 {
   "servers": {
     "lgedv": {
-      "command": "C:\\mcp_test\\venv\\Scripts\\codeguard.exe",
+      "command": "C:\\mcp_server\\venv\\Scripts\\codeguard.exe",
       "args": ["--transport", "stdio"],
       "env": {
         "CPP_DIR": "C:\\path\\to\\source_code", 
