@@ -4,7 +4,7 @@
   "displayName": "LGEDV Code Guard",
   "publisher": "TranAnhTai-LGE",
   "description": "Find C++ defects using MISRA, CERT C++ and user-defined custom Rules",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -37,7 +37,7 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
+    "commands_disabled": [
       {
         "command": "lgedv.checkLGEDVRules",
         "title": "🎯 Check LGEDV Rule for open file",
@@ -124,7 +124,14 @@
       "category": "LGEDV CodeGuard"
       }
     ],
-    "menus": {
+    "commands": [
+      {
+      "command": "lgedv.installMCPServer",
+      "title": "🚀 Install MCP Server",
+      "category": "LGEDV CodeGuard"
+      }
+    ],
+    "menus_disabled": {
       "editor/context": [
         {
           "submenu": "lgedv.codeGuardSubmenu",
@@ -193,7 +200,7 @@
         }
       ]
     },
-    "submenus": [
+    "submenus_disabled": [
       {
         "id": "lgedv.codeGuardSubmenu",
         "label": "🛡️ LGEDV CodeGuard"

@@ -1,12 +1,11 @@
 # CodeGuard - tool for detecting C++ vulnerability
 ## ✨ Features
-CodeGuard supports following features using AI:
+MCP server CodeGuard supports following features using AI:
 - Detect standard Misra C++ violation
 - Detect standard Certcpp C++ violation
 - Detect Custom rules defined by user
+- Analyze race condition, memory leak and other resource leaks (socket, file, etc)
 - Provide refactoring code to avoid C++ vulnerability and increase code quality
-- Provide an integrated web server to display violations in Gerrit style
-- Combine with MCP (Model Context Protocol) server to boost AI capability
 
 
 ## 🎯 Requirements
@@ -14,31 +13,20 @@ CodeGuard supports following features using AI:
 - For Linux, ubuntu 20.04 or higher
 
 
----
-## 🛡️ Recommendations
-
-- You can use the MCP server independently or together with the extension.
-- **Recommended:** Use MCP server directly and combine with Copilot Chat for best results. This setup provides access to advanced AI models and delivers higher quality code review and analysis.
-- **Limitation:** When using only the VSCode extension, the AI model quality is limited by what VSCode provides, which may result in less accurate or less powerful code review compared to MCP + Copilot Chat.
-
-
-## 🧩 MCP Server (standalone usage)
-Installation
+## 🧩 Installation 
 ### Windows
-- Install Python 3.9+ from https://www.python.org/downloads/windows/ 
+- Install Python from https://www.python.org/downloads/windows/ 
 - Open Command Palette (Ctrl+Shift+P), type `LGEDV: Install MCP Server` and select the command.
 - The extension will open a terminal and run the PowerShell script `install_mcp.ps1` to install MCP server in `C:\Program Files\MCP Server CodeGuard` (default).
 - After installation, you will see a success notification and a sample configuration file `.vscode/mcp.json` created in your project folder.
 
 
 ### Linux
-- Install Python 3.9+ using your package manager (e.g., `sudo apt install python3 python3-venv python3-pip`).
+- Install Python using your package manager (e.g., `sudo apt install python3 python3-venv python3-pip`).
 - Open Command Palette (Ctrl+Shift+P), type `LGEDV: Install MCP Server` and select the command.
 - The extension will open a terminal and run the Bash script `install_mcp.sh` to install MCP server in `~/mcp_server` (default).
 - After installation, you will see a success notification and a sample configuration file `.vscode/mcp.json` created in your project folder.
 - If you need to adjust the path for `CPP_DIR` or `CUSTOM_RULE_PATH`, edit the `.vscode/mcp.json` file to match your project.
-
-
 
 
 ### MCP Server Configuration
@@ -69,7 +57,8 @@ Create `.vscode/mcp.json` in your project codebase with the following format (Wi
 ## 🌐 MCP Server Usage
 
 
-MCP server can be used independently or via the extension. **For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.**
+<!--MCP server can be used independently or via the extension. -->
+**For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.**
 
 
 ### MCP Server Prompts 
@@ -102,7 +91,7 @@ MCP server can be used independently or via the extension. **For rule-based chec
 - Delete the MCP server installation folder (e.g., `C:\\Program Files\\MCP Server CodeGuard`) to completely remove it.
 
 
-
+<!--
 ## 🎯 Using CodeGuard VSCode Extension
 ### Setup custom rule File & report directory
 
@@ -172,6 +161,7 @@ MCP server can be used independently or via the extension. **For rule-based chec
 #### Run command
 Command: `LGEDV: Check Rules by Static Analysic` on currently open file to detect C++ violations.
 
+-->
 
 
 
