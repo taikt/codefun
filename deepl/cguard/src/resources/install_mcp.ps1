@@ -64,7 +64,7 @@ $mcpJsonContent = @'
 {
   "servers": {
     "lgedv": {
-      "command": "C:\\mcp_server\\venv\\Scripts\\codeguard.exe",
+      "command": "C:\\Program Files\\MCP Server CodeGuard\\venv\\Scripts\\codeguard.exe",
       "args": ["--transport", "stdio"],
       "env": {
         "CPP_DIR": "\\path\\to\\cpp_dir",

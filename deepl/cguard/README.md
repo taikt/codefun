@@ -22,12 +22,12 @@ CodeGuard supports following features using AI:
 - **Limitation:** When using only the VSCode extension, the AI model quality is limited by what VSCode provides, which may result in less accurate or less powerful code review compared to MCP + Copilot Chat.
 
 
-## 🧩 Install MCP Server
-
+## 🧩 MCP Server (standalone usage)
+Installation
 ### Windows
 - Install Python 3.9+ from https://www.python.org/downloads/windows/ 
 - Open Command Palette (Ctrl+Shift+P), type `LGEDV: Install MCP Server` and select the command.
-- The extension will open a terminal and run the PowerShell script `install_mcp.ps1` to install MCP server in `C:\mcp_server` (default).
+- The extension will open a terminal and run the PowerShell script `install_mcp.ps1` to install MCP server in `C:\Program Files\MCP Server CodeGuard` (default).
 - After installation, you will see a success notification and a sample configuration file `.vscode/mcp.json` created in your project folder.
 
 
@@ -42,16 +42,16 @@ CodeGuard supports following features using AI:
 
 
 ### MCP Server Configuration
-Create `.vscode/mcp.json` in your project codebase with the following format:
+Create `.vscode/mcp.json` in your project codebase with the following format (Window sample)
 ```json
 {
   "servers": {
     "lgedv": {
-      "command": "C:\\mcp_server\\venv\\Scripts\\codeguard.exe",
+      "command": "C:\\Program Files\\MCP Server CodeGuard\\venv\\Scripts\\codeguard.exe",
       "args": ["--transport", "stdio"],
       "env": {
-        "CPP_DIR": "C:\\path\\to\\source_code", 
-        "CUSTOM_RULE_PATH": "C:\\path\\to\\CustomRule.md" 
+        "CPP_DIR": "C:\\path\\to\\source_code", // change this line
+        "CUSTOM_RULE_PATH": "C:\\path\\to\\CustomRule.md" // change this line
       }
     }
   }
@@ -71,8 +71,8 @@ Create `.vscode/mcp.json` in your project codebase with the following format:
 
 MCP server can be used independently or via the extension. **For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.**
 
-### Main prompts and usage
 
+### MCP Server Prompts 
 - **LGEDV Rule Check**
   - Download the latest LGEDV rules by calling the tool: `#fetch_lgedv_rule`.
   - Run the prompt `/check_lgedv` to check LGEDV rule violations.
@@ -90,7 +90,7 @@ MCP server can be used independently or via the extension. **For rule-based chec
   - Run the prompt `/check_custom` to check user-defined custom rule violations.
 
 - **Race Condition, Memory Leak, Resource Leak Analysis**
-  - Configure the C++ source path in your `mcp.json` file, for example: `"CPP_DIR": "D:\\src\\codefun\\code_test"`.
+  - Configure the C++ source path in your `mcp.json` file, e.g: `"CPP_DIR": "D:\\src\\codefun\\code_test"`.
   - Due to AI token limitations, MCP server will check up to **3 files** in the specified source path per analysis run.
   - Available prompts:
   - `/check_races`: Analyze race condition
@@ -99,11 +99,11 @@ MCP server can be used independently or via the extension. **For rule-based chec
 
 
 ## Uninstall MCP Server
-- Delete the MCP server installation folder (e.g., `C:\mcp_server` or `~/mcp_server`) to completely remove it.
+- Delete the MCP server installation folder (e.g., `C:\\Program Files\\MCP Server CodeGuard`) to completely remove it.
 
 
 
-## 🎯 Extension Usage
+## 🎯 Using CodeGuard VSCode Extension
 ### Setup custom rule File & report directory
 
 - Open VSCode, go to `File` > `Preferences` > `Settings` (or press `Ctrl+,`).
