@@ -70,6 +70,8 @@ Create `.vscode/mcp.json` in your project codebase with the following format:
 
 MCP server can be used independently or via the extension. **For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.**
 
+![MCP demo](src/images/mcp_usage.gif)
+
 ### Main prompts and usage
 
 - **LGEDV Rule Check**

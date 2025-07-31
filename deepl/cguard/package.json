@@ -1,6 +1,6 @@
 {
   "name": "lgedv-codeguard",
-  "icon":"src/logo.png",
+  "icon":"src/images/logo.png",
   "displayName": "LGEDV Code Guard",
   "publisher": "TranAnhTai-LGE",
   "description": "Find C++ defects using MISRA, CERT C++ and user-defined custom Rules",
