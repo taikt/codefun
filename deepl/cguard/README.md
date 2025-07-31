@@ -71,15 +71,34 @@ Create `.vscode/mcp.json` in your project codebase with the following format:
 
 ## MCP Server Usage
 
-MCP server can be used independently or via the extension. You only need to use the following prompts 
-### Main prompts
-- `check_lgedv`: Check LGEDV rule violations
-- `check_misra`: Check MISRA C++ rule violations
-- `check_certcpp`: Check CERT C++ rule violations
-- `check_custom`: Check user-defined custom rule violations
-- `check_races`: Analyze race conditions in code
-- `check_leaks`: Analyze memory leaks in code
-- `check_resources`: Analyze resource leaks in code
+
+MCP server can be used independently or via the extension. **For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.**
+
+### Main prompts and usage
+
+- **LGEDV Rule Check**
+  1. Download the latest LGEDV rules by calling the tool: `#fetch_lgedv_rule`.
+  2. Run the prompt `/check_lgedv` to check LGEDV rule violations.
+
+- **MISRA Rule Check**
+  1. Download the latest MISRA rules by calling the tool: `#fetch_misra_rule`.
+  2. Run the prompt `/check_misra` to check MISRA C++ rule violations.
+
+- **CERTCPP Rule Check**
+  1. Download the latest CERTCPP rules by calling the tool: `#fetch_certcpp_rule`.
+  2. Run the prompt `/check_certcpp` to check CERT C++ rule violations.
+
+- **Custom Rule Check**
+  1. Download or specify your custom rule file by calling the tool: `#fetch_custom_rule`.
+  2. Run the prompt `/check_custom` to check user-defined custom rule violations.
+
+- **Race Condition, Memory Leak, Resource Leak Analysis**
+  - Configure the C++ source path in your `mcp.json` file, for example: `"CPP_DIR": "D:\\src\\codefun\\code_test"`.
+  - Due to AI token limitations, MCP server will check up to **3 files** in the specified source path per analysis run.
+  - Available prompts:
+  - `/check_races`: Analyze race condition
+  - `/check_leaks`: Analyze memory leak
+  - `/check_resources`: Analyze resource leak
 
 
 ## Uninstall MCP Server
@@ -130,10 +149,64 @@ MCP server can be used independently or via the extension. You only need to use 
 - Command: `LGEDV: Check Multiple Files (LGEDV/MISRA/CERT/Custom)`
 - Usage: Run rule checks on multiple files in the workspace.
 
-### 8. Start/stop/restart Web Server (View Violation Reports)
+
+### 8. Static Analysis (cppcheck, clang, clang-tidy)
+
+#### Windows
+
+**Install cppcheck:**
+1. Download installer from https://cppcheck.sourceforge.io/
+2. Run the installer. If not added to PATH automatically, add the install folder (e.g. `C:\Program Files\Cppcheck`) to your system PATH.
+3. Verify by running in PowerShell:
+   ```powershell
+   cppcheck --version
+   ```
+
+**Install clang/clang-tidy:**
+1. Download LLVM installer from https://releases.llvm.org/download.html (e.g. `LLVM-17.0.6-win64.exe`).
+2. Run the installer and select "Add LLVM to the system PATH" if available.
+3. Verify by running:
+   ```powershell
+   clang --version
+   clang-tidy --version
+   ```
+
+
+#### Linux
+
+**Install cppcheck:**
+```bash
+sudo apt update
+sudo apt install cppcheck
+```
+
+**Install clang/clang-tidy:**
+```bash
+sudo apt update
+sudo apt install clang clang-tidy
+```
+
+**Verify installation:**
+```bash
+cppcheck --version
+clang --version
+clang-tidy --version
+```
+
+---
+
+Once installed, you can use the extension's static analysis command to check.
+- Command: `LGEDV: Check Rules by Static Analysic`
+- Usage: Run on the currently open C++ file to detect C++ violations.
+
+
+### 9. Start/stop/restart Web Server (View Violation Report)
 - Open Command Palette (Ctrl+Shift+P), type `LGEDV: Start Web Server` and select the command to start server.
 - Open web browser (localhost:8888) to view violation reports.
 - On Windows: runs `./start_server.ps1 stop/restart` via PowerShell to stop or restart server.
 - On Linux/macOS: runs `./start_server.sh stop/restart` via Bash to stop or restart server.
+
+
+
 
 

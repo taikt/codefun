@@ -3,7 +3,7 @@
 class DataHolder {
 public:
     DataHolder(size_t n) {
-        data = new int[n]; // cấp phát động
+        data = new int[n]; 
         size = n;
     }
     void set(size_t idx, int value) {
