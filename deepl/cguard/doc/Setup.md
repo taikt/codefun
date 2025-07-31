@@ -12,6 +12,18 @@ vsce ls   (=> to show what is packaged)
 code --install-extension lgedv-codeguard-1.0.5.vsix
 -> reload vscode
 
+(neu bi loi khi vsce package, nang cap version)
+# Nếu chưa có nvm, cài nvm:
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+# Cài Node.js mới nhất (hoặc đúng bản yêu cầu)
+nvm install 20.18.1
+nvm use 20.18.1
+# Kiểm tra lại
+node -v
+npm -v
+
+
 # start server manually
 cd d:\src\codefun\deepl\cguard\src\web_srv
 python -m venv venv
