@@ -30,8 +30,6 @@ RULE_PATHS = {
     "misra": os.path.join(BASE_DIR, "resources", "Misracpp2008Guidelines_en.md"),
     "lgedv": os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md"),
     "certcpp": os.path.join(BASE_DIR, "resources", "CertcppGuidelines_en.md"),
-    "critical": os.path.join(BASE_DIR, "resources", "CriticalRuleGuideLines.md"),
-    "rapidScan": os.path.join(BASE_DIR, "resources", "RapidScanGuidelines_en.md"),
     "custom": os.environ.get("CUSTOM_RULE_PATH", os.path.join(BASE_DIR, "resources", "CustomRule.md"))
 }
 
@@ -39,8 +37,6 @@ RULE_PATHS = {
 MISRA_RULE_URL = RULE_PATHS["misra"]
 LGEDV_RULE_URL = RULE_PATHS["lgedv"]
 CERTCPP_RULE_URL = RULE_PATHS["certcpp"]
-CRITICAL_RULE_URL = RULE_PATHS["critical"]
-RAPIDSCAN_RULE_URL = RULE_PATHS["rapidScan"]
 CUSTOM_RULE_URL = RULE_PATHS["custom"]
 
 RESOURCE_FILES = RULE_PATHS

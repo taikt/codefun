@@ -83,20 +83,6 @@ async def fetch_certcpp_rule(url: str = None) -> List[Union[
     fetcher = RuleFetcher()
     return await fetcher.fetch_rule("certcpp", url)
 
-async def fetch_critical_rule(url: str = None) -> List[Union[
-    types.TextContent, types.ImageContent, types.AudioContent, types.EmbeddedResource
-]]:
-    """Fetch Critical rule"""
-    fetcher = RuleFetcher()
-    return await fetcher.fetch_rule("critical", url)
-
-async def fetch_rapidScan_rule(url: str = None) -> List[Union[
-    types.TextContent, types.ImageContent, types.AudioContent, types.EmbeddedResource
-]]:
-    """Fetch RapidScan rule"""
-    fetcher = RuleFetcher()
-    return await fetcher.fetch_rule("rapidScan", url)
-
 async def fetch_custom_rule(url: str = None) -> List[Union[
     types.TextContent, types.ImageContent, types.AudioContent, types.EmbeddedResource
 ]]:

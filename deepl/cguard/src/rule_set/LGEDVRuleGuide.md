@@ -10,12 +10,6 @@ Definition: Allows up to 1 return point in a function. Multiple returns are a vi
 ## Rule LGEDV_CRCL_0004:
 Definition: Default (Initialization) value of return need to be a negative/false/failure or any other error meaning. Initialize the returning value to FAILED or the negative meaning value.
 
-## Rule LGEDV_CRCL_0005:
-Definition: Use a meaningful variable name. Avoid to use uncommon naming without any related meaning.
-
-## Rule LGEDV_CRCL_0007:
-Definition: Do not use thread, looper unless there is an unavoidable reason.
-
 ## Rule LGEDV_CRCL_0009:
 Definition: Recommended Cyclomatic Complexity is lower than 10 (some of function should be break down for readability, maintainability).
 
@@ -40,11 +34,8 @@ Definition: A case (having >= 2 logical lines) in switch case should be a block 
 ## Rule LGEDV_CRCL_0016:
 Definition: Use bounded C functions instead of unbounded ones to prevent buffer overrun, for example, replace sprintf by snprintf.
 
-## Rule LGEDV_CRCL_0018:
-Definition: Using name space to void conflict class, constants name between library and apps. Wrap library in a namespace.
-
 ## Rule LGEDV_CRCL_0019:
-Definition: Every function need to return valuable/meaningful return value. For void return functions need to be rechecked if void is really enough or not. 
+Definition: Every function need to return valuable/meaningful value. For void return functions need to be rechecked if void is really enough or not. 
 
 ## Rule LGEDV_CRCL_0020:
 Definition: Every allocated resources (memory, file, mutex lock, etc) need to be released properly. Delete, free memories, close files, unlock mutex etc before leave the function.

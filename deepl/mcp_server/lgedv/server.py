@@ -94,32 +94,6 @@ def main(port: int, transport: str):
                     },
                 ),
                 types.Tool(
-                    name="fetch_critical_rule",
-                    description="Fetches the Critical rule markdown from remote server.",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "url": {
-                                "type": "string",
-                                "description": "URL to fetch Critical rule (optional, default is preset)",
-                            }
-                        },
-                    },
-                ),
-                types.Tool(
-                    name="fetch_rapidScan_rule",
-                    description="Fetches the RapidScan rule markdown from remote server.",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "url": {
-                                "type": "string",
-                                "description": "URL to fetch RapidScan rule (optional, default is preset)",
-                            }
-                        },
-                    },
-                ),
-                types.Tool(
                     name="fetch_custom_rule",
                     description="Fetches the Custom rule markdown from remote server.",
                     inputSchema={

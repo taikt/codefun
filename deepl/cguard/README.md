@@ -1,5 +1,5 @@
 # CodeGuard - tool for detecting C++ vulnerability
-## Features
+## ✨ Features
 CodeGuard supports following features using AI:
 - Detect standard Misra C++ violation
 - Detect standard Certcpp C++ violation
@@ -9,14 +9,13 @@ CodeGuard supports following features using AI:
 - Combine with MCP (Model Context Protocol) server to boost AI capability
 
 
-
-## Requirements
+## 🎯 Requirements
 - VSCode 1.101.1 or higher
 - For Linux, ubuntu 20.04 or higher
 
 
 ---
-## Recommendations
+## 🛡️ Recommendations
 
 - You can use the MCP server independently or together with the extension.
 - **Recommended:** Use MCP server directly and combine with Copilot Chat for best results. This setup provides access to advanced AI models and delivers higher quality code review and analysis.
@@ -24,8 +23,7 @@ CodeGuard supports following features using AI:
 
 For professional code analysis and review, prefer using MCP server with Copilot Chat integration.
 
-# 🧩 Use MCP server
-## Install MCP Server
+## 🧩 Install MCP Server
 
 ### Windows
 1. Install Python 3.9+ from https://www.python.org/downloads/windows/ 
@@ -69,8 +67,7 @@ Create `.vscode/mcp.json` in your project codebase with the following format:
 ---
 
 
-## MCP Server Usage
-
+## 🌐 MCP Server Usage
 
 MCP server can be used independently or via the extension. **For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.**
 
@@ -106,8 +103,8 @@ MCP server can be used independently or via the extension. **For rule-based chec
 
 
 
-# 🎯 Use extension
-## How to Setup Custom Rule File & Report Directory
+## 🎯 Extension Usage
+### Setup custom rule File & report directory
 
 1. Open VSCode, go to `File` > `Preferences` > `Settings` (or press `Ctrl+,`).
 2. Search for `lge` in the settings search bar.
@@ -119,9 +116,9 @@ MCP server can be used independently or via the extension. **For rule-based chec
    - Example: `D:\src\codefun\defect_report` or `${workspaceFolder}/defect_report`
 5. Save your settings. The extension will use these paths for custom rule checking and report output.
 
-## Extension usage
 
-### 1. Start/stop/restart Web Server (View violation report)
+
+### 1. Start/stop/restart Web Server (view violation report)
 - Open Command Palette (Ctrl+Shift+P), type `LGEDV: Start Web Server` and select the command to start server.
 - Open web browser (localhost:8888) to view violation reports.
 - On Windows: runs `./start_server.ps1 stop/restart` via PowerShell to stop or restart server.
@@ -162,44 +159,19 @@ MCP server can be used independently or via the extension. **For rule-based chec
 
 **Install cppcheck:**
 1. Download installer from https://cppcheck.sourceforge.io/
-2. Run the installer. If not added to PATH automatically, add the install folder (e.g. `C:\Program Files\Cppcheck`) to your system PATH.
-3. Verify by running in PowerShell:
-   ```powershell
-   cppcheck --version
-   ```
+2. Run the installer. If not added to PATH automatically, add the install folder to your system PATH.
+ 
 **Install clang/clang-tidy:**
-1. Download LLVM installer from https://releases.llvm.org/download.html (e.g. `LLVM-17.0.6-win64.exe`).
+1. Download LLVM installer from https://releases.llvm.org/download.html.
 2. Run the installer and select "Add LLVM to the system PATH" if available.
-3. Verify by running:
-   ```powershell
-   clang --version
-   clang-tidy --version
-   ```
 
 #### Linux
+Install cppcheck: sudo apt install cppcheck
+Install clang/clang-tidy: sudo apt install clang clang-tidy
 
-**Install cppcheck:**
-```bash
-sudo apt update
-sudo apt install cppcheck
-```
+#### Run command
+Command: `LGEDV: Check Rules by Static Analysic` on currently open file to detect C++ violations.
 
-**Install clang/clang-tidy:**
-```bash
-sudo apt update
-sudo apt install clang clang-tidy
-```
-
-**Verify installation:**
-```bash
-cppcheck --version
-clang --version
-clang-tidy --version
-```
-
-Once installed, you can use the extension's static analysis command to check.
-- Command: `LGEDV: Check Rules by Static Analysic`
-- Usage: Run on the currently open C++ file to detect C++ violations.
 
 
 

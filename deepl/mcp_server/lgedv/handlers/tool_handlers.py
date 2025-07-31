@@ -7,7 +7,7 @@ from typing import List, Union, Dict
 from mcp import types
 from lgedv.modules.rule_fetcher import (
     fetch_misra_rule, fetch_lgedv_rule, fetch_certcpp_rule,
-    fetch_critical_rule, fetch_custom_rule
+    fetch_custom_rule
 )
 from lgedv.modules.file_utils import list_cpp_files, get_cpp_files_content
 from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
@@ -44,8 +44,6 @@ class ToolHandler:
                 return await self._handle_fetch_lgedv_rule(arguments)
             elif name == "fetch_certcpp_rule":
                 return await self._handle_fetch_certcpp_rule(arguments)
-            elif name == "fetch_critical_rule":
-                return await self._handle_fetch_critical_rule(arguments)
             elif name == "fetch_custom_rule":
                 return await self._handle_fetch_custom_rule(arguments)
             
@@ -89,13 +87,6 @@ class ToolHandler:
         url = arguments.get("url")
         result = await fetch_certcpp_rule(url)
         logger.info(f"fetch_certcpp_rule completed for url: {url}")
-        return result
-    
-    async def _handle_fetch_critical_rule(self, arguments: dict) -> List[types.TextContent]:
-        """Handle fetch_critical_rule tool"""
-        url = arguments.get("url")
-        result = await fetch_critical_rule(url)
-        logger.info(f"fetch_critical_rule completed for url: {url}")
         return result
     
     async def _handle_fetch_custom_rule(self, arguments: dict) -> List[types.TextContent]:
