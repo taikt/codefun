@@ -30,45 +30,45 @@ print_info() {
     echo -e "${BLUE}[DEBUG]${NC} $1"
 }
 
-# ---[ Python environment auto-check & setup ]---
-PYTHON_OK=1
-PYTHON_BIN="python3"
-VENV_DIR="$SCRIPT_DIR/venv"
 
-# Check python3
-if ! command -v python3 >/dev/null 2>&1; then
-    print_error "Python3 not found! Please install python3."
-    exit 1
-fi
+python_env_setup() {
+    PYTHON_OK=1
+    PYTHON_BIN="python3"
+    VENV_DIR="$SCRIPT_DIR/venv"
 
-# Check/cài python3-venv nếu có sudo
-if ! $PYTHON_BIN -m venv --help >/dev/null 2>&1; then
-    if command -v sudo >/dev/null 2>&1; then
-        print_status "Installing python3-venv..."
-        sudo apt update && sudo apt install -y python3-venv python3-full
-    else
-        print_error "python3-venv not found and no sudo permission. Please ask admin to install python3-venv."
+    # Check python3
+    if ! command -v python3 >/dev/null 2>&1; then
+        print_error "Python3 not found! Please install python3."
         exit 1
     fi
-fi
 
-if [ ! -d "$VENV_DIR" ]; then
-    python3 -m venv "$VENV_DIR"
-    if [ ! -f "$VENV_DIR/bin/activate" ]; then
-        print_error "Failed to create venv! Please check python3-venv, permissions, and Python version."
-        exit 1
+    # Check/cài python3-venv nếu có sudo
+    if ! $PYTHON_BIN -m venv --help >/dev/null 2>&1; then
+        if command -v sudo >/dev/null 2>&1; then
+            print_status "Installing python3-venv..."
+            sudo apt update && sudo apt install -y python3-venv python3-full
+        else
+            print_error "python3-venv not found and no sudo permission. Please ask admin to install python3-venv."
+            exit 1
+        fi
     fi
-fi
-source "$VENV_DIR/bin/activate"
-pip install -r "$SCRIPT_DIR/requirements.txt"
 
-# Đảm bảo pip có sẵn
-if ! command -v pip >/dev/null 2>&1; then
-    print_status "Installing pip in venv..."
-    $PYTHON_BIN -m ensurepip --upgrade
-fi
+    if [ ! -d "$VENV_DIR" ]; then
+        python3 -m venv "$VENV_DIR"
+        if [ ! -f "$VENV_DIR/bin/activate" ]; then
+            print_error "Failed to create venv! Please check python3-venv, permissions, and Python version."
+            exit 1
+        fi
+    fi
+    source "$VENV_DIR/bin/activate"
+    "$VENV_DIR/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
 
-# ---[ End Python env check ]---
+    # Đảm bảo pip có sẵn
+    if ! command -v pip >/dev/null 2>&1; then
+        print_status "Installing pip in venv..."
+        $PYTHON_BIN -m ensurepip --upgrade
+    fi
+}
 
 # Check if we're in the right directory
 check_environment() {
@@ -129,6 +129,7 @@ status_server() {
 
 # Start the server
 start_server() {
+    python_env_setup
     print_info "Starting HTML Report Server (aiohttp)..."
     local pid=$(get_server_pid)
     if [[ -n "$pid" ]]; then
@@ -172,8 +173,7 @@ start_server() {
         print_info "Log file: $LOG_FILE"
         print_info "Use './start_server.sh status' to check server status"
         print_info "Use './start_server.sh stop' to stop the server"
-        print_status "Server startup completed. Terminal will exit automatically in 5 seconds..."
-        sleep 5
+        print_status "Server startup completed."
         exit 0
     else
         print_error "Failed to start server"
@@ -255,6 +255,7 @@ restart_server() {
     fi
     rm -f "$PID_FILE" "$LOG_FILE" 2>/dev/null
     print_info "Starting fresh server..."
+    python_env_setup
     start_server
 }
 

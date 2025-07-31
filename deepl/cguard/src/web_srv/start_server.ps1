@@ -140,6 +140,13 @@ function Start-Server {
     }
     # Sau khi chạy, kiểm tra trạng thái
     Status-Server
+    # Hiển thị thông tin thư mục report từ log
+    if (Test-Path $LogFile) {
+        $reportLine = Get-Content $LogFile | Select-String "Web server will serve HTML reports from:" | Select-Object -Last 1
+        if ($reportLine) {
+            Write-Status $reportLine.Line
+        }
+    }
     Write-Status "Server startup completed."
 }
 

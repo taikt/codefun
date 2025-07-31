@@ -138,3 +138,4 @@ a.out
 out
 __pycache__
 *.log
+*.vsix

@@ -242,7 +242,7 @@
     "vscode:prepublish": "npm run compile && npm run copy-rules",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "copy-rules": "xcopy src\\rule_set out\\rule_set /E /I /Y"
+    "copy-rules": "node copy_rules.js"
   },
   "files": [
     "out",
