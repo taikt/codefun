@@ -8,7 +8,7 @@ class PromptTemplates:
     
     @staticmethod
     def get_lgedv_analysis_prompt() -> str:
-    """Template cho LGEDV analysis"""
+        """Template cho LGEDV analysis"""
         return (
             "You are a C++ static analysis expert. Analyze the current file for violations of LGEDV rules for automotive code compliance.\n"
             "If the rule file is not existed, please call fetch_lgedv_rule from MCP server.\n"
@@ -44,7 +44,7 @@ class PromptTemplates:
         
     @staticmethod
     def get_misra_analysis_prompt() -> str:
-    """Template cho MISRA analysis"""
+        """Template cho MISRA analysis"""
         return (
             "You are a C++ static analysis expert. Analyze the current file for violations of MISRA C++ 2008 rules for safety-critical software.\n"
             "If the rule file is not existed, please call fetch_misra_rule from MCP server.\n"
@@ -116,7 +116,7 @@ class PromptTemplates:
     
     @staticmethod
     def get_custom_analysis_prompt() -> str:
-    """Template cho Custom rule analysis"""
+        """Template cho Custom rule analysis"""
         return (
             "You are a C++ static analysis expert. Analyze the current file for violations of the following custom rules.\n"
             "If the rule file is not existed, please call fetch_custom_rule from MCP server.\n"
