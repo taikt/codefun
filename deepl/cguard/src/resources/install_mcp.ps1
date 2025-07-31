@@ -1,5 +1,5 @@
 param(
-    [string]$ProjectDir = "C:\mcp_server",
+    [string]$ProjectDir = "C:\Program Files\MCP Server CodeGuard",
     [string]$PackageName = "codeguard-lgedv"
 )
 
