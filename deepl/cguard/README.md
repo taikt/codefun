@@ -24,7 +24,7 @@ CodeGuard supports following features using AI:
 
 For professional code analysis and review, prefer using MCP server with Copilot Chat integration.
 
-# Use MCP server
+# 🧩 Use MCP server
 ## Install MCP Server
 
 ### Windows
@@ -106,8 +106,8 @@ MCP server can be used independently or via the extension. **For rule-based chec
 
 
 
-# Use extension
-## How to Setup Custom Rule File & Report Directory in Extension
+# 🎯 Use extension
+## How to Setup Custom Rule File & Report Directory
 
 1. Open VSCode, go to `File` > `Preferences` > `Settings` (or press `Ctrl+,`).
 2. Search for `lge` in the settings search bar.
@@ -121,36 +121,42 @@ MCP server can be used independently or via the extension. **For rule-based chec
 
 ## Extension usage
 
-### 1. Check LGEDV Rule for Open File
+### 1. Start/stop/restart Web Server (View violation report)
+- Open Command Palette (Ctrl+Shift+P), type `LGEDV: Start Web Server` and select the command to start server.
+- Open web browser (localhost:8888) to view violation reports.
+- On Windows: runs `./start_server.ps1 stop/restart` via PowerShell to stop or restart server.
+- On Linux/macOS: runs `./start_server.sh stop/restart` via Bash to stop or restart server.
+
+### 2. Check LGEDV Rule for Open File
 - Command: `LGEDV: Check LGEDV Rule`
 - Usage: Run on the currently open C++ file to detect LGEDV rule violations.
 
-### 2. Check MISRA Rule for Open File
+### 3. Check MISRA Rule for Open File
 - Command: `LGEDV: Check MISRA Rule`
 - Usage: Run on the currently open C++ file to detect MISRA C++ violations.
 
-### 3. Check CERTCPP Rule for Open File
+### 4. Check CERTCPP Rule for Open File
 - Command: `LGEDV: Check CERTCPP Rule`
 - Usage: Run on the currently open C++ file to detect CERT C++ violations.
 
-### 4. Check Custom Rule for Open File
+### 5. Check Custom Rule for Open File
 - Command: `LGEDV: Check Custom Rule`
 - Usage: Run on the currently open C++ file to detect user-defined custom rule violations.
 
-### 5. Check All Rules for Open File
+### 6. Check All Rules for Open File
 - Command: `LGEDV: Check All Rules`
 - Usage: Run all rule checks (LGEDV, MISRA, CERTCPP, Custom) on the current file.
 
-### 6. Generate LGEDV/MISRA/CERT/Custom Prompts
+### 7. Generate LGEDV/MISRA/CERT/Custom Prompts
 - Command: `LGEDV: Generate LGEDV Prompt`, `LGEDV: Generate MISRA Prompt`, ...
 - Usage: Generate AI prompt for code review or refactoring based on selected rule set.
 
-### 7. Check Multiple Files
+### 8. Check Multiple Files
 - Command: `LGEDV: Check Multiple Files (LGEDV/MISRA/CERT/Custom)`
 - Usage: Run rule checks on multiple files in the workspace.
 
 
-### 8. Static Analysis (cppcheck, clang, clang-tidy)
+### 9. Static Analysis (cppcheck, clang, clang-tidy)
 
 #### Windows
 
@@ -161,7 +167,6 @@ MCP server can be used independently or via the extension. **For rule-based chec
    ```powershell
    cppcheck --version
    ```
-
 **Install clang/clang-tidy:**
 1. Download LLVM installer from https://releases.llvm.org/download.html (e.g. `LLVM-17.0.6-win64.exe`).
 2. Run the installer and select "Add LLVM to the system PATH" if available.
@@ -170,7 +175,6 @@ MCP server can be used independently or via the extension. **For rule-based chec
    clang --version
    clang-tidy --version
    ```
-
 
 #### Linux
 
@@ -193,18 +197,11 @@ clang --version
 clang-tidy --version
 ```
 
----
-
 Once installed, you can use the extension's static analysis command to check.
 - Command: `LGEDV: Check Rules by Static Analysic`
 - Usage: Run on the currently open C++ file to detect C++ violations.
 
 
-### 9. Start/stop/restart Web Server (View Violation Report)
-- Open Command Palette (Ctrl+Shift+P), type `LGEDV: Start Web Server` and select the command to start server.
-- Open web browser (localhost:8888) to view violation reports.
-- On Windows: runs `./start_server.ps1 stop/restart` via PowerShell to stop or restart server.
-- On Linux/macOS: runs `./start_server.sh stop/restart` via Bash to stop or restart server.
 
 
 
