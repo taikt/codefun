@@ -1,11 +1,16 @@
-
-# install packages
+# Install packages
 sudo apt-get update
-sudo su
-apt-get install -y ninja-build build-essential cmake clang git python3 libstdc++-12-dev zlib1g-dev cppcheck clang && sudo apt-get install npm && sudo npm install -g vsce && sudo npm install typescript -g && apt-get install graphviz
+sudo apt-get install -y ninja-build build-essential cmake clang git python3 libstdc++-12-dev zlib1g-dev cppcheck clang && sudo apt-get install npm && sudo npm install -g vsce && sudo npm install typescript -g && apt-get install graphviz
 
+## for static analysic tool
+### install clang
+wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh 
+sudo ./llvm.sh 20
+sudo apt-get install libclang-20-dev clang-20
+ls /usr/lib/llvm-20/lib/libclang.so
 
-# build
+# build extension
 npm run compile
 vsce package
 vsce ls   (=> to show what is packaged)
@@ -24,19 +29,7 @@ node -v
 npm -v
 
 
-# start server manually
-cd d:\src\codefun\deepl\cguard\src\web_srv
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-python server_aiohttp.py
-
-# kiem tra status web server
-## win:
-netstat -ano | findstr :8888
-curl http://localhost:8888/api/health
-powershell -ExecutionPolicy Bypass -File "start_server.ps1" status
-
-# upload
+# Upload extension
 https://marketplace.visualstudio.com/manage/publishers/trananhtai-lge
 (username: tai2.tran@lge.com, pw: lg's login)
 token:
@@ -50,21 +43,30 @@ vsce publish
    - https://dev.azure.com/tai2tran/_usersSettings/tokens
    
 2. Tạo token mới với quyền "All accessible organizations" hoặc ít nhất là "Marketplace (Publish)".
-  
-3. Đăng nhập lại với token mới:
-   ```bash
-   vsce login <publisher-name>
-   vd: vsce login TranAnhTai-LGE
-   ```
-   - Khi được hỏi, dán token mới vào.
+vsce login TranAnhTai-LGE
+vsce publish
 
-4. Thực hiện lại lệnh publish:
-   ```bash
-   vsce publish
-   ```
+# start web server manually
+cd d:\src\codefun\deepl\cguard\src\web_srv
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+python server_aiohttp.py
 
-**Lưu ý:**
-- Nên bổ sung trường `"repository"` và file `LICENSE` vào `package.json` để tránh cảnh báo khi publish.
+# kiem tra status web server
+## win:
+netstat -ano | findstr :8888
+curl http://localhost:8888/api/health
+powershell -ExecutionPolicy Bypass -File "start_server.ps1" status
 
 
-Sau khi dùng token mới, bạn sẽ publish extension thành công!
+
+# Note 
+8.1.2025
+- Temporaly disable codeguard menu:
+in package.json, doi ten  (de vscode khong nhan ra keyword)
+menus -> menus_disabled
+submenus -> submenus_disabled
+
+- diable commands cho extension (ctr+shift+P), chi giu lai Install MCP
+in package.json: doi commands -> commands_disabled
+tao commands moi chi chua "install MCP"

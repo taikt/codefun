@@ -17,15 +17,15 @@ MCP server CodeGuard supports following features using AI:
 ### Windows
 - Install Python from https://www.python.org/downloads/windows/ 
 - Open Command Palette (Ctrl+Shift+P), type `LGEDV: Install MCP Server` and select the command.
-- The extension will open a terminal and run the PowerShell script `install_mcp.ps1` to install MCP server in `C:\Program Files\MCP Server CodeGuard` (default).
-- After installation, you will see a success notification and a sample configuration file `.vscode/mcp.json` created in your project folder.
+- The extension will install MCP server in `C:\Program Files\MCP Server CodeGuard` (default).
+- After installation, a sample configuration file `.vscode/mcp.json` is created in your project folder.
 
 
 ### Linux
 - Install Python using your package manager (e.g., `sudo apt install python3 python3-venv python3-pip`).
 - Open Command Palette (Ctrl+Shift+P), type `LGEDV: Install MCP Server` and select the command.
-- The extension will open a terminal and run the Bash script `install_mcp.sh` to install MCP server in `~/mcp_server` (default).
-- After installation, you will see a success notification and a sample configuration file `.vscode/mcp.json` created in your project folder.
+- The extension will install MCP server in `~/mcp_server` (default).
+- After installation, a sample configuration file `.vscode/mcp.json` is created in your project folder.
 - If you need to adjust the path for `CPP_DIR` or `CUSTOM_RULE_PATH`, edit the `.vscode/mcp.json` file to match your project.
 
 
@@ -51,15 +51,11 @@ Create `.vscode/mcp.json` in your project codebase with the following format (Wi
 - e.g.  "CUSTOM_RULE_PATH": "C:\\path\\to\\CustomRule.md"
 - Open mcp.json on vscode and start MCP server by click start button.
 
----
 
 
 ## 🌐 MCP Server Usage
 
-
-<!--MCP server can be used independently or via the extension. -->
-**For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.**
-
+For rule-based checks, you must download the rule set before running the check prompt. If the rule set was downloaded, skip this step.
 
 ### MCP Server Prompts 
 - **LGEDV Rule Check**
