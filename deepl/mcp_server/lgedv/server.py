@@ -190,7 +190,11 @@ def main(port: int, transport: str):
                 ),
                 types.Prompt(
                     name="check_resources",
-                    description="Analyze potential resource leaks (file/socket/handle) in Linux C++ codebase using AI.",
+                    description="Analyze potential resource leaks (file/socket/handle).",
+                ),
+                types.Prompt(
+                    name="get_context",
+                    description="Load context for all C++ source/header files in the current directory."
                 ),
             ]
 

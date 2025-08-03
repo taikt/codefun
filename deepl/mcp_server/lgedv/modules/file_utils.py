@@ -19,10 +19,11 @@ def list_cpp_files(dir_path: str = None) -> List[str]:
     if dir_path is None:
         dir_path = get_cpp_dir()
     
+    CPP_EXTENSIONS = ('.cpp', '.h', '.hpp', '.cc', '.cxx')
     cpp_files = []
     for root, dirs, files in os.walk(dir_path):
         for file in files:
-            if file.endswith('.cpp'):
+            if file.endswith(CPP_EXTENSIONS):
                 # Return relative path for better readability
                 rel_path = os.path.relpath(os.path.join(root, file), dir_path)
                 cpp_files.append(rel_path)

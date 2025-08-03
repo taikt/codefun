@@ -149,3 +149,25 @@ class PromptTemplates:
             "```cpp\n[entire corrected file with all fixes applied]\n```\n\n"
             "**Important:** If no custom rule violations are found, clearly state \"No custom rule violations detected in this code.\""
         )
+    
+    @staticmethod
+    def get_context_prompt() -> str:
+        """Template cho việc lấy và ghi nhớ context code C++"""
+        return (
+            "You are a C++ code context assistant. Your task is to read and remember the full content and structure of all C++ source and header files in the current project directory.\n"
+            "If file contents are not yet loaded, call the tool 'get_cpp_files_content' from the MCP server to retrieve all .cpp and .h files in the directory specified by CPP_DIR.\n"
+            "For each file, extract and summarize:\n"
+            "- File name and relative path\n"
+            "- All class, struct, enum, and function definitions\n"
+            "- Key relationships (inheritance, composition, usage)\n"
+            "- Any global variables, macros, or configuration\n"
+            "- Any important comments or documentation\n"
+            "Do not perform static analysis or rule checking in this step.\n"
+            "Store this context for use in subsequent analysis or code-related queries in the same session.\n\n"
+            "**OUTPUT FORMAT:**\n"
+            "For each file:\n"
+            "### [File Name]\n"
+            "```cpp\n[Summary of structure, definitions, and key elements]\n```\n"
+            "Repeat for all files provided.\n"
+            "Confirm when context is fully loaded and ready for future queries."
+        )

@@ -45,6 +45,8 @@ class PromptHandler:
                 return await self._handle_memory_leak_analysis(arguments)
             elif name == "check_resources":
                 return await self._handle_resource_leak_analysis(arguments)
+            elif name == "get_context":
+                return await self._handle_code_context()  
             else:
                 raise ValueError(f"Unknown prompt: {name}")
                 
@@ -441,3 +443,19 @@ Focus on Linux-specific resources and provide actionable recommendations for eac
         prompt_section += "4. Check for lock-free and concurrent data structure usage.\n"
         prompt_section += "5. Provide before/after code examples for fixes.\n\n"
         return prompt_section
+
+    async def _handle_code_context(self) -> types.GetPromptResult:
+        """Handle code context prompt (load and summarize all C++ files in CPP_DIR)"""
+        prompt = self.templates.get_context_prompt()
+        messages = [
+            types.PromptMessage(
+                role="user",
+                content=types.TextContent(type="text", text=prompt),
+            )
+        ]
+        result = types.GetPromptResult(
+            messages=messages,
+            description="A prompt for loading and summarizing code context for all C++ files.",
+        )
+        logger.info("Code context prompt completed")
+        return result
