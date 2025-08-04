@@ -1,0 +1,36 @@
+@startuml
+autonumber
+actor Client1
+actor Client2
+actor Client3
+actor Client4
+actor Client5
+
+box "Map Download App" #LightBlue
+  participant "MapHTTPServer (epoll thread)" as Server
+  participant "curlMultiLoop (libcurl multi thread)" as CurlThread
+end box
+participant CurlMulti as "libcurl multi"
+participant MapServer as "Map Server"
+
+Client1 -> Server: Connect & send request
+Client2 -> Server: Connect & send request
+Client3 -> Server: Connect & send request
+Client4 -> Server: Connect & send request
+Client5 -> Server: Connect & send request
+
+Server --> Server: epoll_wait receives data from 5 sockets
+Server --> Server: Parse header/content
+Server --> CurlThread: Create CURL easy handle (for each request)
+Server --> CurlThread: Add to libcurl multi (for each request)
+CurlThread -->> CurlMulti: curl_multi_perform (process all requests concurrently)
+CurlMulti -->> MapServer: Send HTTP requests (parallel)
+MapServer -->> CurlMulti: Return HTTP responses (parallel)
+CurlMulti -->> CurlThread: Call WriteCallback, write data to buffer
+CurlThread -->> Server: On completion, send response to correct client socket (5 times in parallel)
+Server -->> Client1: Send response
+Server -->> Client2: Send response
+Server -->> Client3: Send response
+Server -->> Client4: Send response
+Server -->> Client5: Send response
+@enduml
