@@ -20,7 +20,7 @@ copilot -> controller : get_prompt (check_resources, arguments)
 controller -> promptHandler : handle_prompt("check_resources", arguments)
 promptHandler -> toolHandler : _handle_ai_resource_analysis({dir_path})
 toolHandler -> resourceAnalyzer : analyze_codebase(dir_path)
-resourceAnalyzer -> storage : list_cpp_files(dir_path)
+resourceAnalyzer -> storage : list_source_files(dir_path)
 storage --> resourceAnalyzer : return list of C++ files
 alt C++ files found
   loop for each C++ file

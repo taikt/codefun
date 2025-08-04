@@ -4,34 +4,34 @@ Các tiện ích để xử lý file C++ và operations liên quan
 """
 import os
 from typing import List
-from .config import get_cpp_dir
+from .config import get_src_dir
 
-def list_cpp_files(dir_path: str = None) -> List[str]:
+def list_source_files(dir_path: str = None) -> List[str]:
     """
-    Trả về danh sách file .cpp trong dir_path hoặc CPP_DIR hoặc cwd.
+    Trả về danh sách file .cpp trong dir_path hoặc src_dir hoặc cwd.
     
     Args:
         dir_path: Thư mục cần tìm kiếm (optional)
         
     Returns:
-        List[str]: Danh sách các file .cpp
+        List[str]: Danh sách các file sources
     """
     if dir_path is None:
-        dir_path = get_cpp_dir()
+        dir_path = get_src_dir()
     
-    CPP_EXTENSIONS = ('.cpp', '.h', '.hpp', '.cc', '.cxx')
-    cpp_files = []
+    SRC_EXTENSIONS = ('.cpp', '.h', '.hpp', '.cc', '.cxx', '.py', '.java', '.js', '.jsx', '.ts')
+    src_files = []
     for root, dirs, files in os.walk(dir_path):
         for file in files:
-            if file.endswith(CPP_EXTENSIONS):
+            if file.endswith(SRC_EXTENSIONS):
                 # Return relative path for better readability
                 rel_path = os.path.relpath(os.path.join(root, file), dir_path)
-                cpp_files.append(rel_path)
-    return cpp_files
+                src_files.append(rel_path)
+    return src_files
 
-def get_cpp_files_content(dir_path: str = None) -> str:
+def get_src_files_content(dir_path: str = None) -> str:
     """
-    Lấy nội dung của tất cả file .cpp trong thư mục
+    Lấy nội dung của tất cả file source trong thư mục
     
     Args:
         dir_path: Thư mục cần đọc (optional)
@@ -40,12 +40,12 @@ def get_cpp_files_content(dir_path: str = None) -> str:
         str: Nội dung tất cả các file được nối lại
     """
     if dir_path is None:
-        dir_path = get_cpp_dir()
+        dir_path = get_src_dir()
     
-    cpp_files = list_cpp_files(dir_path)
+    src_files = list_source_files(dir_path)
     contents = []
     
-    for file in cpp_files:
+    for file in src_files:
         abs_path = os.path.join(dir_path, file)
         try:
             with open(abs_path, "r", encoding="utf-8") as f:

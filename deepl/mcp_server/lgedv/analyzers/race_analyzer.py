@@ -5,9 +5,9 @@ Module chuyên dụng để phân tích race conditions trong C++ code
 import os
 import re
 from typing import Dict, List
-from lgedv.modules.config import get_cpp_dir, setup_logging
+from lgedv.modules.config import get_src_dir, setup_logging
 from lgedv.modules.data_models import SharedResource, ThreadUsage, RaceCondition, AnalysisResult
-from lgedv.modules.file_utils import list_cpp_files
+from lgedv.modules.file_utils import list_source_files
 
 logger = setup_logging()
 
@@ -417,11 +417,11 @@ class RaceConditionAnalyzer:
             AnalysisResult: Kết quả phân tích
         """
         if dir_path is None:
-            dir_path = get_cpp_dir()
+            dir_path = get_src_dir()
         
         # Thu thập tất cả file C++
-        cpp_files = list_cpp_files(dir_path)
-        full_paths = [os.path.join(dir_path, f) for f in cpp_files]
+        src_files = list_source_files(dir_path)
+        full_paths = [os.path.join(dir_path, f) for f in src_files]
         
         # Phân tích từng file
         all_resources = {}
@@ -461,7 +461,7 @@ class RaceConditionAnalyzer:
             file_summaries[file_path] = summary_text
         # Tạo summary tổng hợp
         summary = {
-            "total_files_analyzed": len(cpp_files),
+            "total_files_analyzed": len(src_files),
             #"total_shared_resources": len(resource_access_map),
             #"potential_races": len(potential_races),
             "files_with_threads": len([f for f, threads in all_threads.items() if threads]),

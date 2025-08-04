@@ -107,34 +107,34 @@ def main(port: int, transport: str):
                     },
                 ),
                 types.Tool(
-                    name="list_cpp_files",
-                    description="List all .cpp files in the current CPP_DIR or given directory.",
+                    name="list_source_files",
+                    description="List all .cpp files in the current src_dir or given directory.",
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "dir_path": {
                                 "type": "string",
-                                "description": "Directory to search for .cpp files (optional, default is CPP_DIR or cwd)",
+                                "description": "Directory to search for .cpp files (optional, default is src_dir or cwd)",
                             }
                         },
                     },
                 ),
                 types.Tool(
-                    name="get_cpp_files_content",
-                    description="Get the content of all .cpp files in the current CPP_DIR or given directory as a single response for context.",
+                    name="get_src_files_content",
+                    description="Get the content of all .cpp files in the current src_dir or given directory as a single response for context.",
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "dir_path": {
                                 "type": "string",
-                                "description": "Directory to search for .cpp files (optional, default is CPP_DIR or cwd)",
+                                "description": "Directory to search for .cpp files (optional, default is src_dir or cwd)",
                             }
                         },
                     },
                 ),
                 types.Tool(
                     name="detect_races",
-                    description="Detect potential race conditions in the codebase using CPP_DIR.",
+                    description="Detect potential race conditions in the codebase using src_dir.",
                     inputSchema={
                         "type": "object",
                         "properties": {},
@@ -142,7 +142,7 @@ def main(port: int, transport: str):
                 ),
                 types.Tool(
                     name="analyze_leaks",
-                    description="AI-powered memory leak detection in C++ codebase using CPP_DIR.",
+                    description="AI-powered memory leak detection in C++ codebase using src_dir.",
                     inputSchema={
                         "type": "object", 
                         "properties": {},
@@ -150,7 +150,7 @@ def main(port: int, transport: str):
                 ),
                 types.Tool(
                     name="analyze_resources",
-                    description="AI-powered resource leak detection in Linux C++ codebase using CPP_DIR.",
+                    description="AI-powered resource leak detection in Linux C++ codebase using src_dir.",
                     inputSchema={
                         "type": "object",
                         "properties": {},
@@ -194,7 +194,7 @@ def main(port: int, transport: str):
                 ),
                 types.Prompt(
                     name="get_context",
-                    description="Load context for all C++ source/header files in the current directory."
+                    description="Load context for all source files in the current directory."
                 ),
             ]
 

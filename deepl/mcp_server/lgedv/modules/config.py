@@ -17,7 +17,7 @@ def setup_logging():
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
             logging.StreamHandler(sys.stderr),
-            logging.FileHandler(log_path)
+            # logging.FileHandler(log_path) # disable file logging, uncomment to enable
         ]
     )
     return logging.getLogger(__name__)
@@ -30,7 +30,7 @@ RULE_PATHS = {
     "misra": os.path.join(BASE_DIR, "resources", "Misracpp2008Guidelines_en.md"),
     "lgedv": os.path.join(BASE_DIR, "resources", "LGEDVRuleGuide.md"),
     "certcpp": os.path.join(BASE_DIR, "resources", "CertcppGuidelines_en.md"),
-    "custom": os.environ.get("CUSTOM_RULE_PATH", os.path.join(BASE_DIR, "resources", "CustomRule.md"))
+    "custom": os.environ.get("custom_path", os.path.join(BASE_DIR, "resources", "CustomRule.md"))
 }
 
 # Legacy compatibility
@@ -41,9 +41,9 @@ CUSTOM_RULE_URL = RULE_PATHS["custom"]
 
 RESOURCE_FILES = RULE_PATHS
 
-def get_cpp_dir():
+def get_src_dir():
     """Get the CPP directory from environment or current working directory"""
-    return os.environ.get("CPP_DIR", os.getcwd())
+    return os.environ.get("src_dir", os.getcwd())
 
 # NOTE: MCP Resource handling is now in handlers/resource_handler.py
 # This provides better separation and allows for future expansion like:

@@ -6,8 +6,8 @@ Modular architecture similar to memory_analyzer.py and race_analyzer.py
 import os
 import re
 from typing import Dict, List, Optional, Set, Tuple
-from lgedv.modules.config import get_cpp_dir, setup_logging
-from lgedv.modules.file_utils import list_cpp_files
+from lgedv.modules.config import get_src_dir, setup_logging
+from lgedv.modules.file_utils import list_source_files
 
 logger = setup_logging()
 
@@ -304,32 +304,32 @@ class ResourceAnalyzer:
     
     def analyze_codebase(self, dir_path: str = None) -> Dict:
         """
-        Analyze resource leaks in entire codebase - always uses CPP_DIR from config
+        Analyze resource leaks in entire codebase - always uses src_dir from config
         
         Args:
-            dir_path: IGNORED - always uses CPP_DIR from config like check_leaks
+            dir_path: IGNORED - always uses src_dir from config like check_leaks
             
         Returns:
             Dict: Comprehensive analysis results
         """
-        # Always use CPP_DIR from config, ignore passed dir_path
-        target_dir = get_cpp_dir()
+        # Always use src_dir from config, ignore passed dir_path
+        target_dir = get_src_dir()
         
         logger.info(f"Starting full codebase resource leak analysis: {target_dir}")
         
         # Collect all C++ files
-        cpp_files = list_cpp_files(target_dir)
-        logger.info(f"List of C++ files: {cpp_files}")
-        logger.info(f"Total C++ files found: {len(cpp_files)}")
-        #for f in cpp_files:
+        src_files = list_source_files(target_dir)
+        logger.info(f"List of C++ files: {src_files}")
+        logger.info(f"Total C++ files found: {len(src_files)}")
+        #for f in src_files:
         #    logger.info(f"Found C++ file: {f}")
 
-        full_paths = [os.path.join(target_dir, f) for f in cpp_files]
+        full_paths = [os.path.join(target_dir, f) for f in src_files]
         
-        if not cpp_files:
+        if not src_files:
             return {
                 "analysis_method": "full_codebase_resource_analysis",
-                "status": "no_cpp_files_found",
+                "status": "no_src_files_found",
                 "directory": target_dir,
                 "files_analyzed": 0,
                 "resource_leaks": [],
@@ -366,7 +366,7 @@ class ResourceAnalyzer:
         
         # Summary
         summary = {
-            "total_files_analyzed": len(cpp_files),
+            "total_files_analyzed": len(src_files),
             "resource_operations_found": sum(len(ops) for ops in all_resource_ops.values()),
             "cross_file_flows": len([f for f in resource_flows.values() if f.is_cross_file()]),
             "potential_leaks": len(detected_leaks),
@@ -379,7 +379,7 @@ class ResourceAnalyzer:
         return {
             "analysis_method": "full_codebase_resource_with_dynamic_grouping",
             "directory": target_dir,
-            "files_analyzed": len(cpp_files),
+            "files_analyzed": len(src_files),
             "resource_flows": {k: self._serialize_resource_flow(v) for k, v in resource_flows.items()},
             "detected_leaks": detected_leaks,
             "dynamic_groups": resource_groups,
@@ -390,16 +390,16 @@ class ResourceAnalyzer:
     
     def analyze_directory(self, dir_path: str = None) -> List[Dict]:
         """
-        Simple directory analysis - always uses CPP_DIR from config like check_leaks
+        Simple directory analysis - always uses src_dir from config like check_leaks
         
         Args:
-            dir_path: IGNORED - always uses CPP_DIR from config
+            dir_path: IGNORED - always uses src_dir from config
             
         Returns:
             List[Dict]: List of resource leak findings
         """
-        # Always use CPP_DIR from config, ignore passed dir_path
-        target_dir = get_cpp_dir()
+        # Always use src_dir from config, ignore passed dir_path
+        target_dir = get_src_dir()
         analysis = self.analyze_codebase(target_dir)
         logger.info(f"Resource leak analysis completed for directory: {target_dir}")
         return analysis.get("detected_leaks", [])
@@ -642,10 +642,10 @@ class ResourceAnalyzer:
 def analyze_resources(dir_path: str = None) -> Dict:
     """
     Main entry point for full codebase resource leak analysis
-    Always uses CPP_DIR from config like check_leaks
+    Always uses src_dir from config like check_leaks
     
     Args:
-        dir_path: IGNORED - always uses CPP_DIR from config
+        dir_path: IGNORED - always uses src_dir from config
         
     Returns:
         Dict: Comprehensive analysis results

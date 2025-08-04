@@ -5,8 +5,8 @@ Học hỏi từ race_analyzer để phân tích tất cả files và detect cro
 import os
 import re
 from typing import Dict, List, Optional, Set, Tuple
-from lgedv.modules.config import get_cpp_dir, setup_logging
-from lgedv.modules.file_utils import list_cpp_files
+from lgedv.modules.config import get_src_dir, setup_logging
+from lgedv.modules.file_utils import list_source_files
 
 logger = setup_logging()
 
@@ -238,18 +238,18 @@ class MemoryAnalyzer:
             Dict: Kết quả phân tích chi tiết
         """
         if dir_path is None:
-            dir_path = get_cpp_dir()
+            dir_path = get_src_dir()
         
         logger.info(f"Starting full codebase memory leak analysis: {dir_path}")
         
         # Thu thập tất cả file C++
-        cpp_files = list_cpp_files(dir_path)
-        full_paths = [os.path.join(dir_path, f) for f in cpp_files]
+        src_files = list_source_files(dir_path)
+        full_paths = [os.path.join(dir_path, f) for f in src_files]
         
-        if not cpp_files:
+        if not src_files:
             return {
                 "analysis_method": "full_codebase_analysis",
-                "status": "no_cpp_files_found",
+                "status": "no_src_files_found",
                 "directory": dir_path,
                 "files_analyzed": 0,
                 "memory_leaks": [],
@@ -283,7 +283,7 @@ class MemoryAnalyzer:
         
         # Summary
         summary = {
-            "total_files_analyzed": len(cpp_files),
+            "total_files_analyzed": len(src_files),
             "memory_operations_found": sum(len(ops) for ops in all_memory_ops.values()),
             "cross_file_flows": len([f for f in memory_flows.values() if f.is_cross_file()]),
             "potential_leaks": len(detected_leaks),
@@ -294,7 +294,7 @@ class MemoryAnalyzer:
         return {
             "analysis_method": "full_codebase_with_dynamic_grouping",
             "directory": dir_path,
-            "files_analyzed": len(cpp_files),
+            "files_analyzed": len(src_files),
             "memory_flows": {k: self._serialize_memory_flow(v) for k, v in memory_flows.items()},
             "detected_leaks": detected_leaks,
             "dynamic_groups": memory_groups,

@@ -7,7 +7,7 @@ from typing import Dict
 from mcp import types
 from lgedv.prompts.prompt_templates import PromptTemplates
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer
-from lgedv.modules.config import get_cpp_dir, setup_logging
+from lgedv.modules.config import get_src_dir, setup_logging
 
 logger = setup_logging()
 
@@ -132,8 +132,8 @@ class PromptHandler:
     
     async def _handle_race_condition_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
         """Handle race condition analysis prompt - always use fallback-style prompt with findings if available"""
-        dir_path = get_cpp_dir()
-        logger.info(f"[check_races] Using CPP_DIR: {dir_path}")
+        dir_path = get_src_dir()
+        logger.info(f"[check_races] Using src_dir: {dir_path}")
         try:
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
@@ -162,8 +162,8 @@ class PromptHandler:
     
     async def _handle_memory_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
         """Handle memory leak analysis prompt - always use fallback-style prompt with findings if available"""
-        dir_path = get_cpp_dir()
-        logger.info(f"[check_leaks] Using CPP_DIR: {dir_path}")
+        dir_path = get_src_dir()
+        logger.info(f"[check_leaks] Using src_dir: {dir_path}")
         try:
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
@@ -192,8 +192,8 @@ class PromptHandler:
        
     async def _handle_resource_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
         """Handle resource leak analysis prompt - always use fallback-style prompt with findings if available, now with line numbers"""
-        dir_path = get_cpp_dir()
-        logger.info(f"[check_resources] Using CPP_DIR: {dir_path}")
+        dir_path = get_src_dir()
+        logger.info(f"[check_resources] Using src_dir: {dir_path}")
         try:
             from lgedv.handlers.tool_handlers import ToolHandler
             tool_handler = ToolHandler()
@@ -248,9 +248,9 @@ class PromptHandler:
         """Tạo fallback prompt khi có lỗi"""
         # Lấy danh sách file C++ trong dir_path
         try:
-            cpp_files = [f for f in os.listdir(dir_path) if f.endswith('.cpp')]
+            src_files = [f for f in os.listdir(dir_path) if f.endswith('.cpp')]
             code_snippets = []
-            for f in cpp_files[:2]:  # Chỉ lấy 2 file đầu cho ngắn gọn
+            for f in src_files[:2]:  # Chỉ lấy 2 file đầu cho ngắn gọn
                 file_path = os.path.join(dir_path, f)
                 with open(file_path, 'r', encoding='utf-8') as file:
                     code = file.read()
@@ -282,7 +282,7 @@ class PromptHandler:
             f"**Problem Description:** [explanation]\n"
             f"**Fix Recommendation:** [suggested solution]\n\n"
             f"Target Directory: {dir_path}\n"
-            f"Files Found: {', '.join(cpp_files)}\n"
+            f"Files Found: {', '.join(src_files)}\n"
             f"# Source Code Context\n"
             f"{code_context}"
         )
@@ -445,7 +445,7 @@ Focus on Linux-specific resources and provide actionable recommendations for eac
         return prompt_section
 
     async def _handle_code_context(self) -> types.GetPromptResult:
-        """Handle code context prompt (load and summarize all C++ files in CPP_DIR)"""
+        """Handle code context prompt (load and summarize all files in src_dir)"""
         prompt = self.templates.get_context_prompt()
         messages = [
             types.PromptMessage(

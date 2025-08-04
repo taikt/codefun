@@ -4,8 +4,8 @@
      "command": "C:\\Users\\tai2.tran\\mcp_server\\venv\\Scripts\\codeguard.exe",
      "args": ["--transport", "stdio"],
      "env": {
-      "CPP_DIR": "E:\\src\\code_test\\mem_leak",
-      "CUSTOM_RULE_PATH": "E:\\src\\codefun\\deepl\\mcp_server\\lgedv\\resources\\CustomRule.md" 
+      "src_dir": "E:\\src\\code_test\\mem_leak",
+      "custom_path": "E:\\src\\codefun\\deepl\\mcp_server\\lgedv\\resources\\CustomRule.md" 
   }
  }
 }

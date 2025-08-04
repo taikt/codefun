@@ -18,7 +18,7 @@ copilot -> controller : get_prompt (check_races, arguments)
 controller -> promptHandler : handle_prompt("check_races", arguments)
 promptHandler -> toolHandler : _handle_detect_races({dir_path})
 toolHandler -> raceAnalyzer : analyze_codebase(dir_path)
-raceAnalyzer -> storage : list_cpp_files(dir_path)
+raceAnalyzer -> storage : list_source_files(dir_path)
 storage --> raceAnalyzer : return list of C++ files
 alt C++ files found
   loop for each C++ file

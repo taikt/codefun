@@ -9,11 +9,11 @@ from lgedv.modules.rule_fetcher import (
     fetch_misra_rule, fetch_lgedv_rule, fetch_certcpp_rule,
     fetch_custom_rule
 )
-from lgedv.modules.file_utils import list_cpp_files, get_cpp_files_content
+from lgedv.modules.file_utils import list_source_files, get_src_files_content
 from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer, analyze_leaks
 from lgedv.analyzers.resource_analyzer import ResourceAnalyzer
-from lgedv.modules.config import setup_logging, get_cpp_dir
+from lgedv.modules.config import setup_logging, get_src_dir
 import pprint
 
 logger = setup_logging()
@@ -48,10 +48,10 @@ class ToolHandler:
                 return await self._handle_fetch_custom_rule(arguments)
             
             # File operations
-            elif name == "list_cpp_files":
-                return await self._handle_list_cpp_files(arguments)
-            elif name == "get_cpp_files_content":
-                return await self._handle_get_cpp_files_content(arguments)
+            elif name == "list_source_files":
+                return await self._handle_list_source_files(arguments)
+            elif name == "get_src_files_content":
+                return await self._handle_get_src_files_content(arguments)
             
             # Analysis tools
             elif name == "detect_races":
@@ -96,24 +96,24 @@ class ToolHandler:
         logger.info(f"fetch_custom_rule completed for url: {url}")
         return result
     
-    async def _handle_list_cpp_files(self, arguments: dict) -> List[types.TextContent]:
-        """Handle list_cpp_files tool"""
+    async def _handle_list_source_files(self, arguments: dict) -> List[types.TextContent]:
+        """Handle list_source_files tool"""
         dir_path = arguments.get("dir_path")
-        files = list_cpp_files(dir_path)
-        logger.info(f"list_cpp_files found {len(files)} files")
+        files = list_source_files(dir_path)
+        logger.info(f"list_source_files found {len(files)} files")
         return [types.TextContent(type="text", text="\n".join(files))]
     
-    async def _handle_get_cpp_files_content(self, arguments: dict) -> List[types.TextContent]:
-        """Handle get_cpp_files_content tool"""
+    async def _handle_get_src_files_content(self, arguments: dict) -> List[types.TextContent]:
+        """Handle get_src_files_content tool"""
         dir_path = arguments.get("dir_path")
-        content = get_cpp_files_content(dir_path)
-        logger.info(f"get_cpp_files_content completed for dir: {dir_path}")
+        content = get_src_files_content(dir_path)
+        logger.info(f"get_src_files_content completed for dir: {dir_path}")
         return [types.TextContent(type="text", text=content)]
     
     async def _handle_detect_races(self, arguments: dict) -> List[types.TextContent]:
-        """Handle detect_races tool - sử dụng CPP_DIR từ config"""
-        dir_path = get_cpp_dir()
-        logger.info(f"[detect_races] Using CPP_DIR: {dir_path}")
+        """Handle detect_races tool - sử dụng src_dir từ config"""
+        dir_path = get_src_dir()
+        logger.info(f"[detect_races] Using src_dir: {dir_path}")
         result = analyze_race_conditions_in_codebase(dir_path)
         logger.info(f"detect_races completed for dir: {dir_path}")
         # Log markdown report for each file
@@ -403,9 +403,9 @@ class ToolHandler:
         if all(info['total_leaks'] == 0 for info in file_leak_map.values()):
             # Không có leak, lấy danh sách file C++ và sắp xếp theo số dòng
             logger.info("No memory leaks found, listing C++ files by line count")
-            cpp_files = list_cpp_files(dir_path)  # dir_path là thư mục đang phân tích
+            src_files = list_source_files(dir_path)  # dir_path là thư mục đang phân tích
             file_line_counts = []
-            for file_path in cpp_files:
+            for file_path in src_files:
                 abs_path = os.path.join(dir_path, file_path)
                 logger.info(f"Counting lines in file: {abs_path}")
                 try:
@@ -478,9 +478,9 @@ class ToolHandler:
 
         if all(info['total_leaks'] == 0 for info in file_leak_map.values()):
             # Không có leak, lấy danh sách file C++ và sắp xếp theo số dòng
-            cpp_files = list_cpp_files(dir_path)  # dir_path là thư mục đang phân tích
+            src_files = list_source_files(dir_path)  # dir_path là thư mục đang phân tích
             file_line_counts = []
-            for file_path in cpp_files:
+            for file_path in src_files:
                 if not os.path.isabs(file_path):
                     abs_path = os.path.join(dir_path, file_path)
                 else:
@@ -573,10 +573,10 @@ class ToolHandler:
         return result
     
     async def _handle_memory_analysis(self, arguments: dict) -> List[types.TextContent]:
-        """Handle AI-powered memory leak analysis - sử dụng CPP_DIR từ config"""
-        # Sử dụng CPP_DIR trực tiếp, không nhận tham số dir_path nữa
-        dir_path = get_cpp_dir()
-        logger.info(f"[analyze_leaks] Using CPP_DIR: {dir_path}")
+        """Handle AI-powered memory leak analysis - sử dụng src_dir từ config"""
+        # Sử dụng src_dir trực tiếp, không nhận tham số dir_path nữa
+        dir_path = get_src_dir()
+        logger.info(f"[analyze_leaks] Using src_dir: {dir_path}")
         
         # Use the new MemoryAnalyzer
         analyzer = MemoryAnalyzer()
@@ -634,24 +634,24 @@ class ToolHandler:
         Handle AI resource leak analysis - tạo rich prompt cho Copilot analysis
         Prioritize files by leak severity for code context (like memory analyzer)
         """
-        cpp_dir = get_cpp_dir()
-        logger.info(f"Starting AI resource leak analysis on directory: {cpp_dir}")
+        src_dir = get_src_dir()
+        logger.info(f"Starting AI resource leak analysis on directory: {src_dir}")
    
         analyzer = ResourceAnalyzer()
         # result = analyzer.analyze_directory()
         result = analyzer.analyze_codebase()
-        logger.info(f"AI resource leak analysis found {len(result)} leaks in directory: {cpp_dir}")
+        logger.info(f"AI resource leak analysis found {len(result)} leaks in directory: {src_dir}")
         if not result:
             return [types.TextContent(
                 type="text",
-                text=f"# 🔍 Linux C++ Resource Leak Analysis\n\n❌ No resource leaks detected in: {cpp_dir}"
+                text=f"# 🔍 Linux C++ Resource Leak Analysis\n\n❌ No resource leaks detected in: {src_dir}"
             )]
         
         # Create rich metadata prompt for AI analysis
         logger.info("Creating metadata section for resource analysis")
-        metadata_section = self._create_resource_analysis_metadata(result, cpp_dir)
+        metadata_section = self._create_resource_analysis_metadata(result, src_dir)
         #logger.info(f"metadata_section: {metadata_section}")
-        code_context_section = self._create_resource_code_context_section(result, cpp_dir)
+        code_context_section = self._create_resource_code_context_section(result, src_dir)
         #logger.info(f"code_context_section: {code_context_section}")
         # analysis_prompt = self._create_resource_findings_section(result)
         # logger.info(f"analysis_prompt: {analysis_prompt}")
@@ -659,7 +659,7 @@ class ToolHandler:
         full_prompt = (
             f"You are an expert Linux C++ resource management analyst.\n\n"
             f"**Task:**\n"
-            f"Analyze the C++ files in `{cpp_dir}` for resource leaks using the `analyze_resources` tool.\n"
+            f"Analyze the C++ files in `{src_dir}` for resource leaks using the `analyze_resources` tool.\n"
             f"Focus strictly on real, evidence-based issues. Do NOT include any hypothetical, speculative, or potential cases—report only resource leaks that are clearly demonstrated by the code and findings.\n\n"
             f"**Resource Types to Check:**\n"
             f"- File descriptors (open/close, FILE*/fclose)\n"
@@ -694,7 +694,7 @@ class ToolHandler:
         return [types.TextContent(type="text", text=full_prompt)]
     
         
-    def _create_resource_analysis_metadata(self, analysis_result: dict, cpp_dir: str) -> str:
+    def _create_resource_analysis_metadata(self, analysis_result: dict, src_dir: str) -> str:
         """Create metadata section for resource analysis"""
         detected_leaks = analysis_result.get("detected_leaks", [])
         summary = analysis_result.get("summary", {})
@@ -713,7 +713,7 @@ class ToolHandler:
         
         metadata = (
             f"## 📊 **Analysis Metadata**\n\n"
-            f"- **Directory**: `{cpp_dir}`\n"
+            f"- **Directory**: `{src_dir}`\n"
             f"- **Analysis Type**: Linux C++ Resource Leak Detection\n"
             f"- **Files Analyzed**: {summary.get('total_files_analyzed', 0)}\n"
             f"- **Resource Operations Found**: {summary.get('resource_operations_found', 0)}\n"
@@ -727,10 +727,10 @@ class ToolHandler:
         )
         return metadata
     
-    def _create_resource_code_context_section(self, analysis_result: dict, cpp_dir: str) -> str:
+    def _create_resource_code_context_section(self, analysis_result: dict, src_dir: str) -> str:
         code_section = "## 📄 Relevant Code Context:\n\n"
         # Get files with memory leaks and prioritize them
-        files_with_leaks = self._prioritize_files_by_resource_leak_severity(analysis_result.get('detected_leaks', []), cpp_dir)
+        files_with_leaks = self._prioritize_files_by_resource_leak_severity(analysis_result.get('detected_leaks', []), src_dir)
         # TOKEN OPTIMIZATION: Aggressive limits for better efficiency
         max_files = 3  # Max files to include (reduced from 5)
         max_file_size = 50000  # Max characters per file 
@@ -746,7 +746,7 @@ class ToolHandler:
                 logger.info(f"[memory_leak] Reading file: {file_path}")
                 # Read file content with smart truncation
                 if not os.path.isabs(file_path):
-                    abs_path = os.path.join(cpp_dir, file_path)
+                    abs_path = os.path.join(src_dir, file_path)
                 else:
                     abs_path = file_path
                 with open(abs_path, 'r', encoding='utf-8') as f:
@@ -881,13 +881,13 @@ class ToolHandler:
     #         logger.info(f"taikt- [thread_usage] File: {file_path} | Thread usage count: {len(usage)}")
 
     #     # Lấy danh sách tất cả file C++ đầu vào
-    #     all_cpp_files = summary.get('all_cpp_files', [])
-    #     if not all_cpp_files:
-    #         # Fallback: lấy từ file_summaries nếu không có all_cpp_files
-    #         all_cpp_files = list(summary.get('file_summaries', {}).keys())
+    #     all_src_files = summary.get('all_src_files', [])
+    #     if not all_src_files:
+    #         # Fallback: lấy từ file_summaries nếu không có all_src_files
+    #         all_src_files = list(summary.get('file_summaries', {}).keys())
 
-    #     logger.info(f"taikt- [all_cpp_files] Total: {len(all_cpp_files)} files: {all_cpp_files}")
-    #     for file_path in all_cpp_files:
+    #     logger.info(f"taikt- [all_src_files] Total: {len(all_src_files)} files: {all_src_files}")
+    #     for file_path in all_src_files:
     #         markdown = markdown_reports.get(file_path, "")
             
     #         if markdown.strip() == "No detect thread entrypoint functions." or not markdown.strip():
@@ -908,7 +908,7 @@ class ToolHandler:
 
     #     # 2. Nếu < 3, bổ sung file có nhiều thread entry points nhất
     #     if len(selected_files) < 3:
-    #         remaining_files = [f for f in all_cpp_files if f not in selected_files]
+    #         remaining_files = [f for f in all_src_files if f not in selected_files]
     #         thread_entry_counts = {f: len(thread_usage.get(f, [])) for f in remaining_files}
     #         thread_sorted = sorted(thread_entry_counts.items(), key=lambda x: x[1], reverse=True)
     #         for f, _ in thread_sorted:
@@ -920,7 +920,7 @@ class ToolHandler:
     #     # 3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (số dòng)
     #     if len(selected_files) < 3:
     #         code_line_counts = {}
-    #         for f in all_cpp_files:
+    #         for f in all_src_files:
     #             if f not in selected_files:
     #                 try:
     #                     with open(f, 'r', encoding='utf-8') as file:
@@ -935,8 +935,8 @@ class ToolHandler:
     #                 break
 
     #     # Nếu số lượng file đầu vào < 3 thì lấy hết
-    #     if len(all_cpp_files) < 3:
-    #         final_files = list(dict.fromkeys(all_cpp_files))  # Giữ thứ tự, loại trùng
+    #     if len(all_src_files) < 3:
+    #         final_files = list(dict.fromkeys(all_src_files))  # Giữ thứ tự, loại trùng
     #     else:
     #         final_files = selected_files[:3]
 
@@ -991,19 +991,19 @@ class ToolHandler:
         thread_usage = result.get('thread_usage', {})
 
         # Lấy danh sách tất cả file C++ đầu vào
-        all_cpp_files = summary.get('all_cpp_files', [])
-        if not all_cpp_files:
-            all_cpp_files = list(summary.get('file_summaries', {}).keys())
+        all_src_files = summary.get('all_src_files', [])
+        if not all_src_files:
+            all_src_files = list(summary.get('file_summaries', {}).keys())
 
-        logger.info(f"taikt- [all_cpp_files] Total: {len(all_cpp_files)} files: {all_cpp_files}")
+        logger.info(f"taikt- [all_src_files] Total: {len(all_src_files)} files: {all_src_files}")
 
         # Nếu số lượng file <= 3 thì lấy hết
-        if len(all_cpp_files) <= 3:
-            final_files = list(dict.fromkeys(all_cpp_files))
+        if len(all_src_files) <= 3:
+            final_files = list(dict.fromkeys(all_src_files))
         else:
             # Tính entry_points_count và số dòng code cho từng file
             file_stats = []
-            for file_path in all_cpp_files:
+            for file_path in all_src_files:
                 markdown = markdown_reports.get(file_path, "")
                 if markdown.strip() == "No detect thread entrypoint functions." or not markdown.strip():
                     entry_points_count = 0
