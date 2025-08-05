@@ -98,14 +98,14 @@ class ToolHandler:
     
     async def _handle_list_source_files(self, arguments: dict) -> List[types.TextContent]:
         """Handle list_source_files tool"""
-        dir_path = arguments.get("dir_path")
+        dir_path = get_src_dir()
         files = list_source_files(dir_path)
         logger.info(f"list_source_files found {len(files)} files")
         return [types.TextContent(type="text", text="\n".join(files))]
     
     async def _handle_get_src_files_content(self, arguments: dict) -> List[types.TextContent]:
         """Handle get_src_files_content tool"""
-        dir_path = arguments.get("dir_path")
+        dir_path = get_src_dir()
         content = get_src_files_content(dir_path)
         logger.info(f"get_src_files_content completed for dir: {dir_path}")
         return [types.TextContent(type="text", text=content)]
