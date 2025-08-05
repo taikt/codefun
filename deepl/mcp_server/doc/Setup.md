@@ -1,3 +1,18 @@
+# TODO
+- moi lan check_leaks (3 files) => luu vao /tmp/lgedv/memory_analysis_889ee30a_checked.json
+{
+  "timestamp": "2025-08-06T00:12:39.053479",
+  "analysis_type": "memory_analysis",
+  "directory": "/home/worker/src/code_test/memory_leak/test_1",
+  "checked_files": [
+    "t2.cpp",
+    "t3.cpp",
+    "t4.cpp"
+  ]
+}
+- khi goi check_leaks lan tiep, can kiem tra tren cac file remaining (bo di cac file trong checked_file) => chon tiep 3 files
+- gia tri 889ee30a: unique cho moi lan mo chat session
+
 # Build and upload package
 ## pypi
 # https://pypi.org/manage/account/token/
