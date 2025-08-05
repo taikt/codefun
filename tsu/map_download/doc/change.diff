@@ -1,0 +1,183 @@
+diff --git a/src/services/MapHTTPServer.cpp b/src/services/MapHTTPServer.cpp
+index 9da0e25..fedb019 100644
+--- a/src/services/MapHTTPServer.cpp
++++ b/src/services/MapHTTPServer.cpp
+@@ -29,12 +29,52 @@
+ #include "MapHTTPServer.h"
+ 
+ namespace mda {
++    // Event loop cho curl multi, chạy ở thread riêng
++    void MapHTTPServer::curlMultiLoop()
++    {
++        int still_running = 0;
++        while (isRunning)
++        {
++            curl_multi_perform(mCurlMultiHandle, &still_running);
++            curl_multi_wait(mCurlMultiHandle, NULL, 0, 100, NULL);
++            CURLMsg* msg;
++            int msgs_left;
++            while ((msg = curl_multi_info_read(mCurlMultiHandle, &msgs_left)))
++            {
++                if (msg->msg == CURLMSG_DONE)
++                {
++                    CURL* easy = msg->easy_handle;
++                    int32_t fd = mCurlFdMap[easy];
++                    // Gửi response về client
++                    sendData(fd, mResponseBuffer[fd]);
++                    // Cleanup
++                    curl_multi_remove_handle(mCurlMultiHandle, easy);
++                    curl_easy_cleanup(easy);
++                    mCurlFdMap.erase(easy);
++                    mResponseBuffer.erase(fd);
++                }
++            }
++        }
++    }
++    // Callback ghi dữ liệu trả về từ CURL
++    size_t WriteCallback(char* ptr, size_t size, size_t nmemb, void* userdata)
++    {
++        std::string* buffer = static_cast<std::string*>(userdata);
++        buffer->append(ptr, size * nmemb);
++        return size * nmemb;
++    }
++    // Thêm biến thành viên cho libcurl multi và mapping
++    CURLM* mCurlMultiHandle = nullptr;
++    std::map<CURL*, int32_t> mCurlFdMap;
++    std::map<int32_t, std::string> mResponseBuffer;
++    std::thread mCurlMultiThread;
++
+     MapHTTPServer::MapHTTPServer(const std::string& host, std::uint16_t port)
+     :mHost(host),
+     mPort(port),
+     mListenEvents()
+     {
+-        mThreadPoolMDA = new ThreadPool(MAXIMUM_CLIENTS);
++        mCurlMultiHandle = curl_multi_init();
+         mMapDownloadManager = new MapDownloadManager();
+         for (auto i =0; i <MAXIMUM_CLIENTS; i++)
+         {
+@@ -44,7 +84,8 @@ namespace mda {
+ 
+     MapHTTPServer::~MapHTTPServer()
+     {
+-
++        if (mCurlMultiHandle) curl_multi_cleanup(mCurlMultiHandle);
++    }
+     }
+ 
+     bool MapHTTPServer::start()
+@@ -105,8 +146,9 @@ namespace mda {
+ 
+         isRunning = true;
+         mListenThread = std::thread(&MapHTTPServer::listenEvent, this);
++        // Khởi động event loop cho curl multi
++        mCurlMultiThread = std::thread(&MapHTTPServer::curlMultiLoop, this);
+         controlEpollEvent(EPOLL_CTL_ADD, mSeverfd, EPOLLIN);
+-
+         return true;
+     }
+ 
+@@ -116,6 +158,9 @@ namespace mda {
+         if (mListenThread.joinable()) {
+             mListenThread.join();
+         }
++        if (mCurlMultiThread.joinable()) {
++            mCurlMultiThread.join();
++        }
+         std::vector<int32_t> fdList = mMapDownloadManager->getFdList();
+         for(auto &x: fdList)
+         {
+@@ -171,37 +216,21 @@ namespace mda {
+         return ret;
+     }
+ 
+-    ssize_t MapHTTPServer::sendData(const int32_t &sockfd, const RawData& response)
++    // Gửi response về client, nhận buffer string
++    ssize_t MapHTTPServer::sendData(const int32_t &sockfd, const std::string& response)
+     {
+         LOG_I(DLT_STRING("Send data to MPU!"));
+         ssize_t totalSent = 0;
+-
+-        while (response.length <= std::numeric_limits<ssize_t>::max() && totalSent < static_cast<ssize_t>(response.length)) {
+-
+-            ssize_t bytesSent = send(sockfd, response.buffer.data() + totalSent, response.length - totalSent, 0);
+-
+-            if (bytesSent < 0) {
+-                if (errno == EWOULDBLOCK) {
+-                    // Socket is non-blocking and the send buffer is full
+-                    LOG_I(DLT_STRING("Socket would block, trying again..."));
+-                    // std::this_thread::sleep_for(std::chrono::microseconds(50000));
+-                    continue; // Retry sending
+-                } else {
+-                    // Some other error occurred
+-                    LOG_I(DLT_STRING("Error sending data:"), DLT_INT(errno));
+-                    return -1;
+-                }
+-            }
+-            if(totalSent < std::numeric_limits<ssize_t>::max() - bytesSent)
+-            {
+-                totalSent += bytesSent; // Update total bytes sent
+-            }
+-            else
++        while (totalSent < static_cast<ssize_t>(response.length()))
++        {
++            ssize_t bytesSent = send(sockfd, response.data() + totalSent, response.length() - totalSent, 0);
++            if (bytesSent < 0)
+             {
+-                break;
++                if (errno == EWOULDBLOCK) continue;
++                else return -1;
+             }
++            totalSent += bytesSent;
+         }
+-
+         return totalSent;
+     }
+ 
+@@ -279,15 +308,16 @@ namespace mda {
+         std::unique_ptr<RawData> data;
+         while (isRunning)
+         {
+-            int32_t nfds = epoll_wait(mListenFd, mListenEvents, MAXIMUM_EPOLL_EVENTS, 0); // Number of event
+-            if (nfds == 0)
++            // epoll_wait timeout 5000ms: tiết kiệm CPU, vẫn phản hồi nhanh
++            int32_t nfds = epoll_wait(mListenFd, mListenEvents, MAXIMUM_EPOLL_EVENTS, 5000); // 5000ms timeout
++            if (nfds < 0)
+             {
+-                std::this_thread::sleep_for(std::chrono::microseconds(genRandomVal()));
+-                continue;
++                LOG_E(DLT_STRING("ERROR:"), DLT_INT(errno));
+             }
+-            else if (nfds < 0)
++            else if (nfds == 0)
+             {
+-                LOG_E(DLT_STRING("ERROR:"), DLT_INT(errno));
++                // Không có sự kiện, tiếp tục vòng lặp (không sleep thủ công)
++                continue;
+             }
+             else
+             {
+@@ -446,11 +476,18 @@ namespace mda {
+                     (void)mRequestDataMap[fd].rawContent.append(buffer);
+                 }
+ 
+-                if(mRequestDataMap[fd].isCompleteHeader && (mRequestDataMap[fd].content_length() <= mRequestDataMap[fd].rawContent.length()))
+-                {
+-                    mRequestDataMap[fd].setDNS(getDNS());
+-                    mThreadPoolMDA->enqueue(std::bind(&MapHTTPServer::doRequest, this, std::ref(mRequestDataMap[fd]), fd));
+-
++        if(mRequestDataMap[fd].isCompleteHeader && (mRequestDataMap[fd].content_length() <= mRequestDataMap[fd].rawContent.length()))
++        {
++            mRequestDataMap[fd].setDNS(getDNS());
++            // Tạo CURL easy handle cho request
++            CURL* easy = curl_easy_init();
++            curl_easy_setopt(easy, CURLOPT_URL, mRequestDataMap[fd].path().c_str()); // Sửa lại lấy URL đúng
++            // ...set các option khác như POST/GET, header, body nếu cần...
++            curl_easy_setopt(easy, CURLOPT_WRITEFUNCTION, WriteCallback);
++            curl_easy_setopt(easy, CURLOPT_WRITEDATA, &mResponseBuffer[fd]);
++            curl_multi_add_handle(mCurlMultiHandle, easy);
++            mCurlFdMap[easy] = fd;
++        }
+                 }
+             } else if (byte_count == 0) {  // client has closed connection
+                 LOG_I(DLT_STRING("Client has closed connection"));
