@@ -39,7 +39,7 @@ class PromptTemplates:
             "---\n\n"
             # "## 🔧 Complete Fixed Code\n"
             # "```cpp\n[entire corrected file with all fixes applied]\n```\n\n"
-            "**Important:** If no LGEDV rule violations are found, clearly state \"No LGEDV rule violations detected in this code.\"\n"
+            # "**Important:** If no LGEDV rule violations are found, clearly state \"No LGEDV rule violations detected in this code.\"\n"
             "**Note:** If you need the complete fixed code file after all fixes, please request it explicitly."
         )
         
@@ -76,7 +76,7 @@ class PromptTemplates:
             "---\n\n"
             # "## 🔧 Complete Fixed Code\n"
             # "```cpp\n[entire corrected file with all fixes applied]\n```\n\n"
-            "**Important:** If no MISRA rule violations are found, clearly state \"No MISRA rule violations detected in this code.\"\n"
+            # "**Important:** If no MISRA rule violations are found, clearly state \"No MISRA rule violations detected in this code.\"\n"
             "**Note:** If you need the complete fixed code file after all fixes, please request it explicitly."
         )
     
@@ -113,7 +113,7 @@ class PromptTemplates:
             "---\n\n"
             # "## 🔧 Complete Fixed Code\n"
             # "```cpp\n[entire corrected file with all fixes applied]\n```\n\n"
-            "**Important:** If no CERT rule violations are found, clearly state \"No CERT rule violations detected in this code.\"\n"
+            # "**Important:** If no CERT rule violations are found, clearly state \"No CERT rule violations detected in this code.\"\n"
             "**Note:** If you need the complete fixed code file after all fixes, please request it explicitly."
         )
     
@@ -150,7 +150,7 @@ class PromptTemplates:
             "---\n\n"
             # "## 🔧 Complete Fixed Code\n"
             # "```cpp\n[entire corrected file with all fixes applied]\n```\n\n"
-            "**Important:** If no custom rule violations are found, clearly state \"No custom rule violations detected in this code.\"\n"
+            # "**Important:** If no custom rule violations are found, clearly state \"No custom rule violations detected in this code.\"\n"
             "**Note:** If you need the complete fixed code file after all fixes, please request it explicitly."
         )
     
