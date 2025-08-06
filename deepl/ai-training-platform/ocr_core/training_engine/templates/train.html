@@ -1,0 +1,61 @@
+{% load static %}
+{% csrf_token %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Train Management</title>
+  <link rel="stylesheet" href="{% static 'css/train.css' %}">
+</head>
+<body>
+  <div id = "form-info" data-form-id="{{ form_id }}" data-form-name="{{ form_name }}">  </div>
+  <div class="container">
+    <!-- Part 1: GPU Info -->
+    <h2>GPUs Info</h2>
+    <div class="gpu-info">
+      <!-- Các thẻ GPU sẽ được tạo động ở đây bởi JS -->
+    </div>
+
+    <!-- Part 2: Train List -->
+    <h2>Train History</h2>
+    <div class="train-list">
+      <table id="trainListTable">
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Train Session</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Accuracy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Train list will be inserted here by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Part 3: Action Buttons -->
+    <h2></h2>
+    <div class="action-buttons">
+      <button id="createTrainBtn">Create Train</button>
+      <button id="refreshTrainBtn">Refresh</button>
+      <button id="stopTrainBtn">Stop Selected Trains</button>
+      <button id="deleteTrainBtn">Delete Selected Trains</button>
+    </div>
+  </div>
+
+  <!-- Popup Modal for Create Train -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <h2>Create New Train Session</h2>
+      <p>Are you sure you want to create a new train session?</p>
+      <button id="confirmCreateTrain">OK</button>
+      <button id="cancelCreateTrain">Cancel</button>
+    </div>
+  </div>
+
+  <script src="{% static 'script/train.js' %}"></script>
+</body>
+</html>

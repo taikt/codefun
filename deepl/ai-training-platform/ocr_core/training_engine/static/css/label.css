@@ -1,0 +1,170 @@
+body {
+    padding: 20px;
+}
+
+#container {
+    display: flex;
+    height: 95vh;
+}
+
+#canvas-section {
+    /* padding: 20px; */
+    /* display: flex; */
+    margin-right: 20px;
+    width: 66%;
+    background-color: #f4f4f4;
+}
+
+#navigation-buttons{
+    background-color: #bebebe;
+    display: flex;
+    justify-content: space-between;
+    /* justify-content: center;
+    align-items: center; */
+    height: 5%
+}
+#canvas-container{
+    position: relative;
+    width: 100%; 
+    height: calc(90%) ;
+    overflow-y: scroll;
+    display: flex;
+    align-items: center; /* Căn giữa theo chiều dọc */
+    justify-content: center; /* Căn giữa theo chiều ngang */
+}
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; /* Chiếm toàn bộ chiều rộng của canvas-container */
+    height: 100%; /* Chiếm toàn bộ chiều cao của canvas-container */
+    display: block; /* Đảm bảo canvas không có khoảng cách thừa */
+    object-fit: contain; /*Giữ nguyên tỷ lệ của ảnh mà không bị méo*/
+}
+#overlaycanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; /* Chiếm toàn bộ chiều rộng của canvas-container */
+    height: 100%; /* Chiếm toàn bộ chiều cao của canvas-container */
+    display: block; /* Đảm bảo canvas không có khoảng cách thừa */
+    object-fit: contain; /*Giữ nguyên tỷ lệ của ảnh mà không bị méo*/
+}
+
+
+/* #canvas{
+    width: 100%;
+    background-color: #f4f4f4;
+    display: flex;
+    overflow-y: auto;
+    justify-content: center;
+    height: 90%;
+} */
+
+/* #canvas {
+    width: 100%;  /* Canvas chiếm toàn bộ chiều rộng của thẻ chứa */
+    /* background-color: #f4f4f4; */
+    /* display: block; */
+    /* overflow-y: auto;  Cho phép cuộn theo chiều dọc nếu ảnh thừa ra */
+    /* height: 90%;  Chiều cao của canvas */
+    /* position: relative; */
+    /* image-rendering: pixelated; */
+/* } */
+
+    
+#sidebar {
+    width: 34%;
+    display: flex;
+    flex-direction: column;
+}
+
+#label-list, #image-list {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #f4f4f4;
+    border-right: 1px solid #ddd;
+    /* padding-right: 10px; */
+    max-height: 45%;
+    margin-bottom: 10px;
+}
+
+#labels, #images {
+    flex: 1;
+    overflow-y: auto;
+    border-right: 1px solid #ddd;
+    /* padding-right: 10px; */
+    /* max-height: 90%; */
+    margin-bottom: 10px;
+}
+
+#images .list-group-item a {
+    flex: 1;
+    white-space: nowrap; /* Giữ nguyên văn bản trong một dòng */
+    overflow: hidden; /* Ẩn nội dung thừa nếu quá dài */
+    text-overflow: ellipsis; /* Thêm dấu ... nếu nội dung quá dài */
+}
+
+#images .checkbox-container {
+    flex-shrink: 0; /* Đảm bảo hộp kiểm không co giãn */
+}
+
+
+#button-container {
+    flex: 0;
+    display: flex;
+    background-color: #f4f4f4;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+#img-button-container {
+    flex: 0;
+    display: flex;
+    background-color: #f4f4f4;
+    justify-content: space-between;
+    /* margin-bottom: 20px; */
+}
+
+.list-title {
+    background-color: #bebebe;
+    margin: 5px;
+}
+
+.button {
+    margin-top: 10px;
+}
+
+.list-group-item {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    /* padding: 8px; */
+    position: relative;
+    margin-bottom: 5px;
+}
+
+.label-text {
+    flex: 1;
+    /* padding-left: 10px; */
+    position: relative;
+    z-index: 2; /* Ensure text is above overlay */
+}
+
+.label-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2); /* 20% overlay */
+    pointer-events: none; /* Prevent overlay from blocking interaction */
+    z-index: 1; /* Ensure overlay stays below text */
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+    z-index: 2; /* Ensure checkbox stays above overlay */
+}
+

@@ -1,0 +1,76 @@
+stages:
+  # - update_submodule
+  - scanning_repository
+  - build
+  - deploy
+
+variables:
+  IMAGE_REGISTRY_USER: $REPO_USER
+  IMAGE_REGISTRY_PASS: $REPO_PASSWORD
+  IMAGE_REGISTRY_PROJECT: $REPO_PROJECT
+  IMAGE_REGISTRY_URL: $REPO_IMAGE_REGISTRY_URL$REPO_PROJECT
+
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA.$CI_PIPELINE_IID
+  PROJECT_NAME: $CI_PROJECT_NAME
+  IMAGE_NAME_TAG: $CI_COMMIT_BRANCH.$IMAGE_TAG
+
+  IMAGE_NAME_BUILD: $CI_PROJECT_NAME:$CI_COMMIT_BRANCH.$IMAGE_TAG
+  IMAGE_NAME_BUILD_LATEST: $CI_PROJECT_NAME:$CI_COMMIT_BRANCH.latest
+  GIT_SUBMODULE_STRATEGY: recursive
+
+scanning_repository:
+  tags:
+    - ${RUNNER_TAG}
+  stage: scanning_repository
+  image: $SNYK_REPO_URL
+  before_script:
+    - export CUDA_VERSION=11.7.1
+    - export CUDNN_VERSION=8
+    - export PATH="/usr/local/cuda/bin:${PATH}"
+    - export LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
+    - echo "$PATH" && echo "$LD_LIBRARY_PATH"
+    - pip install -r requirements.txt
+  script:
+    - snyk auth $SNYK_TOKEN
+    # - snyk monitor
+    - snyk test --project-name=$CI_PROJECT_NAME || true
+    - snyk code test
+  only:
+    - deployment
+  allow_failure: true
+
+build:
+  stage: build
+  tags:
+    - $RUNNER_TAG
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - echo "{\"auths\":{\"$IMAGE_REGISTRY_URL\":{\"auth\":\"$(printf "%s:%s" "$IMAGE_REGISTRY_USER" "$IMAGE_REGISTRY_PASS" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    # - cat /kaniko/.docker/config.json
+  script:
+    - echo $IMAGE_NAME_BUILD
+    - echo $IMAGE_NAME_BUILD_LATEST
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+      --cache=true
+      --destination "$IMAGE_REGISTRY_URL/$IMAGE_NAME_BUILD"
+      --destination "$IMAGE_REGISTRY_URL/$IMAGE_NAME_BUILD_LATEST"
+  only:
+    - deployment
+  only:
+    - deployment
+
+deploy:
+  stage: deploy
+  tags:
+    - $RUNNER_TAG
+  image: alpine/k8s:1.23.16
+  script: |
+    sh k8s-deployment/deploy.sh
+  only:
+    - deployment
+  only:
+    - deployment

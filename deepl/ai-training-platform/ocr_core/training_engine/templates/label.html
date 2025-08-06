@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giao diện Gán Nhãn</title>
+    <!-- Bootstrap CSS for layout -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Optional: Custom CSS -->
+    <link href="{% static 'css/label.css' %}" rel="stylesheet">
+</head>
+<body>
+
+<div id="container">
+    <!-- Canvas Section -->
+    <div id="canvas-section">
+        <!-- Navigation Buttons -->
+        <div id="navigation-buttons">
+            <button id="prev-image" class="btn btn-secondary">Previous</button>
+            {% comment %} <div id = "form-info" data-form-id="{{ form_id }}" data-form-name="{{ form_name }}">  </div> {% endcomment %}
+            <button id="next-image" class="btn btn-secondary">Next</button>
+        </div>
+
+        <div id="canvas-container" >
+            <canvas id="canvas"></canvas>
+            <canvas id="overlaycanvas"></canvas>
+        </div> 
+        <!-- width="600" height="400" -->
+    </div>
+
+    <!-- Sidebar Section -->
+    <div id="sidebar">
+        <!-- Labels -->
+        <div id="label-list">
+            <h4 class="list-title">Danh sách Nhãn</h4>
+            <ul id="labels" class="list-group">
+                <!-- Các nhãn sẽ được thêm vào đây -->
+            </ul>
+        </div>
+
+        <!-- Buttons -->
+        <!-- <div id="button-container">
+            <button id="create-label" class="btn btn-primary">Tạo Nhãn</button>
+            <button id="delete-label" class="btn btn-danger" disabled>Xóa Nhãn</button>
+        </div> -->
+
+        <!-- image list -->
+        <div id="image-list">
+            <h4 class="list-title">Danh sách Ảnh</h4>
+            <ul id="images" class="list-group">
+                <!-- Các nhãn sẽ được thêm vào đây -->
+            </ul>
+        </div>
+
+        <!-- image button -->
+        <!-- <div id="img-button-container">
+            <button id="upload-image" class="btn btn-primary">Upload Ảnh</button>
+            <input type="file" id="image-upload" multiple style="display: none;">
+            <button id="delete-image" class="btn btn-danger" disabled>Xóa Ảnh</button>
+        </div> -->
+    </div>
+</div>
+
+
+<!-- Modal for creating new label -->
+<div class="modal fade" id="labelModal" tabindex="-1" aria-labelledby="labelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="labelModalLabel">Tạo Nhãn Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="labelName" class="form-control" placeholder="Nhập tên nhãn">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" id="save-label" class="btn btn-primary">Lưu Nhãn</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS & Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'script/label.js' %}"></script>
+<!-- <script src="{% static 'script/canvas.js' %}"></script> -->
+
+</body>
+</html>

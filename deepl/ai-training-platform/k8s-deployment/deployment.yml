@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $CI_PROJECT_NAME
+  namespace: $CI_PROJECT_ROOT_NAMESPACE
+  labels:
+    name: $CI_PROJECT_NAME
+    app: $CI_PROJECT_NAME
+  annotations:
+    kubectl.kubernetes.io/restartedAt: "$CURRENT_TIMESTAMP"
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: $CI_PROJECT_NAME
+  template:
+    metadata:
+      labels:
+        name: $CI_PROJECT_NAME
+        app: $CI_PROJECT_NAME
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "$CURRENT_TIMESTAMP"
+    spec:
+      containers:
+        - image: $IMAGE_REGISTRY_URL/$IMAGE_NAME_BUILD
+          name: $CI_PROJECT_NAME
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HOST_NAME
+              value: 'ocr-gov.savis.vn'
+            - name: DEVICE
+              value: 'cuda:0' # hostname:port of django backend
+            - name: DEVICE_TRAIN
+              value: "cuda:0"
+            - name: DB_ENGINE
+              value: 'django.db.backends.postgresql'
+            - name: DB_NAME
+              value: 'OCR_BacGiang' #'Test_OCR'  
+            - name: DB_USER
+              value: 'postgres'         
+            - name: DB_PASSWORD
+              value: 'admin@123'      
+            - name: DB_HOST
+              value: '10.0.20.105'       
+            - name: DB_PORT
+              value: '5432' 
+            - name: ADMIN_HOST
+              value: 'http://10.0.20.212:9322' #SAVIS admin server
+            - name: MINIO_HOST
+              value: 'http://10.0.2.18:30594'
+            - name: BUCKET_NAME
+              value: 'mdm-ocr'
+            - name: MINIO_SAVE
+              value: 'train_result/'
+            - name: DJANGO_SECRET
+              value: 'django-insecure-j4w$528agqdf&a6$!lsguse*p$%@&%iwdiz*qmf4aqs9hrc$$w'
+            - name: TRAIN_LIMIT
+              value: '2'
+            - name: MINIO_UPLOAD_ENDPOINT
+              value: '/api/v2/minio/upload-many-object-path'
+            - name: MINIO_DOWNLOAD_ENDPOINT
+              value: '/api/v2/minio/download-object'
+
+          # envFrom:
+          #   - secretRef:
+          #       name: $CI_PROJECT_NAME-secret
+          resources:
+            limits:
+              cpu: 8000m
+              memory: 16000Mi
+              nvidia.com/gpu: '1'
+            requests:
+              cpu: 8000m
+              memory: 16000Mi
+              nvidia.com/gpu: '1'
+      imagePullSecrets:
+        - name: $CI_PROJECT_NAME-registry
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $CI_PROJECT_NAME
+  namespace: $CI_PROJECT_ROOT_NAMESPACE
+spec:
+  ports:
+    - name: port
+      port: 2010
+      protocol: TCP
+      targetPort: 2010
+  selector:
+    app: $CI_PROJECT_NAME
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: $CI_PROJECT_NAME
+  namespace: $CI_PROJECT_ROOT_NAMESPACE
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: $CI_PROJECT_NAME
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+    - resource:
+        name: memory
+        target:
+          averageUtilization: 80
+          type: Utilization
+      type: Resource
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 80
+          type: Utilization
+      type: Resource

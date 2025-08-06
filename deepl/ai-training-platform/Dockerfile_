@@ -1,0 +1,39 @@
+# Base image ubuntu 22.04
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN rm -rf /etc/localtime
+
+RUN ln -snf /usr/share/zoneinfo/Europe/London /etc/localtime && echo Europe/London > /etc/timezone
+
+RUN apt-get -qq update && apt-get -qq install -y --no-install-recommends \
+	protobuf-compiler \
+	python3.10 \
+	python3-pip \
+	python3-dev \
+	build-essential 
+
+RUN apt install ffmpeg libsm6 libxext6 poppler-utils -y
+
+# Upgrade pip
+RUN pip3 install --upgrade pip
+
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# work directory
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+
+RUN pip3 install -r requirements.txt
+# RUN pip3 uninstall ultralytics -y
+COPY . ./
+RUN yolo settings --sync False
+
+COPY ocr_core ./
+
+
+CMD ["sh","run.sh"]

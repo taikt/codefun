@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    image: client_form_service:latest
+    # volumes:
+    #   - ./AI_services/ultralytics:/app/train_engine
+    # command: sh run.sh
+    environment:
+      - HOST_NAME: ocr-gov.savis.vn
+      - DEVICE: 'cuda:0' # hostname:port of django backend
+      - DEVICE_TRAIN: 0
+      - DB_ENGINE: 'django.db.backends.postgresql'
+      - DB_NAME: 'OCR_BacGiang'  
+      - DB_USER: 'postgres'         
+      - DB_PASSWORD: 'admin@123'      
+      - DB_HOST: '10.0.20.105'       
+      - DB_PORT: '5432' 
+      - ADMIN_HOST: http://10.0.20.212:9322 #SAVIS admin server
+      - MINIO_HOST: http://10.0.2.18:30594
+      - BUCKET_NAME: mdm-ocr
+      - MINIO_SAVE: train_result/
+      - DJANGO_SECRET: "django-insecure-j4w$528agqdf&a6$!lsguse*p$%@&%iwdiz*qmf4aqs9hrc$$w"
+      - TRAIN_LIMIT: 2
+      - ULTRALYTICS_SYNC: False
+      
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    depends_on:
+      - mysql
+  
+
+      
+
+  

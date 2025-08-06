@@ -1,0 +1,109 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+  }
+  
+  .container {
+    display: flex;
+    flex-direction: column; /* Sắp xếp các phần tử theo chiều dọc */
+    height: 100vh; /* Chiều cao toàn màn hình */
+    padding: 20px;
+    box-sizing: border-box;
+    border: 2px solid #ccc; /* Viền cho toàn bộ container */
+    border-radius: 8px;
+  }
+  
+  .gpu-info {
+    display: flex;
+    flex-wrap: nowrap; /* Không cho phép GPU container xuống dòng */
+    overflow-x: auto; /* Cho phép cuộn ngang */
+    gap: 20px;
+    height: 30%; /* GPU container chiếm 30% chiều cao */
+    border: 2px solid #007bff; /* Viền xanh cho GPU container */
+    border-radius: 8px;
+    padding: 10px;
+  }
+  
+  .gpu-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 0 0 auto; /* Không cho phép tự co giãn chiều rộng */
+    width: 250px; /* Đặt chiều rộng cố định cho mỗi thẻ GPU */
+    border: 1px solid #ddd; /* Viền xám cho từng thẻ GPU */
+  }
+  
+  .train-list {
+    height: 60%; /* Train container chiếm 60% chiều cao */
+    overflow-y: auto; /* Thêm thanh cuộn nếu nội dung vượt quá */
+    border: 2px solid #007bff; /* Viền xanh lá cho Train container */
+    border-radius: 8px;
+    padding: 10px;
+  }
+  
+  .train-list table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .train-list th, .train-list td {
+    border: 1px solid #ddd;
+    border: 2px solid #007bff; /* Viền xanh lá cho Train container */
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .train-list th {
+    background-color: #f1f1f1;
+  }
+  
+  .action-buttons {
+    height: 10%; /* Action buttons chiếm 10% chiều cao */
+    display: flex;
+    justify-content: space-between; /* Đặt khoảng cách giữa các nút */
+    align-items: center;
+    padding: 0 20px; /* Thêm padding trái/phải để các nút không sát quá mép */
+    border: 2px solid #007bff; /* Viền vàng cho Action Buttons */
+    border-radius: 8px;
+  }
+  
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Popup modal */
+  .popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .popup-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+    text-align: center;
+    border: 2px solid #6c757d; /* Viền xám cho popup */
+  }
+  

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ - Thông Tin Ứng dụng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-top: 50px;
+        }
+        .info-box {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+        .info-box h2 {
+            text-align: center;
+            color: #333;
+        }
+        .info-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .info-list li {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .info-list li span {
+            font-weight: bold;
+        }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Thông Tin Ứng Dụng</h1>
+
+        <div class="info-box">
+            <h2>Thông tin nhà sản xuất</h2>
+            <ul class="info-list">
+                <li><span>Công ty:</span> {{ info.producer.company }}</li>
+                <li><span>Số ĐKKD:</span> {{ info.producer.dkkd }}</li>
+                
+            </ul>
+            
+            
+        </div>
+        <div class="info-box">
+            <h2>Thông tin khách hàng</h2>
+            <ul class="info-list">
+                <li><span>Khách hàng:</span> {{ info.customer.name }}</li>
+                <li><span>Địa chỉ:</span> {{ info.customer.address }}</li>
+            </ul>
+        </div>
+        <div class="info-box">
+            <h2>Thông tin sản phẩm</h2>
+            <ul class="info-list">
+                <li><span>Phần mềm:</span> {{ info.detail.title }}</li>
+                <li><span>Mã phần mềm:</span> {{ info.detail.code }}</li>
+                <li><span>Loại phần mềm:</span> {{ info.detail.type }}</li>
+                <li><span>Số lượng:</span> {{ info.detail.num }}</li>
+                <li><span>Thời gian hỗ trợ bảo hành:</span> {{ info.detail.exp }}</li>
+                <li><span>Hỗ trợ cập nhật phần mềm:</span> {{ info.detail.update_time }}</li>
+                <li><span>License Key:</span> {{ info.detail.license }}</li>
+                <li><span>Ngày Active:</span> {{ info.detail.active_day }}</li>
+            </ul>
+        </div>
+
+
+    </div>
+
+    <footer>
+        <p>&copy; 2024 My Web Application</p>
+    </footer>
+
+</body>
+</html>
