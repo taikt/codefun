@@ -55,8 +55,9 @@ cat > "$MCP_JSON_PATH" <<EOF
       "command": "$EXE_PATH",
       "args": ["--transport", "stdio"],
       "env": {
-        "CPP_DIR": "/path/to/cpp_dir",
-        "CUSTOM_RULE_PATH": "/path/to/CustomRule.md"
+        "src_dir": "/path/to/source_dir",
+        "custom_path": "/path/to/CustomRule.md",
+        "reset_cache": "true"
       }
     }
   }

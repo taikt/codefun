@@ -7,6 +7,7 @@ import re
 from typing import Dict, List, Optional, Set, Tuple
 from lgedv.modules.config import get_src_dir, setup_logging
 from lgedv.modules.file_utils import list_source_files
+from lgedv.modules.persistent_storage import PersistentTracker
 
 logger = setup_logging()
 
@@ -42,7 +43,8 @@ class MemoryFlow:
         return len(self.files_involved) > 1
         
     def has_potential_leak(self) -> bool:
-        return len(self.allocations) > len(self.deallocations)
+        # return len(self.allocations) > len(self.deallocations)
+        return len(self.allocations) > 0 or  len(self.deallocations) > 0
 
 class CppMemoryParser:
     """Parser để phân tích memory operations trong C++ code"""
@@ -226,6 +228,7 @@ class MemoryAnalyzer:
     
     def __init__(self):
         self.parser = CppMemoryParser()
+        self.tracker = PersistentTracker(analysis_type="memory_analysis")
         
     def analyze_codebase(self, dir_path: str = None) -> Dict:
         """
@@ -243,12 +246,48 @@ class MemoryAnalyzer:
         logger.info(f"Starting full codebase memory leak analysis: {dir_path}")
         
         # Thu thập tất cả file C++
-        src_files = list_source_files(dir_path)
-        full_paths = [os.path.join(dir_path, f) for f in src_files]
+        all_src_files = list_source_files(dir_path)
         
-        if not src_files:
+        # Lấy danh sách file đã check từ persistent storage
+        checked_files = self.tracker.get_checked_files(dir_path)
+        
+        # Lọc ra các file chưa check (relative paths)
+        remaining_files = [f for f in all_src_files if f not in checked_files]
+        
+        logger.info(f"Total source files: {len(all_src_files)}")
+        logger.info(f"Previously checked files: {len(checked_files)}")
+        logger.info(f"Remaining files to analyze: {len(remaining_files)}")
+        
+        # Nếu không còn file nào để phân tích, trả về kết quả tóm tắt
+        if not remaining_files:
+            # return {
+            #     "analysis_method": "incremental_analysis",
+            #     "status": "all_files_already_checked",
+            #     "directory": dir_path,
+            #     "total_files": len(all_src_files),
+            #     "checked_files": len(checked_files),
+            #     "remaining_files": 0,
+            #     "memory_leaks": [],
+            #     "recommendations": ["All files have been analyzed in previous sessions"],
+            #     "session_stats": self.tracker.get_analysis_stats(dir_path)
+            # }
+            summary = {
+            "total_files_in_directory": len(all_src_files),
+            "previously_checked_files": len(checked_files),
+            "newly_analyzed_files": len(remaining_files),          
+            "analysis_completeness": "incremental_analysis"
+            }
+        
             return {
-                "analysis_method": "full_codebase_analysis",
+                "analysis_method": "incremental_analysis_with_dynamic_grouping",
+                "directory": dir_path,           
+                "remaining_files": remaining_files,  # Add this for tool handler                
+                "summary": summary
+            }
+        
+        if len(all_src_files) == 0:
+            return {
+                "analysis_method": "incremental_analysis",
                 "status": "no_src_files_found",
                 "directory": dir_path,
                 "files_analyzed": 0,
@@ -256,16 +295,23 @@ class MemoryAnalyzer:
                 "recommendations": ["No C++ files found in the specified directory"]
             }
         
+        # Chỉ phân tích các file chưa check
+        full_paths = [os.path.join(dir_path, f) for f in remaining_files]
+        
         # Phân tích từng file
         all_memory_ops = {}
         all_includes = {}
         all_cross_file_calls = {}
         
-        logger.info(f"Analyzing {len(full_paths)} files...")
+        logger.info(f"Analyzing {len(remaining_files)} remaining files...")
         
-        for file_path in full_paths:
-            analysis = self.parser.parse_file(file_path)
-            all_memory_ops[file_path] = analysis["memory_operations"]
+        for i, file_path in enumerate(full_paths, 1):
+            logger.info(f"Analyzing file {i}/{len(full_paths)}: {os.path.basename(file_path)}")
+            analysis = self.parser.parse_file(file_path)   
+            # get relative path for memory operations         
+            rel_path = os.path.relpath(file_path, dir_path)
+            all_memory_ops[rel_path] = analysis["memory_operations"]
+            # logger.info(f"[taikt-DEBUG] {file_path}: {len(analysis['memory_operations'])} memory ops")
             all_includes[file_path] = analysis["includes"]
             all_cross_file_calls[file_path] = analysis["cross_file_calls"]
         
@@ -281,26 +327,33 @@ class MemoryAnalyzer:
         # AI-assisted analysis cho complex cases
         ai_context = self._prepare_ai_context_for_complex_cases(detected_leaks, memory_groups)
         
+        
+
         # Summary
         summary = {
-            "total_files_analyzed": len(src_files),
+            "total_files_in_directory": len(all_src_files),
+            "previously_checked_files": len(checked_files),
+            "newly_analyzed_files": len(remaining_files),
             "memory_operations_found": sum(len(ops) for ops in all_memory_ops.values()),
             "cross_file_flows": len([f for f in memory_flows.values() if f.is_cross_file()]),
             "potential_leaks": len(detected_leaks),
             "dynamic_groups": len(memory_groups),
-            "analysis_completeness": "full_codebase"
+            "analysis_completeness": "incremental_analysis"
         }
         
         return {
-            "analysis_method": "full_codebase_with_dynamic_grouping",
+            "analysis_method": "incremental_analysis_with_dynamic_grouping",
             "directory": dir_path,
-            "files_analyzed": len(src_files),
+            "files_analyzed": len(remaining_files),
+            "remaining_files": remaining_files,  # Add this for tool handler
             "memory_flows": {k: self._serialize_memory_flow(v) for k, v in memory_flows.items()},
             "detected_leaks": detected_leaks,
             "dynamic_groups": memory_groups,
             "ai_context_for_complex_cases": ai_context,
             "summary": summary,
-            "recommendations": self._generate_recommendations(detected_leaks, memory_flows)
+            "recommendations": self._generate_recommendations(detected_leaks, memory_flows),
+            "session_stats": self.tracker.get_analysis_stats(dir_path),
+            "all_memory_ops": all_memory_ops
         }
     
     def _build_memory_flow_map(self, all_memory_ops: Dict) -> Dict[str, MemoryFlow]:

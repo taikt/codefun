@@ -67,8 +67,9 @@ $mcpJsonContent = @'
       "command": "C:\\Program Files\\MCP Server CodeGuard\\venv\\Scripts\\codeguard.exe",
       "args": ["--transport", "stdio"],
       "env": {
-        "CPP_DIR": "\\path\\to\\cpp_dir",
-        "CUSTOM_RULE_PATH": "\\path\\to\\CustomRule.md"
+        "src_dir": "\\path\\to\\source_dir",
+        "custom_path": "\\path\\to\\CustomRule.md",
+        "reset_cache": "true"
       }
     }
   }

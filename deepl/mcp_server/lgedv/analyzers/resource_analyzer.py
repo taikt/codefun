@@ -8,6 +8,7 @@ import re
 from typing import Dict, List, Optional, Set, Tuple
 from lgedv.modules.config import get_src_dir, setup_logging
 from lgedv.modules.file_utils import list_source_files
+from lgedv.modules.persistent_storage import PersistentTracker
 
 logger = setup_logging()
 
@@ -45,7 +46,8 @@ class ResourceFlow:
         return len(self.files_involved) > 1
         
     def has_potential_leak(self) -> bool:
-        return len(self.open_operations) > len(self.close_operations)
+        #return len(self.open_operations) > len(self.close_operations)
+        return len(self.open_operations) > 0 or  len(self.close_operations) > 0
 
 class LinuxResourceParser:
     """Parser for Linux C++ resource operations"""
@@ -296,11 +298,8 @@ class ResourceAnalyzer:
     
     def __init__(self):
         self.parser = LinuxResourceParser()
-        self.analyzed_files = []  # Track analyzed files
-        
-    def get_analyzed_files(self) -> List[str]:
-        """Get list of analyzed files"""
-        return self.analyzed_files.copy()
+        self.tracker = PersistentTracker(analysis_type="resource_analysis")  # Add persistent storage
+
     
     def analyze_codebase(self, dir_path: str = None) -> Dict:
         """
@@ -315,20 +314,40 @@ class ResourceAnalyzer:
         # Always use src_dir from config, ignore passed dir_path
         target_dir = get_src_dir()
         
-        logger.info(f"Starting full codebase resource leak analysis: {target_dir}")
+        logger.info(f"Starting incremental resource leak analysis: {target_dir}")
         
         # Collect all C++ files
-        src_files = list_source_files(target_dir)
-        logger.info(f"List of C++ files: {src_files}")
-        logger.info(f"Total C++ files found: {len(src_files)}")
-        #for f in src_files:
-        #    logger.info(f"Found C++ file: {f}")
-
-        full_paths = [os.path.join(target_dir, f) for f in src_files]
+        all_src_files = list_source_files(target_dir)
         
-        if not src_files:
+        # Get previously checked files from persistent storage
+        checked_files = self.tracker.get_checked_files(target_dir)
+        
+        # Filter out files that haven't been checked (relative paths)
+        remaining_files = [f for f in all_src_files if f not in checked_files]
+        
+        logger.info(f"Total source files: {len(all_src_files)}")
+        logger.info(f"Previously checked files: {len(checked_files)}")
+        logger.info(f"Remaining files to analyze: {len(remaining_files)}")
+        
+        if not remaining_files:
+            logger.info(f"All files in directory {target_dir} have already been checked.")
             return {
-                "analysis_method": "full_codebase_resource_analysis",
+                "analysis_method": "incremental_resource_analysis",
+                "status": "all_files_already_checked",
+                "directory": target_dir,
+                "files_analyzed": 0,
+                "total_files": len(all_src_files),
+                "checked_files": len(checked_files),
+                "remaining_files": 0,
+                "resource_leaks": [],
+                "recommendations": ["All files have been analyzed in previous sessions"],
+                "session_stats": self.tracker.get_analysis_stats(target_dir)
+            }
+        
+        if len(all_src_files) == 0:
+            logger.info(f"No source files found in directory: {target_dir}")
+            return {
+                "analysis_method": "incremental_resource_analysis",
                 "status": "no_src_files_found",
                 "directory": target_dir,
                 "files_analyzed": 0,
@@ -336,19 +355,22 @@ class ResourceAnalyzer:
                 "recommendations": ["No C++ files found in the specified directory"]
             }
         
+        # Only analyze remaining files (not checked yet)
+        full_paths = [os.path.join(target_dir, f) for f in remaining_files]
+        
         # Analyze each file
         all_resource_ops = {}
         all_includes = {}
         all_cross_file_calls = {}
         
-        logger.info(f"Analyzing {len(full_paths)} files for resource leaks...")
+        logger.info(f"Analyzing {len(remaining_files)} remaining files for resource leaks...")
         
-        for file_path in full_paths:
+        for i, file_path in enumerate(full_paths, 1):
+            logger.info(f"Analyzing file {i}/{len(full_paths)}: {os.path.basename(file_path)}")
             analysis = self.parser.parse_file(file_path)
             all_resource_ops[file_path] = analysis["resource_operations"]
             all_includes[file_path] = analysis["includes"]
             all_cross_file_calls[file_path] = analysis["cross_file_calls"]
-            self.analyzed_files.append(file_path)  # Track analyzed file
         
         # Build resource flow map
         resource_flows = self._build_resource_flow_map(all_resource_ops)
@@ -358,34 +380,43 @@ class ResourceAnalyzer:
         
         # Detect resource leaks
         detected_leaks = self._detect_resource_leaks(resource_groups, resource_flows)
-        # for i, leak in enumerate(detected_leaks):
-        #     logger.info(f"[taikt] Leak {i}: type={type(leak)}, value={leak}")
 
         # AI context for complex cases
         ai_context = self._prepare_ai_context_for_complex_cases(detected_leaks, resource_groups)
         
         # Summary
         summary = {
-            "total_files_analyzed": len(src_files),
+            "total_files_in_directory": len(all_src_files),
+            "previously_checked_files": len(checked_files),
+            "newly_analyzed_files": len(remaining_files),
             "resource_operations_found": sum(len(ops) for ops in all_resource_ops.values()),
             "cross_file_flows": len([f for f in resource_flows.values() if f.is_cross_file()]),
             "potential_leaks": len(detected_leaks),
             "dynamic_groups": len(resource_groups),
-            "analysis_completeness": "full_codebase"
+            "analysis_completeness": "incremental_analysis"
         }
 
-        logger.info(f"Analysis summary: {summary}")
+        logger.info(f"Resource analysis summary: {summary}")
+        logger.info(f"[RESOURCE_DEBUG] len(remaining_files) = {len(remaining_files)}")
+        logger.info(f"[RESOURCE_DEBUG] remaining_files = {remaining_files}")
+        logger.info(f"[RESOURCE_DEBUG] len(all_src_files) = {len(all_src_files)}")
+        logger.info(f"[RESOURCE_DEBUG] all_src_files = {all_src_files}")
+        logger.info(f"[RESOURCE_DEBUG] len(checked_files) = {len(checked_files)}")
+        logger.info(f"[RESOURCE_DEBUG] checked_files = {checked_files}")
+        logger.info(f"[RESOURCE_DEBUG] target_dir = {target_dir}")
 
         return {
-            "analysis_method": "full_codebase_resource_with_dynamic_grouping",
+            "analysis_method": "incremental_resource_analysis_with_dynamic_grouping",
             "directory": target_dir,
-            "files_analyzed": len(src_files),
+            "files_analyzed": len(remaining_files),
+            "remaining_files": remaining_files,  # Add this for tool handler
             "resource_flows": {k: self._serialize_resource_flow(v) for k, v in resource_flows.items()},
             "detected_leaks": detected_leaks,
             "dynamic_groups": resource_groups,
             "ai_context_for_complex_cases": ai_context,
             "summary": summary,
-            "recommendations": self._generate_recommendations(detected_leaks, resource_flows)
+            "recommendations": self._generate_recommendations(detected_leaks, resource_flows),
+            "session_stats": self.tracker.get_analysis_stats(target_dir)
         }
     
     def analyze_directory(self, dir_path: str = None) -> List[Dict]:

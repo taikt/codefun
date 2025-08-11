@@ -15,6 +15,7 @@ from lgedv.modules.config import RESOURCE_FILES, CUSTOM_RULE_URL, setup_logging
 from lgedv.handlers.tool_handlers import ToolHandler
 from lgedv.handlers.prompt_handlers import PromptHandler
 from lgedv.handlers.resource_handler import get_all_resources
+from lgedv.modules.persistent_storage import PersistentTracker, reset_all_analysis
 
 # Setup logging
 logger = setup_logging()
@@ -33,6 +34,14 @@ def main(port: int, transport: str):
         logger.info("Server started and ready to receive requests")
         logger.info(f"Starting server with transport: {transport}, port: {port}")
         
+        # Check environment variable for reset
+        reset_cache = os.getenv('reset_cache', 'false').lower() == 'true'
+        
+        if reset_cache:
+            logger.info("🗑️  Resetting all analysis cache...")
+            reset_all_analysis()
+            logger.info("✅ Analysis cache reset completed")
+
         # Initialize server and handlers
         app = Server("mcp-misra-tool")
         tool_handler = ToolHandler()
@@ -156,6 +165,26 @@ def main(port: int, transport: str):
                         "properties": {},
                     },
                 ),
+                types.Tool(
+                    name="reset_analysis",
+                    description="Reset analysis cache for fresh start",
+                    inputSchema={
+                        "type": "object", 
+                        "properties": {
+                            "analysis_type": {
+                                "type": "string",
+                                "description": "Type of analysis to reset (memory_analysis, race_analysis, resource_analysis, or 'all')",
+                                "enum": ["memory_analysis", "race_analysis", "resource_analysis", "all"],
+                                "default": "all"
+                            },
+                            "directory": {
+                                "type": "string",
+                                "description": "Target directory (optional, uses src_dir if not provided)"
+                            }
+                        },
+                        "required": []
+                    },
+                )
             ]
 
         # Register prompt list handler
@@ -195,6 +224,22 @@ def main(port: int, transport: str):
                 types.Prompt(
                     name="get_context",
                     description="Load context for all source files in the current directory."
+                ),
+                types.Prompt(
+                    name="reset_analysis",
+                    description="Reset all analysis cache for a fresh start."
+                ),
+                types.Prompt(
+                    name="reset_mem_check",
+                    description="Reset memory leak analysis cache."
+                ),
+                types.Prompt(
+                    name="reset_resource_check",
+                    description="Reset resource leak analysis cache."
+                ),
+                types.Prompt(
+                    name="reset_race_check",
+                    description="Reset race analysis cache."
                 ),
             ]
 

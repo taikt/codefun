@@ -3,8 +3,11 @@ File utilities for handling C++ files and content operations
 Các tiện ích để xử lý file C++ và operations liên quan
 """
 import os
-from typing import List
-from .config import get_src_dir
+import json
+from typing import List, Dict
+from .config import get_src_dir, setup_logging
+
+logger = setup_logging()
 
 def list_source_files(dir_path: str = None) -> List[str]:
     """

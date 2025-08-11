@@ -47,6 +47,14 @@ class PromptHandler:
                 return await self._handle_resource_leak_analysis(arguments)
             elif name == "get_context":
                 return await self._handle_code_context()  
+            elif name == "reset_analysis":
+                return await self._handle_reset_analysis_prompt(arguments)
+            if name == "reset_mem_check":
+                return await self._handle_reset_mem_check_prompt(arguments)
+            if name == "reset_resource_check":
+                return await self._handle_reset_resource_check_prompt(arguments)
+            if name == "reset_race_check":
+                return await self._handle_reset_race_check_prompt(arguments)
             else:
                 raise ValueError(f"Unknown prompt: {name}")
                 
@@ -220,7 +228,179 @@ class PromptHandler:
         except Exception as e:
             logger.error(f"Error in resource leak analysis: {e}")
             return self._create_fallback_resource_leak_prompt(dir_path, str(e))
-        
+
+    # Thêm vào class PromptHandler
+
+    async def _handle_reset_analysis_prompt(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
+        """
+        Handle reset analysis prompt - tự động gọi tool reset_analysic và trả về kết quả.
+        """
+        from lgedv.handlers.tool_handlers import ToolHandler
+        tool_handler = ToolHandler()
+        try:
+            tool_result = await tool_handler._handle_reset_analysis({})
+            if tool_result and hasattr(tool_result[0], 'text'):
+                tool_text = tool_result[0].text
+                messages = [
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=tool_text),
+                    )
+                ]
+                result = types.GetPromptResult(
+                    messages=messages,
+                    description="Reset analysis result.",
+                )
+                logger.info("Reset analysis prompt completed")
+                return result
+            else:
+                return types.GetPromptResult(
+                    messages=[
+                        types.PromptMessage(
+                            role="user",
+                            content=types.TextContent(type="text", text="No result from reset_analysic tool."),
+                        )
+                    ],
+                    description="Reset analysis result (no output).",
+                )
+        except Exception as e:
+            logger.error(f"Error in reset analysis prompt: {e}")
+            return types.GetPromptResult(
+                messages=[
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=f"Error resetting analysis: {e}"),
+                    )
+                ],
+                description="Reset analysis error.",
+            )
+    
+    async def _handle_reset_mem_check_prompt(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
+        """
+        Handle reset_mem_check prompt - tự động gọi tool reset_mem_check và trả về kết quả.
+        """
+        from lgedv.handlers.tool_handlers import ToolHandler
+        tool_handler = ToolHandler()
+        try:
+            tool_result = await tool_handler._handle_reset_mem_check({})
+            if tool_result and hasattr(tool_result[0], 'text'):
+                tool_text = tool_result[0].text
+                messages = [
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=tool_text),
+                    )
+                ]
+                return types.GetPromptResult(
+                    messages=messages,
+                    description="Reset memory leak analysis result.",
+                )
+            else:
+                return types.GetPromptResult(
+                    messages=[
+                        types.PromptMessage(
+                            role="user",
+                            content=types.TextContent(type="text", text="No result from reset_mem_check tool."),
+                        )
+                    ],
+                    description="Reset memory leak analysis result (no output).",
+                )
+        except Exception as e:
+            logger.error(f"Error in reset_mem_check prompt: {e}")
+            return types.GetPromptResult(
+                messages=[
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=f"Error resetting memory leak analysis: {e}"),
+                    )
+                ],
+                description="Reset memory leak analysis error.",
+            )
+
+    async def _handle_reset_resource_check_prompt(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
+        """
+        Handle reset_resource_check prompt - tự động gọi tool reset_resource_check và trả về kết quả.
+        """
+        from lgedv.handlers.tool_handlers import ToolHandler
+        tool_handler = ToolHandler()
+        try:
+            tool_result = await tool_handler._handle_reset_resource_check({})
+            if tool_result and hasattr(tool_result[0], 'text'):
+                tool_text = tool_result[0].text
+                messages = [
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=tool_text),
+                    )
+                ]
+                return types.GetPromptResult(
+                    messages=messages,
+                    description="Reset resource leak analysis result.",
+                )
+            else:
+                return types.GetPromptResult(
+                    messages=[
+                        types.PromptMessage(
+                            role="user",
+                            content=types.TextContent(type="text", text="No result from reset_resource_check tool."),
+                        )
+                    ],
+                    description="Reset resource leak analysis result (no output).",
+                )
+        except Exception as e:
+            logger.error(f"Error in reset_resource_check prompt: {e}")
+            return types.GetPromptResult(
+                messages=[
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=f"Error resetting resource leak analysis: {e}"),
+                    )
+                ],
+                description="Reset resource leak analysis error.",
+            )
+
+    async def _handle_reset_race_check_prompt(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
+        """
+        Handle reset_race_check prompt - tự động gọi tool reset_race_check và trả về kết quả.
+        """
+        from lgedv.handlers.tool_handlers import ToolHandler
+        tool_handler = ToolHandler()
+        try:
+            tool_result = await tool_handler._handle_reset_race_check({})
+            if tool_result and hasattr(tool_result[0], 'text'):
+                tool_text = tool_result[0].text
+                messages = [
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=tool_text),
+                    )
+                ]
+                return types.GetPromptResult(
+                    messages=messages,
+                    description="Reset race analysis result.",
+                )
+            else:
+                return types.GetPromptResult(
+                    messages=[
+                        types.PromptMessage(
+                            role="user",
+                            content=types.TextContent(type="text", text="No result from reset_race_check tool."),
+                        )
+                    ],
+                    description="Reset race analysis result (no output).",
+                )
+        except Exception as e:
+            logger.error(f"Error in reset_race_check prompt: {e}")
+            return types.GetPromptResult(
+                messages=[
+                    types.PromptMessage(
+                        role="user",
+                        content=types.TextContent(type="text", text=f"Error resetting race analysis: {e}"),
+                    )
+                ],
+                description="Reset race analysis error.",
+            )
+     
     def _format_resource_leak_summary(self, leaks: list) -> str:
         """Format a summary of resource leaks by type and severity"""
         summary = {}
@@ -411,31 +591,6 @@ Focus on Linux-specific resources and provide actionable recommendations for eac
     
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
         """Create analysis prompt section with detailed race condition information (no grouping, no limit)"""
-        # Comment out the main prompt generation logic
-        # detected_races = race_result.get('potential_race_conditions', [])
-        # prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
-        # prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
-        # if not detected_races:
-        #     prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
-        #     prompt_section += "However, please perform a manual review focusing on:\n"
-        #     prompt_section += "1. Shared state access patterns\n"
-        #     prompt_section += "2. Thread synchronization mechanisms\n"
-        #     prompt_section += "3. Atomic operations usage\n"
-        #     prompt_section += "4. Lock-free programming patterns\n\n"
-        #     return prompt_section
-        # for i, race in enumerate(detected_races, 1):
-        #     severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
-        #     prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
-        #     prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
-        #     prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
-        #     prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
-        #     prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
-        #     if 'potential_causes' in race:
-        #         prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
-        #     if 'recommended_actions' in race:
-        #         prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
-        #     prompt_section += "\n" + "─" * 60 + "\n\n"
-        # Chỉ giữ lại phần hướng dẫn ưu tiên
         prompt_section = "## 🎯 Priority Analysis Guidelines:\n\n"
         prompt_section += "1. Focus on shared state accessed by multiple threads.\n"
         prompt_section += "2. Ensure proper synchronization (mutexes, locks, atomics).\n"

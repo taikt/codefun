@@ -77,7 +77,7 @@ class MemoryAllocation:
 @dataclass
 class MemoryDeallocation:
     """Thông tin về việc giải phóng bộ nhớ"""
-    deallocation_type: str  # 'delete', 'free', 'delete[]'
+    deallocation_tymissing_deletepe: str  # 'delete', 'free', 'delete[]'
     file_path: str
     line_number: int
     variable_name: str

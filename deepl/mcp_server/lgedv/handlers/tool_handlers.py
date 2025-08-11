@@ -14,13 +14,18 @@ from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer, analyze_leaks
 from lgedv.analyzers.resource_analyzer import ResourceAnalyzer
 from lgedv.modules.config import setup_logging, get_src_dir
+from lgedv.modules.persistent_storage import PersistentTracker
+
 import pprint
 
 logger = setup_logging()
 
 class ToolHandler:
     """Handler cho các MCP tools"""
-    
+
+    def __init__(self):
+        self.memory_tracker = PersistentTracker(analysis_type="memory_analysis")
+
     async def handle_tool_call(self, name: str, arguments: dict) -> List[Union[
         types.TextContent, types.ImageContent, types.AudioContent, types.EmbeddedResource
     ]]:
@@ -60,7 +65,8 @@ class ToolHandler:
                 return await self._handle_memory_analysis(arguments)
             elif name == "analyze_resources":
                 return await self._handle_resource_analysis(arguments)
-            
+            elif name == "reset_analysis":
+                return await self._handle_reset_analysis(arguments)
             else:
                 raise ValueError(f"Unknown tool: {name}")
                 
@@ -118,8 +124,8 @@ class ToolHandler:
         logger.info(f"detect_races completed for dir: {dir_path}")
         # Log markdown report for each file
         markdown_reports = result.get('summary', {}).get('markdown_reports', {})
-        for file_path, markdown in markdown_reports.items():
-            logger.info("[THREAD ENTRY MARKDOWN] File: %s\n%s", file_path, markdown)
+        # for file_path, markdown in markdown_reports.items():
+        #     logger.info("[THREAD ENTRY MARKDOWN] File: %s\n%s", file_path, markdown)
         # Log file summaries (markdown + race info)
         file_summaries = result.get('summary', {}).get('file_summaries', {})
         for file_path, summary in file_summaries.items():
@@ -172,6 +178,12 @@ class ToolHandler:
             f"\nFocus on actionable recommendations that can be immediately implemented.\n"
         )
         
+        full_prompt += (
+            f"\n---\n"
+            f"**Note:** Files that have already been analyzed will not be re-analyzed in future runs. "
+            f"To analyze all files again, please clear the analysis cache by running the `/reset_race_check` prompt."
+        )
+        
         return [types.TextContent(type="text", text=full_prompt)]
     
 
@@ -195,6 +207,9 @@ class ToolHandler:
         partial_dealloc_leaks = [l for l in leaks if l.get('deallocations', 0) > 0 and l.get('allocations', 0) > l.get('deallocations', 0)]
         
         # Get file statistics
+        previously_checked_files = summary.get('previously_checked_files', 0)
+        total_files_in_directory = summary.get('total_files_in_directory', 0)
+        newly_remaining_files = summary.get('newly_analyzed_files', 0)
         files_analyzed = result.get('files_analyzed', 0)
         memory_flows = result.get('memory_flows', {})
         cross_file_flows = len([f for f in memory_flows.values() if f.get('is_cross_file', False)])
@@ -203,7 +218,9 @@ class ToolHandler:
             f"## 📊 Comprehensive Analysis Results:\n"
             f"### 🗂️ Project Overview:\n"
             f"- **Directory Analyzed**: `{dir_path}`\n"
-            f"- **Total Files Processed**: {files_analyzed}\n"
+            f"- **Total Files in Directory**: {total_files_in_directory}\n"
+            f"- **Previously Checked Files**: {previously_checked_files}\n"            
+            f"- **Remaining Files**: {newly_remaining_files}\n"           
             # f"- **Total Variables Tracked**: {len(memory_flows)}\n"
             # f"- **Analysis Scope**: Full codebase with dynamic grouping\n\n"
             # f"### 📈 Memory Operations Summary:\n"
@@ -229,28 +246,36 @@ class ToolHandler:
     def _create_memory_code_context_section(self, result: dict, dir_path: str) -> str:
         """Create OPTIMIZED code context section with smart token management and file prioritization"""
         code_section = "## 📄 Relevant Code Context:\n\n"
-        
+        all_memory_ops = result.get('all_memory_ops', {})
         # Get files with memory leaks and prioritize them
-        files_with_leaks = self._prioritize_files_by_leak_severity(result.get('detected_leaks', []), dir_path)
-        
+        files_with_leaks = self._prioritize_files_by_leak_severity(result.get('detected_leaks', []), dir_path, all_memory_ops)
+
         # TOKEN OPTIMIZATION: Aggressive limits for better efficiency
-        max_files = 3  # Max files to include (reduced from 5)
-        max_file_size = 50000  # Max characters per file 
+        max_files = 3
+        max_file_size = 50000
         processed_files = 0
+        files_being_checked = []  # Track files being analyzed
         
+        checked_filenames = [os.path.basename(f[0]) for f in files_with_leaks[:max_files]]
+        code_section += f"### 📝 Files being checked in this session: {', '.join(checked_filenames)}\n\n"
+
         for file_path, leak_info in files_with_leaks[:max_files]:
             if processed_files >= max_files:
                 code_section += f"### ⚠️ Additional Files ({len(files_with_leaks) - max_files} files truncated for token optimization)\n\n"
                 break
                 
             try:
-                # logger.info("leak_info (short): %s", pprint.pformat({k: leak_info[k] for k in list(leak_info)[:5]}))
                 logger.info(f"[memory_leak] Reading file: {file_path}")
                 if not os.path.isabs(file_path):
                     abs_path = os.path.join(dir_path, file_path)
+                    relative_path = file_path  # Store relative path for tracking
                 else:
                     abs_path = file_path
-                # Read file content with smart truncation
+                    relative_path = os.path.relpath(file_path, dir_path)  # Convert to relative
+                
+                # Add to files being checked (use relative paths)
+                files_being_checked.append(relative_path)
+                
                 with open(abs_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
@@ -261,11 +286,6 @@ class ToolHandler:
                 filename = file_path.split('/')[-1]
                 code_section += f"### 📁 {filename}\n"
                 code_section += f"**Path**: `{file_path}`\n"
-                #code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
-                # if 'leak_lines' in leak_info:
-                #     code_section += f"**Lines with Memory Operations**: {leak_info['leak_lines']}\n\n"
-                # else:
-                #     code_section += "**Lines with Memory Operations**: (not available)\n\n"
 
                 all_lines = []
                 for leak in leak_info['leaks']:
@@ -286,6 +306,11 @@ class ToolHandler:
                 filename = file_path.split('/')[-1] if file_path else "unknown"
                 code_section += f"### 📁 {filename}\n"
                 code_section += f"```\n// Error reading file: {e}\n```\n\n"
+        
+        # Save checked files to persistent storage
+        if files_being_checked:
+            logger.info(f"Saving {len(files_being_checked)} files to persistent storage: {files_being_checked}")
+            self.memory_tracker.add_checked_files(dir_path, files_being_checked)
         
         return code_section
     
@@ -346,171 +371,130 @@ class ToolHandler:
             
             prompt_section += "\n" + "─" * 60 + "\n\n"
         
-        # Add summary recommendations
-        # prompt_section += "## 🎯 Priority Analysis Guidelines:\n\n"
-        # prompt_section += "1. **Focus on leaks with 0 deallocations first** - These are guaranteed leaks\n"
-        # prompt_section += "2. **Check allocation/deallocation type mismatches** - `new`/`delete[]`, `malloc`/`delete`, etc.\n"
-        # prompt_section += "3. **Look for exception safety issues** - Leaks when exceptions occur\n"
-        # prompt_section += "4. **Verify RAII compliance** - Use smart pointers where possible\n"
-        # prompt_section += "5. **Check constructor/destructor pairs** - Ensure proper cleanup in class destructors\n\n"
         
         return prompt_section
     
-    def _prioritize_files_by_leak_severity(self, leaks: list, dir_path: str) -> list:
-        """Prioritize files by number of critical/high severity memory leaks"""
+    
+    def _prioritize_files_by_leak_severity(self, leaks: list, dir_path: str, all_memory_ops: dict) -> list:
+        """
+        Ưu tiên file memory leak:
+        - Chỉ xét các file chưa check
+        - Ưu tiên file có tổng số hoạt động allocation+deallocation cao hơn trước
+        - Nếu bằng nhau, ưu tiên file dài hơn (nhiều dòng hơn)
+        - Bao gồm cả file chưa check mà không có hoạt động leak nào
+        - CHUẨN HÓA: luôn dùng relative path cho mọi key
+        """
+        checked_files = self.memory_tracker.get_checked_files(dir_path)
+        src_files = list_source_files(dir_path)
+        unchecked_files = [f for f in src_files if f not in checked_files]
+
+        # Gom leak info như cũ
         file_leak_map = {}
         for leak in leaks:
             files_involved = leak.get('files_involved', [])
-            severity = leak.get('severity', 'medium')
             for file_path in files_involved:
-                if file_path not in file_leak_map:
-                    file_leak_map[file_path] = {
-                        'critical_count': 0,
-                        'high_count': 0,
-                        'medium_count': 0,
-                        'low_count': 0,
-                        'total_leaks': 0,
-                        'leaks': []
-                    }
-                if severity == 'critical':
-                    file_leak_map[file_path]['critical_count'] += 1
-                elif severity == 'high':
-                    file_leak_map[file_path]['high_count'] += 1
-                elif severity == 'medium':
-                    file_leak_map[file_path]['medium_count'] += 1
-                else:
-                    file_leak_map[file_path]['low_count'] += 1
-                file_leak_map[file_path]['total_leaks'] += 1
-                file_leak_map[file_path]['leaks'].append(leak)
+                rel_path = os.path.relpath(file_path, dir_path) if os.path.isabs(file_path) else file_path
+                if rel_path not in file_leak_map:
+                    file_leak_map[rel_path] = {'leaks': []}
+                file_leak_map[rel_path]['leaks'].append(leak)
 
-        #for file_path, info in file_leak_map.items():
-        #    logger.info("File: %s\nInfo:\n%s", file_path, pprint.pformat(info))   
-        logger.info("Prioritized file leak map:")     
-        for file_path, info in file_leak_map.items():
-            leak_vars = [leak.get('variable', 'unknown') for leak in info['leaks'][:3]]
-            logger.info(
-                "File: %s | Critical: %d | High: %d | Medium: %d | Low: %d | Total: %d | Leak Vars: %s%s",
-                file_path,
-                info['critical_count'],
-                info['high_count'],
-                info['medium_count'],
-                info['low_count'],
-                info['total_leaks'],
-                ', '.join(leak_vars),
-                f" (+{len(info['leaks'])-3} more)" if len(info['leaks']) > 3 else ""
-            )
+        prioritized_info = []
+        for file_path in unchecked_files:
+            # Tính tổng allocation+deallocation
+            mem_ops = all_memory_ops.get(file_path, []) if all_memory_ops else []
+            total_ops = sum(1 for op in mem_ops if op.operation_type in ('alloc', 'dealloc'))
+            # Đếm số dòng
+            abs_path = file_path if os.path.isabs(file_path) else os.path.join(dir_path, file_path)
+            try:
+                with open(abs_path, 'r', encoding='utf-8') as f:
+                    line_count = sum(1 for _ in f)
+            except Exception:
+                line_count = 0
+            leak_info = file_leak_map.get(file_path, {'leaks': []})
+            prioritized_info.append((file_path, total_ops, line_count, leak_info))
 
-        if all(info['total_leaks'] == 0 for info in file_leak_map.values()):
-            # Không có leak, lấy danh sách file C++ và sắp xếp theo số dòng
-            logger.info("No memory leaks found, listing C++ files by line count")
-            src_files = list_source_files(dir_path)  # dir_path là thư mục đang phân tích
-            file_line_counts = []
-            for file_path in src_files:
-                abs_path = os.path.join(dir_path, file_path)
-                logger.info(f"Counting lines in file: {abs_path}")
-                try:
-                    with open(abs_path, 'r', encoding='utf-8') as f:
-                        line_count = sum(1 for _ in f)
-                except Exception:
-                    line_count = 0
-                file_line_counts.append((file_path, line_count))
-            # Sắp xếp giảm dần theo số dòng
-            sorted_files = sorted(file_line_counts, key=lambda x: x[1], reverse=True)
-            # Trả về [(file_path, empty_leak_info), ...]
-            return [(file_path, {'leaks': []}) for file_path, _ in sorted_files]
-        else:
-            # Sắp xếp như cũ theo critical_count, high_count, total_leaks
-            prioritized_files = sorted(
-                file_leak_map.items(),
-                key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
-                reverse=True
-            )
-            return prioritized_files
-        
-        # prioritized_files = sorted(
-        #     file_leak_map.items(),
-        #     key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
-        #     reverse=True
-        # )
-        # return prioritized_files
+        # Sắp xếp: tổng allocation+deallocation giảm dần, nếu bằng thì số dòng giảm dần
+        sorted_files = sorted(
+            prioritized_info,
+            key=lambda x: (x[1], x[2]),
+            reverse=True
+        )
+
+        # Log thông tin từng file
+        for file_path, total_ops, line_count, leaks in sorted_files:
+            logger.info("[taikt] File: %s | Total alloc+dealloc: %d | Lines: %d", file_path, total_ops, line_count)
+
+        return [(f, l) for f, _, _, l in sorted_files]
     
     def _prioritize_files_by_resource_leak_severity(self, leaks: list, dir_path: str) -> list:
-        """Prioritize files by number and severity of resource leaks (critical/high first)"""
+        """
+        Ưu tiên file resource leak:
+        - Chỉ xét các file chưa check
+        - Ưu tiên file có tổng hoạt động đóng + mở cao hơn trước
+        - Nếu bằng nhau, ưu tiên file dài hơn (nhiều dòng hơn)
+        - Bao gồm cả file chưa check mà không có hoạt động resource nào
+        - CHUẨN HÓA: luôn dùng relative path cho mọi key
+        """
+        resource_tracker = PersistentTracker(analysis_type="resource_analysis")
+        checked_files = resource_tracker.get_checked_files(dir_path)
+        logger.info(f"Previously checked files for resource analysis: {checked_files}")
+
+        # Gom nhóm file chưa check và tính tổng open/close cho từng file (dùng relative path)
+        file_op_counts = {}
         file_leak_map = {}
         for leak in leaks:
+            open_ops = leak.get('open_operations', 0)
+            close_ops = leak.get('close_operations', 0)
             files_involved = leak.get('files_involved', [])
-            severity = leak.get('severity', 'medium')
             for file_path in files_involved:
-                if file_path not in file_leak_map:
-                    file_leak_map[file_path] = {
-                        'critical_count': 0,
-                        'high_count': 0,
-                        'medium_count': 0,
-                        'low_count': 0,
-                        'total_leaks': 0,
-                        'leaks': []
-                    }
-                if severity == 'critical':
-                    file_leak_map[file_path]['critical_count'] += 1
-                elif severity == 'high':
-                    file_leak_map[file_path]['high_count'] += 1
-                elif severity == 'medium':
-                    file_leak_map[file_path]['medium_count'] += 1
-                else:
-                    file_leak_map[file_path]['low_count'] += 1
-                file_leak_map[file_path]['total_leaks'] += 1
-                file_leak_map[file_path]['leaks'].append(leak)
-        
-        logger.info("Prioritized resource file leak map:")
-        for file_path, info in file_leak_map.items():
-            leak_vars = [leak.get('variable', 'unknown') for leak in info['leaks'][:3]]
-            logger.info(
-                "File: %s | Critical: %d | High: %d | Medium: %d | Low: %d | Total: %d | Leak Vars: %s%s",
-                file_path,
-                info['critical_count'],
-                info['high_count'],
-                info['medium_count'],
-                info['low_count'],
-                info['total_leaks'],
-                ', '.join(leak_vars),
-                f" (+{len(info['leaks'])-3} more)" if len(info['leaks']) > 3 else ""
-            )
+                rel_path = os.path.relpath(file_path, dir_path) if os.path.isabs(file_path) else file_path
+                if rel_path in checked_files:
+                    continue
+                if rel_path not in file_op_counts:
+                    file_op_counts[rel_path] = {'open': 0, 'close': 0}
+                file_op_counts[rel_path]['open'] += open_ops
+                file_op_counts[rel_path]['close'] += close_ops
+                if rel_path not in file_leak_map:
+                    file_leak_map[rel_path] = {'leaks': []}
+                file_leak_map[rel_path]['leaks'].append(leak)
 
-        if all(info['total_leaks'] == 0 for info in file_leak_map.values()):
-            # Không có leak, lấy danh sách file C++ và sắp xếp theo số dòng
-            src_files = list_source_files(dir_path)  # dir_path là thư mục đang phân tích
-            file_line_counts = []
-            for file_path in src_files:
-                if not os.path.isabs(file_path):
-                    abs_path = os.path.join(dir_path, file_path)
-                else:
-                    abs_path = file_path
-                try:
-                    with open(abs_path, 'r', encoding='utf-8') as f:
-                        line_count = sum(1 for _ in f)
-                except Exception:
-                    line_count = 0
-                file_line_counts.append((file_path, line_count))
-            # Sắp xếp giảm dần theo số dòng
-            sorted_files = sorted(file_line_counts, key=lambda x: x[1], reverse=True)
-            # Trả về [(file_path, empty_leak_info), ...]
-            return [(file_path, {'leaks': []}) for file_path, _ in sorted_files]
-        else:
-            # Sắp xếp như cũ theo critical_count, high_count, total_leaks
-            prioritized_files = sorted(
-                file_leak_map.items(),
-                key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
-                reverse=True
-            )
-            return prioritized_files
-        # sap xep theo thu tu uu tien: critical > high > total_leaks
-        # prioritized_files = sorted(
-        #     file_leak_map.items(),
-        #     key=lambda x: (x[1]['critical_count'], x[1]['high_count'], x[1]['total_leaks']),
-        #     reverse=True
-        # )
-        # return prioritized_files
-    
+        # Lấy toàn bộ file C++ chưa check (relative path)
+        src_files = list_source_files(dir_path)
+        unchecked_files = [f for f in src_files if f not in checked_files]
+
+        # Tính số dòng cho từng file chưa check
+        file_line_counts = {}
+        for file_path in unchecked_files:
+            abs_path = file_path if os.path.isabs(file_path) else os.path.join(dir_path, file_path)
+            try:
+                with open(abs_path, 'r', encoding='utf-8') as f:
+                    line_count = sum(1 for _ in f)
+            except Exception:
+                line_count = 0
+            file_line_counts[file_path] = line_count
+
+        # Gom thông tin open/close và leak cho từng file chưa check (dùng relative path)
+        prioritized_info = []
+        for file_path in unchecked_files:
+            ops = file_op_counts.get(file_path, {'open': 0, 'close': 0})
+            leaks = file_leak_map.get(file_path, {'leaks': []})
+            total_ops = ops['open'] + ops['close']
+            prioritized_info.append((file_path, total_ops, file_line_counts[file_path], leaks))
+
+        # Sắp xếp: tổng open+close giảm dần, nếu bằng thì số dòng giảm dần
+        sorted_files = sorted(
+            prioritized_info,
+            key=lambda x: (x[1], x[2]),
+            reverse=True
+        )
+
+        # Log thông tin từng file
+        for file_path, total_ops, line_count, leaks in sorted_files:
+            logger.info("[taikt] File: %s | Total open+close: %d | Lines: %d", file_path, total_ops, line_count)
+
+        # Trả về [(file_path, leaks), ...]
+        return [(f, l) for f, _, _, l in sorted_files]
+
     def _add_leak_markers_to_content(self, content: str, leaks: list) -> str:
         """Add visual markers to code content to highlight memory leaks"""
         lines = content.split('\n')
@@ -586,7 +570,8 @@ class ToolHandler:
         # Create rich metadata prompt for AI analysis
         metadata_section = self._create_memory_analysis_metadata(result, dir_path)
         code_context_section = self._create_memory_code_context_section(result, dir_path)
-        analysis_prompt = self._create_memory_analysis_prompt_section(result)
+        # disable analysis prompt for leaks
+        # analysis_prompt = self._create_memory_analysis_prompt_section(result)
           
         full_prompt = (
             f"You are an expert C++ memory management analyst.\n\n"
@@ -607,7 +592,7 @@ class ToolHandler:
             f"# Automated Findings (for your review):\n"
             f"{metadata_section}\n\n"
             f"{code_context_section}\n\n"
-            f"{analysis_prompt}\n\n"
+            # f"{analysis_prompt}\n\n"
             f"## 🔧 Please Provide\n"
             f"1. **Detailed Analysis:** Review each memory leak with clear evidence and assess its validity\n"
             f"2. **Risk Assessment:** Categorize findings by severity and likelihood\n"
@@ -626,6 +611,12 @@ class ToolHandler:
             f"\nFocus on actionable recommendations that can be immediately implemented.\n"
         )
         
+        full_prompt += (
+            f"\n---\n"
+            f"**Note:** Files that have already been analyzed will not be re-analyzed in future runs. "
+            f"To analyze all files again, please clear the analysis cache by running the `/reset_mem_check` prompt."
+        )
+
         return [types.TextContent(type="text", text=full_prompt)]
     
     # ham nay duoc goi tu prompt handler
@@ -636,30 +627,25 @@ class ToolHandler:
         """
         src_dir = get_src_dir()
         logger.info(f"Starting AI resource leak analysis on directory: {src_dir}")
-   
+
         analyzer = ResourceAnalyzer()
-        # result = analyzer.analyze_directory()
         result = analyzer.analyze_codebase()
-        logger.info(f"AI resource leak analysis found {len(result)} leaks in directory: {src_dir}")
-        if not result:
-            return [types.TextContent(
-                type="text",
-                text=f"# 🔍 Linux C++ Resource Leak Analysis\n\n❌ No resource leaks detected in: {src_dir}"
-            )]
+        logger.info(f"AI resource leak analysis found {len(result.get('detected_leaks', []))} leaks in directory: {src_dir}")
         
-        # Create rich metadata prompt for AI analysis
+        # Always create rich metadata and context (even when no leaks detected)
         logger.info("Creating metadata section for resource analysis")
         metadata_section = self._create_resource_analysis_metadata(result, src_dir)
-        #logger.info(f"metadata_section: {metadata_section}")
         code_context_section = self._create_resource_code_context_section(result, src_dir)
-        #logger.info(f"code_context_section: {code_context_section}")
-        # analysis_prompt = self._create_resource_findings_section(result)
-        # logger.info(f"analysis_prompt: {analysis_prompt}")
-
+        
+        # Handle status message based on leaks found
+        leaks_count = len(result.get('detected_leaks', []))
+        status_message = f"{leaks_count} resource leaks detected" if leaks_count > 0 else "No resource leaks detected by automated analysis"
+        
         full_prompt = (
             f"You are an expert Linux C++ resource management analyst.\n\n"
             f"**Task:**\n"
             f"Analyze the C++ files in `{src_dir}` for resource leaks using the `analyze_resources` tool.\n"
+            f"**Status**: {status_message}.\n\n"
             f"Focus strictly on real, evidence-based issues. Do NOT include any hypothetical, speculative, or potential cases—report only resource leaks that are clearly demonstrated by the code and findings.\n\n"
             f"**Resource Types to Check:**\n"
             f"- File descriptors (open/close, FILE*/fclose)\n"
@@ -675,7 +661,6 @@ class ToolHandler:
             f"# Automated Findings (for your review):\n"
             f"{metadata_section}\n\n"
             f"{code_context_section}\n\n"
-            # f"{analysis_prompt}\n\n"
             f"**For each issue, use this format:**\n"
             f"## 🚨 RESOURCE LEAK #[number]: [Brief Description]\n"
             f"- **Type:** [resource type]\n"
@@ -689,6 +674,12 @@ class ToolHandler:
             f"- Suggest modern C++ approaches (RAII, smart pointers, std::fstream, etc.) where applicable.\n"
             f"- Recommend prevention strategies for future code.\n\n"
             f"Do NOT include any speculative, hypothetical, or potential warnings. Only analyze and report on actual, evidenced resource leaks found in the code and findings provided.\n"
+        )
+
+        full_prompt += (
+            f"\n---\n"
+            f"**Note:** Files that have already been analyzed will not be re-analyzed in future runs. "
+            f"To analyze all files again, please clear the analysis cache by running the `/reset_resource_check` prompt."
         )
         
         return [types.TextContent(type="text", text=full_prompt)]
@@ -705,50 +696,55 @@ class ToolHandler:
             f"resource_operations_found={summary.get('resource_operations_found', 0)}, "
             f"cross_file_flows={summary.get('cross_file_flows', 0)}"
         )
-        
-        # severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
-        # for leak in detected_leaks:
-        #     severity = leak.get('severity', 'medium')
-        #     severity_counts[severity] += 1
-        
+        files_analyzed = analysis_result.get('files_analyzed', 0)
+        previously_checked_files = summary.get('previously_checked_files', 0)
+        total_files_in_directory = summary.get('total_files_in_directory', 0)
+        newly_remaining_files = summary.get('newly_analyzed_files', 0)
+       
+        # Create metadata section
         metadata = (
             f"## 📊 **Analysis Metadata**\n\n"
             f"- **Directory**: `{src_dir}`\n"
             f"- **Analysis Type**: Linux C++ Resource Leak Detection\n"
-            f"- **Files Analyzed**: {summary.get('total_files_analyzed', 0)}\n"
+            f"- **Total Files in Directory**: {total_files_in_directory}\n"
+            f"- **Previously Checked Files**: {previously_checked_files}\n"            
+            f"- **Remaining Files**: {newly_remaining_files}\n" 
             f"- **Resource Operations Found**: {summary.get('resource_operations_found', 0)}\n"
-            # f"- **Potential Leaks**: {len(detected_leaks)}\n"
             f"- **Cross-file Flows**: {summary.get('cross_file_flows', 0)}\n\n"
-            # f"### 📈 **Severity Breakdown**\n"
-            # f"- Critical: {severity_counts['critical']}\n"
-            # f"- High: {severity_counts['high']}\n"
-            # f"- Medium: {severity_counts['medium']}\n"
-            # f"- Low: {severity_counts['low']}\n"
         )
         return metadata
     
     def _create_resource_code_context_section(self, analysis_result: dict, src_dir: str) -> str:
         code_section = "## 📄 Relevant Code Context:\n\n"
-        # Get files with memory leaks and prioritize them
+        # Get files with resource leaks and prioritize them
         files_with_leaks = self._prioritize_files_by_resource_leak_severity(analysis_result.get('detected_leaks', []), src_dir)
-        # TOKEN OPTIMIZATION: Aggressive limits for better efficiency
-        max_files = 3  # Max files to include (reduced from 5)
-        max_file_size = 50000  # Max characters per file 
-        processed_files = 0
         
+        # TOKEN OPTIMIZATION: Aggressive limits for better efficiency
+        max_files = 3
+        max_file_size = 50000
+        processed_files = 0
+        files_being_checked = []  # Track files being analyzed in THIS session
+        
+        checked_filenames = [os.path.basename(f[0]) for f in files_with_leaks[:max_files]]
+        code_section += f"### 📝 Files being checked in this session: {', '.join(checked_filenames)}\n\n"
+
         for file_path, leak_info in files_with_leaks[:max_files]:
             if processed_files >= max_files:
                 code_section += f"### ⚠️ Additional Files ({len(files_with_leaks) - max_files} files truncated for token optimization)\n\n"
                 break
                 
             try:
-                # logger.info("leak_info (short): %s", pprint.pformat({k: leak_info[k] for k in list(leak_info)[:5]}))
-                logger.info(f"[memory_leak] Reading file: {file_path}")
-                # Read file content with smart truncation
+                logger.info(f"[resource_leak] Reading file: {file_path}")
                 if not os.path.isabs(file_path):
                     abs_path = os.path.join(src_dir, file_path)
+                    relative_path = file_path  # Store relative path for tracking
                 else:
                     abs_path = file_path
+                    relative_path = os.path.relpath(file_path, src_dir)  # Convert to relative
+                
+                # Add to files being checked in THIS session (use relative paths)
+                files_being_checked.append(relative_path)
+                
                 with open(abs_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
@@ -759,21 +755,21 @@ class ToolHandler:
                 filename = file_path.split('/')[-1]
                 code_section += f"### 📁 {filename}\n"
                 code_section += f"**Path**: `{file_path}`\n"
-            
+
+                # Show resource operation lines
                 all_lines = []
                 for leak in leak_info['leaks']:
-                    # logger.info(f"[taikt] leak: {leak}")
-                    # logger.info(f"[taikt] leak_lines: {leak.get('leak_lines', [])}")
                     all_lines.extend(leak.get('leak_lines', []))
                 if all_lines:
                     unique_lines = sorted(set(all_lines))
-                    code_section += f"**Lines with leak Operations**: {unique_lines}\n"
+                    code_section += f"**Lines with Resource Operations**: {unique_lines}\n"
                 else:
-                    code_section += "**Lines with leak Operations**: (not available)\n"
+                    code_section += "**Lines with Resource Operations**: (not available)\n"
 
-                # Add leak markers to content
-                marked_content = self._add_leak_markers_to_content(content, leak_info['leaks'])
-                code_section += f"```cpp\n{marked_content}\n```\n\n"
+                # Add resource leak markers to content
+                # marked_content = self._add_resource_leak_markers_to_content(content, leak_info['leaks'])
+                # code_section += f"```cpp\n{marked_content}\n```\n\n"
+                code_section += f"```cpp\n{content}\n```\n\n"
                 
                 processed_files += 1
                 
@@ -782,8 +778,39 @@ class ToolHandler:
                 code_section += f"### 📁 {filename}\n"
                 code_section += f"```\n// Error reading file: {e}\n```\n\n"
         
+        # Save ONLY files being checked in this session to persistent storage (incremental)
+        if files_being_checked:
+            resource_tracker = PersistentTracker(analysis_type="resource_analysis")
+            logger.info(f"Incrementally saving {len(files_being_checked)} NEW resource files to persistent storage: {files_being_checked}")
+            resource_tracker.add_checked_files(src_dir, files_being_checked)
+        
         return code_section
     
+    def _add_resource_leak_markers_to_content(self, content: str, leaks: list) -> str:
+        """Add visual markers to code content to highlight resource leaks"""
+        lines = content.split('\n')
+        # Create a map of line numbers to leak info
+        line_markers = {}
+        for leak in leaks:
+            for open_op in leak.get('open_details', []):
+                line_num = open_op.get('line')
+                if line_num and 1 <= line_num <= len(lines):
+                    marker = f"🔴 RESOURCE OPEN: {leak.get('variable', 'unknown')} - {open_op.get('details', '')}"
+                    line_markers[line_num] = marker
+            for close_op in leak.get('close_details', []):
+                line_num = close_op.get('line')
+                if line_num and 1 <= line_num <= len(lines):
+                    marker = f"🟢 RESOURCE CLOSE: {leak.get('variable', 'unknown')} - {close_op.get('details', '')}"
+                    line_markers[line_num] = marker
+        # Add markers to lines
+        marked_lines = []
+        for i, line in enumerate(lines, 1):
+            if i in line_markers:
+                marked_lines.append(f"{line}  // {line_markers[i]}")
+            else:
+                marked_lines.append(line)
+        return '\n'.join(marked_lines)
+
     def _create_resource_findings_section(self, analysis_result: dict) -> str:
         """Create findings section with detected resource leaks"""
         detected_leaks = analysis_result.get("detected_leaks", [])
@@ -837,150 +864,21 @@ class ToolHandler:
 
     def _create_race_analysis_metadata(self, race_result: dict, dir_path: str) -> str:
         """Create metadata section for race condition analysis"""
+        summary = race_result.get('summary', {})
+        previously_checked_files = summary.get('previously_checked_files', 0)
+        total_files_in_directory = summary.get('total_files_in_directory', 0)
+        newly_remaining_files = summary.get('newly_analyzed_files', 0)
+        files_with_threads = summary.get('files_with_threads', 0)
+
         metadata_section = "## 📊 Analysis Metadata\n\n"
         metadata_section += f"**Target Directory:** `{dir_path}`\n"
-        
-        summary = race_result.get('summary', {})
-        #detected_races = race_result.get('potential_race_conditions', [])
-        
-        metadata_section += f"**Files Analyzed:** {summary.get('total_files_analyzed', 0)} C++ files\n"
-        #metadata_section += f"**Race Conditions Found:** {len(detected_races)}\n"
-        
-        # if detected_races:
-        #     # Count by severity
-        #     severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
-        #     for race in detected_races:
-        #         severity = race.get('severity', 'medium').lower()
-        #         if severity in severity_counts:
-        #             severity_counts[severity] += 1
-            
-        #     metadata_section += f"**Severity Breakdown:** {severity_counts['critical']} Critical, "
-        #     metadata_section += f"{severity_counts['high']} High, {severity_counts['medium']} Medium, "
-        #     metadata_section += f"{severity_counts['low']} Low\n"
-        
+        metadata_section += f"**Total Files in Directory:** {total_files_in_directory}\n"
+        metadata_section += f"**Previously Checked Files:** {previously_checked_files}\n"
+        metadata_section += f"**Remaining Files:** {newly_remaining_files}\n"
+        metadata_section += f"**Files with Thread Usage:** {files_with_threads}\n"
         metadata_section += "\n"
         return metadata_section
     
-    # def _create_race_code_context_section(self, result: dict, dir_path: str) -> str:
-    #     """
-    #     Create rich code context section with actual source files and thread entry summaries.
-    #     Ưu tiên:
-    #     1. Tối đa 3 file phát hiện race (file_race_count).
-    #     2. Nếu < 3, bổ sung file có nhiều thread entry points nhất.
-    #     3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (dựa vào số dòng).
-    #     Đảm bảo luôn chọn đủ 3 file nếu số lượng file C++ đầu vào >= 3.
-    #     """
-    #     import collections
-    #     context_section = "## 📁 Source Code Context\n\n"
-    #     summary = result.get('summary', {})
-    #     detected_races = result.get('potential_race_conditions', [])
-    #     markdown_reports = summary.get('markdown_reports', {})
-    #     thread_usage = result.get('thread_usage', {})
-
-    #     for file_path, usage in thread_usage.items():
-    #         logger.info(f"taikt- [thread_usage] File: {file_path} | Thread usage count: {len(usage)}")
-
-    #     # Lấy danh sách tất cả file C++ đầu vào
-    #     all_src_files = summary.get('all_src_files', [])
-    #     if not all_src_files:
-    #         # Fallback: lấy từ file_summaries nếu không có all_src_files
-    #         all_src_files = list(summary.get('file_summaries', {}).keys())
-
-    #     logger.info(f"taikt- [all_src_files] Total: {len(all_src_files)} files: {all_src_files}")
-    #     for file_path in all_src_files:
-    #         markdown = markdown_reports.get(file_path, "")
-            
-    #         if markdown.strip() == "No detect thread entrypoint functions." or not markdown.strip():
-    #             entry_points_count = 0
-    #         else:
-    #             entry_points_count = len([line for line in markdown.splitlines() if line.strip()])
-            
-    #         logger.info(f"[thread_entry_points] File: {file_path} | Entry points: {entry_points_count}\n{markdown}")
-        
-
-    #     # 1. Ưu tiên file phát hiện race
-    #     file_race_count = collections.defaultdict(int)
-    #     for race in detected_races:
-    #         for file_path in race.get('files_involved', []):
-    #             file_race_count[file_path] += 1
-    #     top_files = sorted(file_race_count.items(), key=lambda x: x[1], reverse=True)
-    #     selected_files = [file_path for file_path, _ in top_files]
-
-    #     # 2. Nếu < 3, bổ sung file có nhiều thread entry points nhất
-    #     if len(selected_files) < 3:
-    #         remaining_files = [f for f in all_src_files if f not in selected_files]
-    #         thread_entry_counts = {f: len(thread_usage.get(f, [])) for f in remaining_files}
-    #         thread_sorted = sorted(thread_entry_counts.items(), key=lambda x: x[1], reverse=True)
-    #         for f, _ in thread_sorted:
-    #             if f not in selected_files:
-    #                 selected_files.append(f)
-    #             if len(selected_files) == 3:
-    #                 break
-
-    #     # 3. Nếu vẫn < 3, bổ sung file có nhiều code nhất (số dòng)
-    #     if len(selected_files) < 3:
-    #         code_line_counts = {}
-    #         for f in all_src_files:
-    #             if f not in selected_files:
-    #                 try:
-    #                     with open(f, 'r', encoding='utf-8') as file:
-    #                         code_line_counts[f] = sum(1 for _ in file)
-    #                 except Exception:
-    #                     code_line_counts[f] = 0
-    #         code_sorted = sorted(code_line_counts.items(), key=lambda x: x[1], reverse=True)
-    #         for f, _ in code_sorted:
-    #             if f not in selected_files:
-    #                 selected_files.append(f)
-    #             if len(selected_files) == 3:
-    #                 break
-
-    #     # Nếu số lượng file đầu vào < 3 thì lấy hết
-    #     if len(all_src_files) < 3:
-    #         final_files = list(dict.fromkeys(all_src_files))  # Giữ thứ tự, loại trùng
-    #     else:
-    #         final_files = selected_files[:3]
-
-    #     # Build context_section
-    #     file_count = 0
-    #     max_file_size = 50000
-    #     for file_path in final_files:
-    #         file_count += 1
-    #         try:
-    #             if not os.path.isabs(file_path):
-    #                 abs_path = os.path.join(dir_path, file_path)
-    #             else:
-    #                 abs_path = file_path
-    #             with open(abs_path, 'r', encoding='utf-8') as f:
-    #                 content = f.read()
-    #             if len(content) > max_file_size:
-    #                 content = content[:max_file_size] + "\n\n// ... [TRUNCATED FOR BREVITY] ..."
-    #             filename = os.path.basename(file_path)
-    #             context_section += f"### {file_count}. 📁 **{filename}**\n"
-    #             context_section += f"**Path**: `{file_path}`\n"
-    #             # Race summary
-    #             file_races = [r for r in detected_races if file_path in r.get('files_involved', [])]
-    #             if file_races:
-    #                 context_section += f"**Race Conditions**: {len(file_races)} found\n"
-    #                 for race in file_races[:2]:
-    #                     context_section += f"- {race.get('type', 'unknown')}: {race.get('description', 'No description')}\n"
-    #             # Thread usage summary
-    #             file_threads = thread_usage.get(file_path, [])
-    #             if file_threads:
-    #                 context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
-    #             # Thread entry markdown
-    #             markdown = markdown_reports.get(file_path, "")
-    #             if markdown:
-    #                 context_section += f"**Thread Entry Points**:\n{markdown}\n"
-    #             # Actual code
-    #             context_section += f"\n```cpp\n{content}\n```\n\n"
-    #         except Exception as e:
-    #             filename = os.path.basename(file_path)
-    #             context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
-    #     files_analyzed = summary.get('total_files_analyzed', 0)
-    #     remaining_files = files_analyzed - len(final_files)
-    #     if remaining_files > 0:
-    #         context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
-    #     return context_section
     
     def _create_race_code_context_section(self, result: dict, dir_path: str) -> str:
         import collections
@@ -990,6 +888,16 @@ class ToolHandler:
         markdown_reports = summary.get('markdown_reports', {})
         thread_usage = result.get('thread_usage', {})
 
+        logger.info("==== [THREAD ENTRY MARKDOWN REPORTS] ====")
+        # file_path: duong dan tuyet doi
+        for file_path, markdown in markdown_reports.items():
+            logger.info("[THREAD ENTRY MARKDOWN] File: %s\n%s", file_path, markdown)
+
+        # Get previously checked files for race analysis
+        race_tracker = PersistentTracker(analysis_type="race_analysis")
+        checked_files = race_tracker.get_checked_files(dir_path)
+        logger.info(f"Previously checked files for race analysis: {checked_files}")
+
         # Lấy danh sách tất cả file C++ đầu vào
         all_src_files = summary.get('all_src_files', [])
         if not all_src_files:
@@ -997,13 +905,30 @@ class ToolHandler:
 
         logger.info(f"taikt- [all_src_files] Total: {len(all_src_files)} files: {all_src_files}")
 
-        # Nếu số lượng file <= 3 thì lấy hết
-        if len(all_src_files) <= 3:
-            final_files = list(dict.fromkeys(all_src_files))
+        # Chuyển tất cả file_path sang absolute path khi build unchecked_files
+        unchecked_files = []
+        for file_path in all_src_files:
+            abs_path = file_path if os.path.isabs(file_path) else os.path.abspath(os.path.join(dir_path, file_path))
+            relative_path = os.path.relpath(abs_path, dir_path)
+            if relative_path not in checked_files:
+                unchecked_files.append(abs_path)
+            else:
+                logger.info(f"Skipping already checked race file: {relative_path}")
+
+        logger.info(f"Unchecked race files: {len(unchecked_files)}/{len(all_src_files)} files")
+
+        # If no unchecked files, show message
+        if not unchecked_files:
+            context_section += "### ✅ All files have been checked in previous sessions.\n\n"
+            return context_section
+
+        # Nếu số lượng file unchecked <= 3 thì lấy hết
+        if len(unchecked_files) <= 3:
+            final_files = list(dict.fromkeys(unchecked_files))
         else:
-            # Tính entry_points_count và số dòng code cho từng file
+            # Tính entry_points_count và số dòng code cho từng unchecked file
             file_stats = []
-            for file_path in all_src_files:
+            for file_path in unchecked_files:
                 markdown = markdown_reports.get(file_path, "")
                 if markdown.strip() == "No detect thread entrypoint functions." or not markdown.strip():
                     entry_points_count = 0
@@ -1035,16 +960,28 @@ class ToolHandler:
                     file_path, entry_points_count, code_lines
                 )
 
+        # Track files being checked in THIS session
+        files_being_checked = []
+
         # Build context_section
         file_count = 0
         max_file_size = 50000
+        checked_filenames = [os.path.basename(f) for f in final_files]
+        context_section += f"### 📝 Files being checked in this session: {', '.join(checked_filenames)}\n\n"
+        
         for file_path in final_files:
             file_count += 1
             try:
                 if not os.path.isabs(file_path):
                     abs_path = os.path.join(dir_path, file_path)
+                    relative_path = file_path  # Store relative path for tracking
                 else:
                     abs_path = file_path
+                    relative_path = os.path.relpath(file_path, dir_path)  # Convert to relative
+                
+                # Add to files being checked in THIS session (use relative paths)
+                files_being_checked.append(relative_path)
+                
                 with open(abs_path, 'r', encoding='utf-8') as f:
                     content = f.read()
                 if len(content) > max_file_size:
@@ -1064,6 +1001,11 @@ class ToolHandler:
                     context_section += f"**Thread Usage**: {len(file_threads)} thread-related operations\n"
                 # Thread entry markdown
                 markdown = markdown_reports.get(file_path, "")
+                # logger.info(f"[THREAD ENTRY MARKDOWN - taikt] File: {file_path}\n{markdown}")
+                # key = file_path if file_path in markdown_reports else os.path.abspath(file_path)
+                markdown = markdown_reports.get(file_path, "")
+                logger.info("[taikt- THREAD ENTRY] File: %s\n%s", file_path, markdown)
+
                 if markdown:
                     context_section += f"**Thread Entry Points**:\n{markdown}\n"
                 # Actual code
@@ -1071,39 +1013,21 @@ class ToolHandler:
             except Exception as e:
                 filename = os.path.basename(file_path)
                 context_section += f"### {file_count}. 📁 **{filename}** (Error reading: {e})\n\n"
-        files_analyzed = summary.get('total_files_analyzed', 0)
-        remaining_files = files_analyzed - len(final_files)
-        if remaining_files > 0:
-            context_section += f"### 📊 **Additional Files**: {remaining_files} more C++ files will not be analyzed because of token limitation\n\n"
+        
+        # Save ONLY files being checked in this session to persistent storage (incremental)
+        if files_being_checked:
+            logger.info(f"Incrementally saving {len(files_being_checked)} NEW race files to persistent storage: {files_being_checked}")
+            race_tracker.add_checked_files(dir_path, files_being_checked)
+        
+        # Show remaining files info
+        remaining_unchecked = len(unchecked_files) - len(final_files)
+        if remaining_unchecked > 0:
+            context_section += f"### 📊 **Additional Files**: {remaining_unchecked} more C++ files available for future analysis\n\n"
+        
         return context_section
 
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
         """Create analysis prompt section with only Priority Analysis Guidelines (comment out detailed findings)"""
-        # Commented out: Detailed Race Condition Findings
-        # detected_races = race_result.get('potential_race_conditions', [])
-        # prompt_section = "## 🔍 Detailed Race Condition Findings:\n\n"
-        # prompt_section += f"**Total Detected Race Conditions**: {len(detected_races)} issues requiring attention\n\n"
-        # if not detected_races:
-        #     prompt_section += "✅ **No potential race conditions detected in static analysis.**\n\n"
-        #     prompt_section += "However, please perform a manual review focusing on:\n"
-        #     prompt_section += "1. Shared state access patterns\n"
-        #     prompt_section += "2. Thread synchronization mechanisms\n"
-        #     prompt_section += "3. Atomic operations usage\n"
-        #     prompt_section += "4. Lock-free programming patterns\n\n"
-        #     return prompt_section
-        # for i, race in enumerate(detected_races, 1):
-        #     severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(race.get('severity', 'medium').lower(), "🟡")
-        #     prompt_section += f"### {severity_emoji} Race Condition #{i}: {race.get('type', 'Unknown')} - {race.get('severity', 'Medium')} Priority\n"
-        #     prompt_section += f"- **Description**: {race.get('description', 'No description')}\n"
-        #     prompt_section += f"- **Files Involved**: {', '.join(race.get('files_involved', []))}\n"
-        #     prompt_section += f"- **Line Numbers**: {', '.join(map(str, race.get('line_numbers', [])))}\n"
-        #     prompt_section += f"- **Severity**: {race.get('severity', 'Medium')}\n"
-        #     if 'potential_causes' in race:
-        #         prompt_section += f"- **Potential Causes**: {race.get('potential_causes', 'Unknown')}\n"
-        #     if 'recommended_actions' in race:
-        #         prompt_section += f"- **Recommended Actions**: {race.get('recommended_actions', 'Unknown')}\n"
-        #     prompt_section += "\n" + "─" * 60 + "\n\n"
-        # Only keep Priority Analysis Guidelines
         prompt_section = "## 🎯 Priority Analysis Guidelines:\n\n"
         prompt_section += "1. Focus on shared state accessed by multiple threads.\n"
         prompt_section += "2. Ensure proper synchronization (mutexes, locks, atomics).\n"
@@ -1111,3 +1035,64 @@ class ToolHandler:
         prompt_section += "4. Check for lock-free and concurrent data structure usage.\n"
         prompt_section += "5. Provide before/after code examples for fixes.\n\n"
         return prompt_section
+
+    async def _handle_reset_analysis(self, arguments: dict) -> List[types.TextContent]:
+        """Reset analysis cache for fresh start"""
+        import shutil
+        try:
+            cache_dir = "/tmp/lgedv"
+            shutil.rmtree(cache_dir, ignore_errors=True)
+            message = "All analysis cache in /tmp/lgedv has been reset (directory deleted)."
+            return [types.TextContent(type="text", text=message)]
+        except Exception as e:
+            return [types.TextContent(type="text", text=f"Error resetting analysis cache: {e}")]
+
+    async def _handle_reset_mem_check(self, arguments: dict) -> List[types.TextContent]:
+        """
+        Reset memory leak analysis cache (xóa file /tmp/lgedv/memory_analysis_checked.json).
+        """
+        import os
+        file_path = "/tmp/lgedv/memory_analysis_checked.json"
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                message = "Memory leak analysis cache has been reset."
+            else:
+                message = "No memory leak analysis cache file found to reset."
+            return [types.TextContent(type="text", text=message)]
+        except Exception as e:
+            return [types.TextContent(type="text", text=f"Error resetting memory leak analysis cache: {e}")]
+
+
+    async def _handle_reset_resource_check(self, arguments: dict) -> List[types.TextContent]:
+        """
+        Reset resource leak analysis cache (xóa file /tmp/lgedv/resource_analysis_checked.json).
+        """
+        import os
+        file_path = "/tmp/lgedv/resource_analysis_checked.json"
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                message = "Resource leak analysis cache has been reset."
+            else:
+                message = "No resource leak analysis cache file found to reset."
+            return [types.TextContent(type="text", text=message)]
+        except Exception as e:
+            return [types.TextContent(type="text", text=f"Error resetting resource leak analysis cache: {e}")]
+        
+    
+    async def _handle_reset_race_check(self, arguments: dict) -> List[types.TextContent]:
+        """
+        Reset race analysis cache (xóa file /tmp/lgedv/race_analysis_checked.json).
+        """
+        import os
+        file_path = "/tmp/lgedv/race_analysis_checked.json"
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                message = "Race analysis cache has been reset."
+            else:
+                message = "No race analysis cache file found to reset."
+            return [types.TextContent(type="text", text=message)]
+        except Exception as e:
+            return [types.TextContent(type="text", text=f"Error resetting race analysis cache: {e}")]

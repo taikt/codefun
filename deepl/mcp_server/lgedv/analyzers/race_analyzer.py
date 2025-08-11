@@ -8,6 +8,7 @@ from typing import Dict, List
 from lgedv.modules.config import get_src_dir, setup_logging
 from lgedv.modules.data_models import SharedResource, ThreadUsage, RaceCondition, AnalysisResult
 from lgedv.modules.file_utils import list_source_files
+from lgedv.modules.persistent_storage import PersistentTracker
 
 logger = setup_logging()
 
@@ -405,73 +406,135 @@ class RaceConditionAnalyzer:
     
     def __init__(self):
         self.parser = CppParser()
-    
+        self.tracker = PersistentTracker(analysis_type="race_analysis")
+
     def analyze_codebase(self, dir_path: str = None) -> AnalysisResult:
         """
-        Phân tích race condition trong toàn bộ codebase
+        Phân tích thread entry points trong toàn bộ codebase - incremental analysis
         
         Args:
             dir_path: Thư mục cần phân tích
             
         Returns:
-            AnalysisResult: Kết quả phân tích
+            AnalysisResult: Kết quả phân tích với thread entry points
         """
-        if dir_path is None:
-            dir_path = get_src_dir()
+        # Always use src_dir from config
+        target_dir = get_src_dir()
         
-        # Thu thập tất cả file C++
-        src_files = list_source_files(dir_path)
-        full_paths = [os.path.join(dir_path, f) for f in src_files]
+        logger.info(f"Starting incremental thread entry analysis: {target_dir}")
         
-        # Phân tích từng file
+        # Collect all C++ files
+        all_src_files = list_source_files(target_dir)
+        
+        # Get previously checked files from persistent storage
+        checked_files = self.tracker.get_checked_files(target_dir)
+        
+        # Filter out files that haven't been checked (relative paths)
+        remaining_files = [f for f in all_src_files if f not in checked_files]
+        
+        logger.info(f"Total source files: {len(all_src_files)}")
+        logger.info(f"Previously checked files: {len(checked_files)}")
+        logger.info(f"Remaining files to analyze: {len(remaining_files)}")
+        
+        # Handle case when all files have been checked
+        if not remaining_files:
+            return AnalysisResult(
+                thread_usage={},
+                summary={
+                    "analysis_method": "incremental_thread_entry_analysis",
+                    "status": "all_files_already_checked",
+                    "directory": target_dir,
+                    "total_files_in_directory": len(all_src_files),
+                    "previously_checked_files": len(checked_files),
+                    "newly_analyzed_files": 0,
+                    "remaining_files": [],
+                    "files_with_threads": 0,
+                    "analysis_completeness": "all_files_checked",
+                    "recommendations": ["All files have been analyzed in previous sessions"],
+                    "session_stats": self.tracker.get_analysis_stats(target_dir),
+                    "markdown_reports": {},
+                    "file_summaries": {},
+                    "all_src_files": all_src_files  # For tool handler context selection
+                }
+            )
+        
+        # Handle case when no C++ files found
+        if len(all_src_files) == 0:
+            return AnalysisResult(
+                thread_usage={},
+                summary={
+                    "analysis_method": "incremental_thread_entry_analysis",
+                    "status": "no_src_files_found",
+                    "directory": target_dir,
+                    "total_files_in_directory": 0,
+                    "newly_analyzed_files": 0,
+                    "files_with_threads": 0,
+                    "recommendations": ["No C++ files found in the specified directory"],
+                    "all_src_files": []
+                }
+            )
+        
+        # Only analyze remaining files (not checked yet)
+        full_paths = [os.path.join(target_dir, f) for f in remaining_files]
+        
+        # Analyze each remaining file for thread entry points only
         all_resources = {}
         all_threads = {}
         markdown_reports = {}
-        for file_path in full_paths:
+        
+        logger.info(f"Analyzing {len(remaining_files)} remaining files for thread entry points...")
+        
+        for i, file_path in enumerate(full_paths, 1):
+            logger.info(f"Analyzing file {i}/{len(full_paths)}: {os.path.basename(file_path)}")
             analysis = self.parser.parse_file(file_path)
             all_resources[file_path] = analysis["shared_resources"]
             all_threads[file_path] = analysis["thread_usage"]
-            # Sinh markdown cho hàm entrypoint thread
+            
+            # Generate markdown for thread entry functions
             markdown_md = self.parser.generate_thread_entry_markdown(analysis.get("thread_entry_functions", []))
             markdown_reports[file_path] = markdown_md
-            # Log thông tin markdown cho từng file
+            
+            # Log thread entry markdown for each file
             logger.info("[THREAD ENTRY MARKDOWN] File: %s\n%s", file_path, markdown_md)
-            thread_entry_md = markdown_reports[file_path]
-            logger.info(f"[THREAD_ENTRY_MD] File: {file_path} | Value:\n{thread_entry_md}")
-        # Tìm potential race conditions
-        # resource_access_map = self._build_resource_access_map(all_resources)
-        # potential_races = self._detect_race_conditions(resource_access_map, all_threads)
-        # Tạo summary chi tiết cho từng file
+        
+        # Create detailed file summaries (focus on thread entry points only)
         file_summaries = {}
         for file_path in full_paths:
             file_name = os.path.basename(file_path)
             thread_count = len(all_threads.get(file_path, []))
-            # race_count = sum(1 for rc in potential_races if file_path in rc.files_involved)
-            # races = [f"{rc.type}: {rc.description}" for rc in potential_races if file_path in rc.files_involved]
             thread_entry_md = markdown_reports[file_path]
+            
             summary_text = (
                 f"### 1. 📁 **{file_name}**\n"
                 f"**Path**: `{file_path}`\n"
-                #f"**Race Conditions**: {race_count} found\n" + '\n'.join(races) +
-                f"\n**Thread Usage**: {thread_count} thread-related operations"
+                f"**Thread Usage**: {thread_count} thread-related operations"
             )
             if thread_entry_md and thread_entry_md.strip() and thread_entry_md.strip() != "No detect thread entrypoint functions.":
                 summary_text += f"\n**Thread Entrypoints:**\n{thread_entry_md}"
             summary_text += "\n"
             file_summaries[file_path] = summary_text
-        # Tạo summary tổng hợp
+        
+        # Create comprehensive summary (no race detection)
         summary = {
-            "total_files_analyzed": len(src_files),
-            #"total_shared_resources": len(resource_access_map),
-            #"potential_races": len(potential_races),
+            "analysis_method": "incremental_thread_entry_analysis",
+            "directory": target_dir,
+            "total_files_in_directory": len(all_src_files),
+            "total_files_analyzed": len(remaining_files),
+            "previously_checked_files": len(checked_files),
+            "newly_analyzed_files": len(remaining_files),
+            "remaining_files": remaining_files,
             "files_with_threads": len([f for f, threads in all_threads.items() if threads]),
+            "analysis_completeness": "incremental_analysis",
             "markdown_reports": markdown_reports,
-            "file_summaries": file_summaries
+            "file_summaries": file_summaries,
+            "session_stats": self.tracker.get_analysis_stats(target_dir),
+            "all_src_files": all_src_files  # For tool handler context selection
         }
+        
+        logger.info(f"Thread entry analysis completed for {len(remaining_files)} files")
+        
         return AnalysisResult(
-            #shared_resources=resource_access_map,
             thread_usage=all_threads,
-            #potential_race_conditions=potential_races,
             summary=summary
         )
     
@@ -488,33 +551,6 @@ class RaceConditionAnalyzer:
         
         return resource_access_map
     
-    def _detect_race_conditions(self, resource_access_map: Dict, 
-                               all_threads: Dict) -> List[RaceCondition]:
-        """Phát hiện race conditions"""
-        potential_races = []
-        
-        # Tìm shared resources được truy cập từ nhiều nơi
-        for resource_name, accesses in resource_access_map.items():
-            if len(accesses) > 1:
-                # Check if there are threads in involved files
-                files_involved = list(set(access['file'] for access in accesses))
-                has_threads = any(all_threads.get(f, []) for f in files_involved)
-                
-                if has_threads:
-                    severity = self._assess_severity(resource_name, accesses, all_threads)
-                    
-                    race_condition = RaceCondition(
-                        severity=severity,
-                        type="data_race",
-                        description=f"Potential data race on shared resource '{resource_name}'",
-                        files_involved=files_involved,
-                        resources_involved=[resource_name],
-                        line_numbers=[access['line'] for access in accesses],
-                        fix_recommendation=f"Add proper synchronization (mutex/atomic) for '{resource_name}'"
-                    )
-                    potential_races.append(race_condition)
-        
-        return potential_races
     
     def _assess_severity(self, resource_name: str, accesses: List[Dict], all_threads: Dict) -> str:
         """Đánh giá mức độ nghiêm trọng của race condition"""
