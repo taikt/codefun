@@ -159,7 +159,7 @@ class PromptTemplates:
         """Template cho việc lấy và ghi nhớ context code cho mọi loại file source"""
         return (
             "You are a code context assistant. Your task is to read and remember the full content and structure of all source files (C++, Python, etc.) in the current project directory.\n"
-            "If file contents are not yet loaded, call the tool 'get_src_files_content' from the MCP server to retrieve all relevant source files in the directory specified by SRC_DIR.\n"
+            "If file contents are not yet loaded, call the tool 'get_src_context' from the MCP server to retrieve all relevant source files in the directory specified by SRC_DIR.\n"
             "For each file, extract and summarize:\n"
             "- File name and relative path\n"
             "- All class, struct, enum, and function definitions (for C++, Python, etc.)\n"

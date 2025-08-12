@@ -45,7 +45,7 @@ class PromptHandler:
                 return await self._handle_memory_leak_analysis(arguments)
             elif name == "check_resources":
                 return await self._handle_resource_leak_analysis(arguments)
-            elif name == "get_context":
+            elif name == "get_code_context":
                 return await self._handle_code_context()  
             elif name == "reset_analysis":
                 return await self._handle_reset_analysis_prompt(arguments)

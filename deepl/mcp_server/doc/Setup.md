@@ -62,5 +62,9 @@ pip install codeguard-lgedv
 ## How to use report
 python report.py in.md -o out.md
 
+## get code context
+#get_src_context dir=/home/worker/src/codefun/deepl/cguard/src/helpers
+(right click on a code dir in vscode -> Copy Path)
+
 
 

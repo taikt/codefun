@@ -9,7 +9,8 @@ from lgedv.modules.rule_fetcher import (
     fetch_misra_rule, fetch_lgedv_rule, fetch_certcpp_rule,
     fetch_custom_rule
 )
-from lgedv.modules.file_utils import list_source_files, get_src_files_content
+from lgedv.modules.file_utils import list_source_files
+
 from lgedv.analyzers.race_analyzer import analyze_race_conditions_in_codebase
 from lgedv.analyzers.memory_analyzer import MemoryAnalyzer, analyze_leaks
 from lgedv.analyzers.resource_analyzer import ResourceAnalyzer
@@ -39,6 +40,7 @@ class ToolHandler:
         Returns:
             List content response
         """
+        logger.info("=== handle_tool_call ENTERED ===")
         logger.info(f"Tool called: {name} with arguments: {arguments}")
         
         try:
@@ -55,9 +57,10 @@ class ToolHandler:
             # File operations
             elif name == "list_source_files":
                 return await self._handle_list_source_files(arguments)
-            elif name == "get_src_files_content":
-                return await self._handle_get_src_files_content(arguments)
-            
+            elif name == "get_src_context":
+                logger.info(f"get_src_context called with arguments: {arguments}")
+                return await self._handle_get_src_context(arguments)
+
             # Analysis tools
             elif name == "detect_races":
                 return await self._handle_detect_races(arguments)
@@ -108,12 +111,75 @@ class ToolHandler:
         files = list_source_files(dir_path)
         logger.info(f"list_source_files found {len(files)} files")
         return [types.TextContent(type="text", text="\n".join(files))]
-    
-    async def _handle_get_src_files_content(self, arguments: dict) -> List[types.TextContent]:
-        """Handle get_src_files_content tool"""
-        dir_path = get_src_dir()
-        content = get_src_files_content(dir_path)
-        logger.info(f"get_src_files_content completed for dir: {dir_path}")
+
+    async def _handle_get_src_context(self, arguments: dict) -> List[types.TextContent]:
+        """
+        Lấy toàn bộ code trong thư mục arguments.get("dir"), bao gồm cả thư mục con.
+        Kiểm tra kỹ các trường hợp lỗi: không tồn tại, không phải thư mục, nhiều thư mục trùng tên, không có file code.
+        """
+        dir_path = arguments.get("dir")
+        base_path = get_src_dir()
+        # abs_path = None
+        logger.info(f"[get_context] Walking directory: {base_path}")
+
+        # Xác định đường dẫn tuyệt đối
+        if not dir_path:
+            abs_path = base_path
+        elif os.path.isabs(dir_path):
+            abs_path = dir_path
+        else:
+            if "/" not in dir_path and "\\" not in dir_path:
+                matches = []
+                for root, dirs, files in os.walk(base_path):
+                    for d in dirs:
+                        if d == dir_path:
+                            matches.append(os.path.join(root, d))
+                if len(matches) == 1:
+                    abs_path = matches[0]
+                elif len(matches) == 0:
+                    logger.error(f"Directory '{dir_path}' not found in {base_path}")
+                    raise ValueError(f"Directory '{dir_path}' not found in {base_path}")
+                else:
+                    logger.error(f"Found multiple directories named '{dir_path}':\n" + "\n".join(matches))
+                    raise ValueError(f"Found multiple directories named '{dir_path}':\n" + "\n".join(matches))
+            else:
+                abs_path = os.path.join(base_path, dir_path)
+
+        # Kiểm tra tồn tại và là thư mục
+        if not abs_path or not os.path.exists(abs_path):
+            logger.error(f"Directory '{abs_path}' does not exist.")
+            raise ValueError(f"Directory '{abs_path}' does not exist.")
+        if not os.path.isdir(abs_path):
+            logger.error(f"Path '{abs_path}' is not a directory.")
+            raise ValueError(f"Path '{abs_path}' is not a directory.")
+
+        logger.info(f"[get_context] Walking directory: {abs_path}")
+        code_contents = []
+        SRC_EXTENSIONS = ('.cpp', '.h', '.hpp', '.cc', '.cxx', '.py', '.java', '.js', '.jsx', '.ts')
+        found_code_file = False
+        for root, dirs, files in os.walk(abs_path):
+            logger.info(f"[get_context] Current dir: {root}")
+            logger.info(f"[get_context] Files in dir: {files}")
+            for file in files:
+                logger.info(f"[get_context] Checking file: {file}")
+                if file.endswith(SRC_EXTENSIONS):
+                    found_code_file = True
+                    file_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(file_path, abs_path)
+                    logger.info(f"[get_context] Found code file: {file_path} (rel: {rel_path})")
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            code_contents.append(f"// File: {rel_path}\n" + f.read())
+                    except Exception as e:
+                        logger.error(f"Error reading file {file_path}: {e}")
+                        code_contents.append(f"// File: {rel_path}\n// Error reading file: {e}\n")
+
+        if not found_code_file:
+            logger.warning(f"No code files found in directory '{abs_path}'.")
+            return [types.TextContent(type="text", text=f"// No code files found in directory '{abs_path}'.")]
+
+        content = "\n\n".join(code_contents)
+        # logger.info(f"get_context (recursive) completed for dir: {abs_path}")
         return [types.TextContent(type="text", text=content)]
     
     async def _handle_detect_races(self, arguments: dict) -> List[types.TextContent]:

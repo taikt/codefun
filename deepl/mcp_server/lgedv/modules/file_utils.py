@@ -32,32 +32,32 @@ def list_source_files(dir_path: str = None) -> List[str]:
                 src_files.append(rel_path)
     return src_files
 
-def get_src_files_content(dir_path: str = None) -> str:
-    """
-    Lấy nội dung của tất cả file source trong thư mục
+# def get_context(dir_path: str = None) -> str:
+#     """
+#     Lấy nội dung của tất cả file source trong thư mục
     
-    Args:
-        dir_path: Thư mục cần đọc (optional)
+#     Args:
+#         dir_path: Thư mục cần đọc (optional)
         
-    Returns:
-        str: Nội dung tất cả các file được nối lại
-    """
-    if dir_path is None:
-        dir_path = get_src_dir()
+#     Returns:
+#         str: Nội dung tất cả các file được nối lại
+#     """
+#     if dir_path is None:
+#         dir_path = get_src_dir()
     
-    src_files = list_source_files(dir_path)
-    contents = []
+#     src_files = list_source_files(dir_path)
+#     contents = []
     
-    for file in src_files:
-        abs_path = os.path.join(dir_path, file)
-        try:
-            with open(abs_path, "r", encoding="utf-8") as f:
-                code = f.read()
-            contents.append(f"// File: {file}\n{code}\n")
-        except Exception as e:
-            contents.append(f"// Error reading {file}: {e}\n")
+#     for file in src_files:
+#         abs_path = os.path.join(dir_path, file)
+#         try:
+#             with open(abs_path, "r", encoding="utf-8") as f:
+#                 code = f.read()
+#             contents.append(f"// File: {file}\n{code}\n")
+#         except Exception as e:
+#             contents.append(f"// Error reading {file}: {e}\n")
     
-    return "\n".join(contents)
+#     return "\n".join(contents)
 
 def read_file_content(file_path: str) -> str:
     """

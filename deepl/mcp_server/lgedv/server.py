@@ -129,14 +129,14 @@ def main(port: int, transport: str):
                     },
                 ),
                 types.Tool(
-                    name="get_src_files_content",
-                    description="Get the content of all .cpp files in the current src_dir or given directory as a single response for context.",
+                    name="get_src_context",
+                    description="Get the content of all files in the current given directory as a single response for context.",
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "dir_path": {
+                            "dir": {
                                 "type": "string",
-                                "description": "Directory to search for .cpp files (optional, default is src_dir or cwd)",
+                                "description": "Directory to search for code files.",
                             }
                         },
                     },
@@ -222,8 +222,8 @@ def main(port: int, transport: str):
                     description="Analyze potential resource leaks (file/socket/handle).",
                 ),
                 types.Prompt(
-                    name="get_context",
-                    description="Load context for all source files in the current directory."
+                    name="get_code_context",
+                    description="Load content for all source files in the current directory."
                 ),
                 types.Prompt(
                     name="reset_analysis",
