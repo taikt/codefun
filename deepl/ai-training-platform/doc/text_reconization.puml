@@ -1,0 +1,17 @@
+@startuml
+actor Client
+participant "Django Web Server" as Django
+participant "OCR Inference Module" as OCR
+participant "CNN (VGG)" as CNN
+participant "Transformer Decoder" as Transformer
+
+Client -> Django : POST /infer/ocrLines (ảnh hoặc file)
+Django -> OCR : Gọi hàm ocr_line(np_array)
+OCR -> CNN : Trích xuất đặc trưng ảnh (feature map)
+CNN --> OCR : Feature map
+OCR -> Transformer : Dùng feature map để giải mã chuỗi ký tự (decode sequence)
+Transformer --> OCR : Chuỗi ký tự (text) đã nhận dạng
+OCR -> Django : Trả kết quả nhận dạng (text)
+Django -> Client : Response (text nhận dạng)
+
+@enduml

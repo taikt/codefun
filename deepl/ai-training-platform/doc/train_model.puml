@@ -1,0 +1,24 @@
+@startuml
+actor Client
+participant "Django Web Server" as Django
+participant "Training Engine" as Training
+participant "Admin/Labeling Service" as Admin
+participant "MinIO Storage" as MinIO
+participant "Database" as DB
+
+Client -> Django : POST /train/train-model (code)
+Django -> Training : Start train_model(form_code, id)
+Training -> Admin : get_train_data(form_code)
+Admin --> Training : Training data
+Training -> Admin : get_labels(form_code)
+Admin --> Training : Labels
+Training -> MinIO : Download raw files (if needed)
+Training -> Training : Preprocess data, prepare dataset
+Training -> Training : Train YOLO model
+Training -> MinIO : Upload model weights (.pt, .onnx)
+MinIO --> Training : Model paths
+Training -> DB : Create/Update TrainSession (status, progress, accuracy, paths)
+Training -> Django : Return training result/status
+Django -> Client : Response (success/fail, info)
+
+@enduml

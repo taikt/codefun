@@ -1,0 +1,28 @@
+@startuml
+!define RECTANGLE class
+
+RECTANGLE Client
+RECTANGLE "Django Web Server" as Django
+RECTANGLE "OCR Inference Module" as OCR
+RECTANGLE "Training Engine" as Training
+RECTANGLE "MinIO Storage" as MinIO
+RECTANGLE "Database" as DB
+RECTANGLE "AI Model Weights" as Weights
+RECTANGLE "Admin/Labeling Service" as Admin
+
+Client -[#0000FF]-> Django : HTTP(S) requests
+Django -[#green]-> OCR : /infer/* API (ocrLines, ocrForm, ocrFormURL, updateModel)
+Django -[#green]-> Training : /train/* API (train-model, get-trains, stop-trains)
+Django -[#green]-> Admin : Labeling, file info
+
+OCR -[#red]-> Weights : Load model weights (.pth, .onnx, vocab)
+OCR -[#red]-> MinIO : Download model files (update_model)
+OCR -[#red]-> DB : Query InferModel
+
+Training -[#red]-> MinIO : Upload/Download model weights
+Training -[#red]-> Weights : Save/Export model
+Training -[#red]-> Admin : Get training data, labels
+
+Django -[#red]-> DB : CRUD TrainSession, InferModel
+
+@enduml

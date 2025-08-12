@@ -1,0 +1,20 @@
+@startuml
+title "Chi tiết pipeline nhận dạng text bằng CNN và Transformer"
+
+actor "OCR API" as API
+participant "Preprocessing" as Pre
+participant "CNN (VGG)" as CNN
+participant "Feature Map" as FM
+participant "Positional Encoding" as PE
+participant "Transformer Decoder" as Transformer
+participant "Text Output" as Text
+
+API -> Pre : Nhận ảnh đầu vào (image/patch)
+Pre -> CNN : Chuẩn hóa, resize, chuyển ảnh thành tensor
+CNN -> FM : Trích xuất đặc trưng (feature extraction)
+FM -> PE : Thêm thông tin vị trí (positional encoding)
+PE -> Transformer : Đầu vào encoder/decoder
+Transformer -> Text : Dịch đặc trưng thành chuỗi ký tự (decode sequence)
+Text --> API : Trả kết quả text
+
+@enduml
