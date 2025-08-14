@@ -63,7 +63,9 @@ pip install codeguard-lgedv
 python report.py in.md -o out.md
 
 ## get code context
-#get_src_context dir=/home/worker/src/codefun/deepl/cguard/src/helpers
+### e.g tiger framework
+#get_src_context dir=/home/worker/src/tsu/nad/LGE/tiger-src/servicelayer/core/framework/utils
+
 (right click on a code dir in vscode -> Copy Path)
 
 
