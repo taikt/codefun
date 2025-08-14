@@ -1,41 +1,47 @@
 ## Rule LGEDV_CRCL_0001:
-Definition: Use definition/enumerations instead of magic number.
+Definition: Always use named constants or enumerations instead of hard-coded numeric values (magic numbers) in the code.
 
 ## Rule LGEDV_CRCL_0002:
-Definition: Remove duplicated source code. Make a common class to handle similar actions.
+Definition: Eliminate duplicate code by creating shared classes or functions for similar operations.
 
 ## Rule LGEDV_CRCL_0003:
-Definition: Allows up to 1 return point in a function. Multiple returns are a violation.
+Definition: Only allow early return statements for guard clauses (such as input validation) at the start of a function. The main logic of the function must have only one return statement at the end.
 
 ## Rule LGEDV_CRCL_0004:
-Definition: Default (Initialization) value of return need to be a negative/false/failure or any other error meaning. Initialize the returning value to FAILED or the negative meaning value.
+Definition: Initialize return values to an error or failure state (e.g., negative, false, or FAILED) by default.
+
+## Rule LGEDV_CRCL_0008:
+All log statements must use a common utility function to ensure a consistent log format throughout the codebase. Do not use custom or ad-hoc logging formats.
 
 ## Rule LGEDV_CRCL_0009:
-Definition: Recommended Cyclomatic Complexity is lower than 10 (some of function should be break down for readability, maintainability).
+Definition: Functions should have a cyclomatic complexity less than 10. Refactor complex functions for better readability and maintainability.
 
 ## Rule LGEDV_CRCL_0010:
-Definition: Return value should be valid. Only return True has no meaning. Make change on return type if return value is not necessary.
+Definition: Return values must be meaningful. Avoid returning only a boolean (e.g., just True). Change the return type if a simple boolean is not sufficient.
 
 ## Rule LGEDV_CRCL_0011:
-Definition: Add at least one log in the beginning of each function for log traceability, especially the interface function which called by other component. Add log to track the important information for branching.
+Definition: Add a log statement at the start of each function, especially for public interfaces. Log important information for decision branches.
 
 ## Rule LGEDV_CRCL_0012:
-Definition: Should sync the data to make sure the actual file content reflect our modification. Interact with raw file need to call sync after flush or close with consideration of performance trade-off.
+Definition: Ensure file data is synchronized to disk after modifications by calling sync after flush or close, considering performance impact.
 
-## Rule LGEDV_CRCL_0013 
-Definition: Every switch case must have a break, if there is no break it is a violation.
+## Rule LGEDV_CRCL_0013:
+Definition: Every case in a switch statement must end with a break statement unless intentional fall-through is clearly documented.
 
 ## Rule LGEDV_CRCL_0014:
-Definition: Pointer parameters need to be null checked before using it, and out-of-bound index memory accessing (access array/vector by index) should be checked before using it.
+Definition: Always check pointer parameters for null before use, and validate array or vector indices to prevent out-of-bounds access.
 
 ## Rule LGEDV_CRCL_0015:
-Definition: A case (having >= 2 logical lines) in switch case should be a block of code. Wrap statements of a case in a curly bracce pair {}.
+Definition: If a switch case contains two or more statements, enclose them in curly braces to form a code block.
 
 ## Rule LGEDV_CRCL_0016:
-Definition: Use bounded C functions instead of unbounded ones to prevent buffer overrun, for example, replace sprintf by snprintf.
+Definition: Use bounded C functions (e.g., snprintf instead of sprintf) to prevent buffer overflows.
+
+## Rule LGEDV_CRCL_0018:
+Definition: Avoid naming conflicts between classes or constants in libraries and applications by using unique names or namespaces.
 
 ## Rule LGEDV_CRCL_0019:
-Definition: Every function need to return valuable/meaningful value. For void return functions need to be rechecked if void is really enough or not. 
+Definition: Every function should return a meaningful value. Reconsider the use of void return types; use them only when no return value is necessary.
 
 ## Rule LGEDV_CRCL_0020:
-Definition: Every allocated resources (memory, file, mutex lock, etc) need to be released properly. Delete, free memories, close files, unlock mutex etc before leave the function.
+Definition: Release all allocated resources (memory, files, mutexes, etc.) before exiting a function to prevent resource leaks.

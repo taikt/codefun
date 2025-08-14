@@ -1,0 +1,26 @@
+@startuml
+package "YOLO Service" {
+  [YoloInference] <<class>>
+  [Yolov8PoseCard] <<class>>
+  [ONNX Model] <<artifact>>
+  [TensorRT Engine] <<artifact>>
+  [cv2] <<library>>
+  [numpy] <<library>>
+  [onnxruntime] <<library>>
+  [pycuda] <<library>>
+  [tensorrt] <<library>>
+
+  [YoloInference] -down-> [ONNX Model] : sử dụng
+  [YoloInference] -down-> [onnxruntime] : thực thi mô hình
+  [YoloInference] -down-> [cv2] : tiền/hậu xử lý ảnh
+  [YoloInference] -down-> [numpy] : xử lý dữ liệu
+
+  [Yolov8PoseCard] -down-> [TensorRT Engine] : sử dụng
+  [Yolov8PoseCard] -down-> [pycuda] : quản lý bộ nhớ GPU
+  [Yolov8PoseCard] -down-> [tensorrt] : thực thi mô hình
+  [Yolov8PoseCard] -down-> [cv2] : tiền/hậu xử lý ảnh
+  [Yolov8PoseCard] -down-> [numpy] : xử lý dữ liệu
+}
+
+[YoloInference] ..> [Yolov8PoseCard] : cùng chức năng nhận diện object
+@enduml

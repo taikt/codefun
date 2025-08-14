@@ -63,78 +63,185 @@ class PromptHandler:
             raise
     
     async def _handle_lgedv_check(self) -> types.GetPromptResult:
-        """Handle LGEDV code checking prompt"""
-        prompt = self.templates.get_lgedv_analysis_prompt()
-        
+        import os
+        prompt_lang = os.environ.get("prompt_lang", "en")
+        if prompt_lang == "vi":
+            prompt = (
+                "Bạn là chuyên gia phân tích tĩnh C++. Hãy phân tích file hiện tại để phát hiện vi phạm các quy tắc LGEDV cho phần mềm ô tô.\n"
+                "Nếu chưa có file rule, hãy gọi fetch_lgedv_rule từ MCP server.\n"
+                "Luôn sử dụng bộ quy tắc LGEDV mới nhất vừa fetch để phân tích, không dùng rule cũ hoặc built-in.\n"
+                "Hãy ghi rõ bộ rule nào đang dùng trong báo cáo.\n\n"
+                "**YÊU CẦU PHÂN TÍCH:**\n"
+                "- Tìm TẤT CẢ vi phạm quy tắc trên\n"
+                "- Tập trung vào vi phạm LGEDV\n"
+                "- Ghi rõ số hiệu rule (VD: LGEDV_CRCL_0001, MISRA Rule 8-4-3, DCL50-CPP, RS-001)\n"
+                "- Kiểm tra mọi dòng code, kể cả unreachable, dead code, return sớm, magic number\n"
+                "- Kiểm tra mọi điểm acquire/release resource, mọi exit point, mọi function/method\n"
+                "- Đưa ra code fix cụ thể cho từng lỗi\n"
+                "- Ghi số dòng code gốc trong báo cáo\n\n"                
+                "**ĐỊNH DẠNG KẾT QUẢ:**\n"
+                "Với mỗi lỗi:\n"
+                "## 🚨 Vấn đề [#]: [Mô tả ngắn]\n\n"
+                "**Rule vi phạm:** [SỐ HIỆU] - [Mô tả rule]\n\n"
+                "**Vị trí:** [tên hàm hoặc global/unknown]\n\n"
+                "**Mức độ:** [Critical/High/Medium/Low]\n\n"
+                "**Code hiện tại:**\n"
+                "```cpp\n[code lỗi]\n```\n"
+                "**Code đã sửa:**\n"
+                "```cpp\n[code đúng]\n```\n"
+                "**Giải thích:** [Vì sao vi phạm và cách sửa]\n\n"             
+                "**Lưu ý:** Nếu cần toàn bộ file code đã fix, hãy yêu cầu rõ ràng."
+            )
+        else:
+            prompt = self.templates.get_lgedv_analysis_prompt()
         messages = [
             types.PromptMessage(
                 role="user",
                 content=types.TextContent(type="text", text=prompt),
             )
         ]
-        
         result = types.GetPromptResult(
             messages=messages,
             description="A prompt for LGEDV rule on current file.",
         )
-        
         logger.info("LGEDV check prompt completed")
         return result
     
     async def _handle_misra_check(self) -> types.GetPromptResult:
         """Handle MISRA code checking prompt"""
-        prompt = self.templates.get_misra_analysis_prompt()
-        
+        import os
+        prompt_lang = os.environ.get("prompt_lang", "en")
+        if prompt_lang == "vi":
+            prompt = (
+                "Bạn là chuyên gia phân tích tĩnh C++. Hãy phân tích file hiện tại để phát hiện vi phạm các quy tắc MISRA C++ 2008 cho phần mềm an toàn.\n"
+                "Nếu chưa có file rule, hãy gọi fetch_misra_rule từ MCP server.\n"
+                "Luôn sử dụng bộ quy tắc MISRA mới nhất vừa fetch để phân tích, không dùng rule cũ hoặc built-in.\n"
+                "Hãy ghi rõ bộ rule nào đang dùng trong báo cáo.\n\n"
+                "**YÊU CẦU PHÂN TÍCH:**\n"
+                "- Tìm TẤT CẢ vi phạm quy tắc trên\n"
+                "- Tập trung vào vi phạm MISRA\n"
+                "- Ghi rõ số hiệu rule (VD: MISRA Rule 8-4-3, LGEDV_CRCL_0001, DCL50-CPP, RS-001)\n"
+                "- Kiểm tra mọi dòng code, kể cả unreachable, dead code, return sớm, magic number\n"
+                "- Kiểm tra mọi điểm acquire/release resource, mọi exit point, mọi function/method\n"
+                "- Đưa ra code fix cụ thể cho từng lỗi\n"
+                "- Ghi số dòng code gốc trong báo cáo\n\n"
+                "**ĐỊNH DẠNG KẾT QUẢ:**\n"
+                "Với mỗi lỗi:\n"
+                "## 🚨 Vấn đề [#]: [Mô tả ngắn]\n\n"
+                "**Rule vi phạm:** [SỐ HIỆU] - [Mô tả rule]\n\n"
+                "**Vị trí:** [tên hàm hoặc global/unknown]\n\n"
+                "**Mức độ:** [Critical/High/Medium/Low]\n\n"
+                "**Code hiện tại:**\n"
+                "```cpp\n[code lỗi]\n```\n"
+                "**Code đã sửa:**\n"
+                "```cpp\n[code đúng]\n```\n"
+                "**Giải thích:** [Vì sao vi phạm và cách sửa]\n\n"
+                "**Lưu ý:** Nếu cần toàn bộ file code đã fix, hãy yêu cầu rõ ràng."
+            )
+        else:
+            prompt = self.templates.get_misra_analysis_prompt()
         messages = [
             types.PromptMessage(
                 role="user",
                 content=types.TextContent(type="text", text=prompt),
             )
         ]
-        
         result = types.GetPromptResult(
             messages=messages,
             description="A prompt for MISRA rule on current file.",
         )
-        
         logger.info("MISRA check prompt completed")
         return result
     
     async def _handle_certcpp_check(self) -> types.GetPromptResult:
         """Handle CERT C++ code checking prompt"""
-        prompt = self.templates.get_certcpp_analysis_prompt()
-        
+        import os
+        prompt_lang = os.environ.get("prompt_lang", "en")
+        if prompt_lang == "vi":
+            prompt = (
+                "Bạn là chuyên gia phân tích tĩnh C++. Hãy phân tích file hiện tại để phát hiện vi phạm các quy tắc CERT C++ Secure Coding Standard.\n"
+                "Nếu chưa có file rule, hãy gọi fetch_certcpp_rule từ MCP server.\n"
+                "Luôn sử dụng bộ quy tắc CERT C++ mới nhất vừa fetch để phân tích, không dùng rule cũ hoặc built-in.\n"
+                "Hãy ghi rõ bộ rule nào đang dùng trong báo cáo.\n\n"
+                "**YÊU CẦU PHÂN TÍCH:**\n"
+                "- Tìm TẤT CẢ vi phạm quy tắc trên\n"
+                "- Tập trung vào vi phạm CERT\n"
+                "- Ghi rõ số hiệu rule (VD: DCL50-CPP, MISRA Rule 8-4-3, LGEDV_CRCL_0001, RS-001)\n"
+                "- Kiểm tra mọi dòng code, kể cả unreachable, dead code, return sớm, magic number\n"
+                "- Kiểm tra mọi điểm acquire/release resource, mọi exit point, mọi function/method\n"
+                "- Đưa ra code fix cụ thể cho từng lỗi\n"
+                "- Ghi số dòng code gốc trong báo cáo\n\n"
+                "**ĐỊNH DẠNG KẾT QUẢ:**\n"
+                "Với mỗi lỗi:\n"
+                "## 🚨 Vấn đề [#]: [Mô tả ngắn]\n\n"
+                "**Rule vi phạm:** [SỐ HIỆU] - [Mô tả rule]\n\n"
+                "**Vị trí:** [tên hàm hoặc global/unknown]\n\n"
+                "**Mức độ:** [Critical/High/Medium/Low]\n\n"
+                "**Code hiện tại:**\n"
+                "```cpp\n[code lỗi]\n```\n"
+                "**Code đã sửa:**\n"
+                "```cpp\n[code đúng]\n```\n"
+                "**Giải thích:** [Vì sao vi phạm và cách sửa]\n\n"               
+                "**Lưu ý:** Nếu cần toàn bộ file code đã fix, hãy yêu cầu rõ ràng."
+            )
+        else:
+            prompt = self.templates.get_certcpp_analysis_prompt()
         messages = [
             types.PromptMessage(
                 role="user",
                 content=types.TextContent(type="text", text=prompt),
             )
         ]
-        
         result = types.GetPromptResult(
             messages=messages,
             description="A prompt for CERT C++ rule on current file.",
         )
-        
         logger.info("CERT C++ check prompt completed")
         return result
     
     async def _handle_custom_check(self) -> types.GetPromptResult:
         """Handle Custom rule checking prompt"""
-        prompt = self.templates.get_custom_analysis_prompt()
-        
+        import os
+        prompt_lang = os.environ.get("prompt_lang", "en")
+        if prompt_lang == "vi":
+            prompt = (
+                "Bạn là chuyên gia phân tích tĩnh C++. Hãy phân tích file hiện tại để phát hiện vi phạm các quy tắc custom dưới đây.\n"
+                "Nếu chưa có file rule, hãy gọi fetch_custom_rule từ MCP server.\n"
+                "Luôn sử dụng bộ quy tắc custom mới nhất vừa fetch để phân tích, không dùng rule cũ hoặc built-in.\n"
+                "Hãy ghi rõ bộ rule nào đang dùng trong báo cáo.\n\n"
+                "**YÊU CẦU PHÂN TÍCH:**\n"
+                "- Tìm TẤT CẢ vi phạm quy tắc trên\n"
+                "- Tập trung vào vi phạm custom rule\n"
+                "- Ghi rõ số hiệu rule (VD: CUSTOM-001, MISRA Rule 8-4-3, LGEDV_CRCL_0001, RS-001)\n"
+                "- Kiểm tra mọi dòng code, kể cả unreachable, dead code, return sớm, magic number\n"
+                "- Kiểm tra mọi điểm acquire/release resource, mọi exit point, mọi function/method\n"
+                "- Đưa ra code fix cụ thể cho từng lỗi\n"
+                "- Ghi số dòng code gốc trong báo cáo\n\n"
+                "**ĐỊNH DẠNG KẾT QUẢ:**\n"
+                "Với mỗi lỗi:\n"
+                "## 🚨 Vấn đề [#]: [Mô tả ngắn]\n\n"
+                "**Rule vi phạm:** [SỐ HIỆU] - [Mô tả rule]\n\n"
+                "**Vị trí:** [tên hàm hoặc global/unknown]\n\n"
+                "**Mức độ:** [Critical/High/Medium/Low]\n\n"
+                "**Code hiện tại:**\n"
+                "```cpp\n[code lỗi]\n```\n"
+                "**Code đã sửa:**\n"
+                "```cpp\n[code đúng]\n```\n"
+                "**Giải thích:** [Vì sao vi phạm và cách sửa]\n\n"         
+                "**Lưu ý:** Nếu cần toàn bộ file code đã fix, hãy yêu cầu rõ ràng."
+            )
+        else:
+            prompt = self.templates.get_custom_analysis_prompt()
         messages = [
             types.PromptMessage(
                 role="user",
                 content=types.TextContent(type="text", text=prompt),
             )
         ]
-        
         result = types.GetPromptResult(
             messages=messages,
             description="A prompt for Custom rule on current file.",
         )
-        
         logger.info("Custom check prompt completed")
         return result
     
@@ -162,12 +269,13 @@ class PromptHandler:
                 logger.info("Race condition analysis prompt (fallback style) completed")
                 return result
             else:
-                 return self._create_fallback_race_prompt(dir_path, "No result from tool")
+                logger.warning("No result from tool")
+                return None
             
         except Exception as e:
             logger.error(f"Error in race condition analysis: {e}")
-            return self._create_fallback_race_prompt(dir_path, str(e))
-    
+            return None
+            
     async def _handle_memory_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
         """Handle memory leak analysis prompt - always use fallback-style prompt with findings if available"""
         dir_path = get_src_dir()
@@ -192,11 +300,12 @@ class PromptHandler:
                 logger.info("Memory leak analysis prompt")
                 return result
             else:
-                 return self._create_fallback_memory_leak_prompt(dir_path, "No result from tool")
+                logger.warning("No result from tool for memory leak analysis")
+                return None
         except Exception as e:
             logger.error(f"Error in memory leak analysis: {e}")
-            return self._create_fallback_memory_leak_prompt(dir_path, str(e))
-
+            return None
+           
        
     async def _handle_resource_leak_analysis(self, arguments: Dict[str, str] = None) -> types.GetPromptResult:
         """Handle resource leak analysis prompt - always use fallback-style prompt with findings if available, now with line numbers"""
@@ -223,11 +332,11 @@ class PromptHandler:
                 logger.info("Resource leak analysis prompt completed")
                 return result
             else:
-                 logger.warning("No result from tool for resource leak analysis, using fallback prompt")
-                 return self._create_fallback_resource_leak_prompt(dir_path, "No result from tool")
+                 logger.warning("No result from tool for resource leak analysis")
+                 return None                 
         except Exception as e:
             logger.error(f"Error in resource leak analysis: {e}")
-            return self._create_fallback_resource_leak_prompt(dir_path, str(e))
+            return None
 
     # Thêm vào class PromptHandler
 
@@ -424,170 +533,6 @@ class PromptHandler:
         
         return summary_text
     
-    def _create_fallback_race_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
-        """Tạo fallback prompt khi có lỗi"""
-        # Lấy danh sách file C++ trong dir_path
-        try:
-            src_files = [f for f in os.listdir(dir_path) if f.endswith('.cpp')]
-            code_snippets = []
-            for f in src_files[:2]:  # Chỉ lấy 2 file đầu cho ngắn gọn
-                file_path = os.path.join(dir_path, f)
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    code = file.read()
-                code_snippets.append(f"### {f}\n```cpp\n{code[:1000]}\n```\n")
-            code_context = "\n".join(code_snippets)
-        except Exception:
-            code_context = "Cannot get file C++."
-
-        fallback_prompt = (
-            f"You are an expert C++ concurrency analyst.\n"
-            f"Please use the `detect_races` tool first to manually analyze the C++ files in the directory: {dir_path}\n\n"
-            f"Then provide your expert analysis of potential race conditions, focusing on:\n"
-            f"1. Unprotected shared state modifications\n"
-            f"2. Missing synchronization mechanisms\n"
-            f"3. Thread-unsafe patterns\n"
-            f"4. Potential deadlock scenarios\n\n"
-            f"IMPORTANT: Only list race conditions or deadlocks if there is clear evidence in the code that a variable or resource is accessed from multiple threads\n"
-            f"(e.g., thread creation, callback, or handler running on a different thread). Do not warn about cases that are only potential or speculative.\n"
-            f"If no evidence is found, clearly state: 'No multi-threaded access detected for this variable in the current code.'\n\n"
-            f"This will help ensure the analysis focuses on real issues and avoids unnecessary or speculative warnings.\n"
-            f"\n"
-            f"Use this format for each issue found:\n"
-            f"\n"
-            f"## 🚨 **RACE CONDITION #[number]**: [Brief Description]\n"
-            f"**Type:** [data_race|deadlock|missing_sync]\n"
-            f"**Severity:** [Critical|High|Medium|Low]\n"
-            f"**Files Involved:** [list of files]\n"
-            f"**Function Name:** [function name or global scope/unknown]\n"
-            f"**Problem Description:** [explanation]\n"
-            f"**Fix Recommendation:** [suggested solution]\n\n"
-            f"Target Directory: {dir_path}\n"
-            f"Files Found: {', '.join(src_files)}\n"
-            f"# Source Code Context\n"
-            f"{code_context}"
-        )
-        messages = [
-            types.PromptMessage(
-                role="user", 
-                content=types.TextContent(type="text", text=fallback_prompt),
-            )
-        ]
-        
-        result = types.GetPromptResult(
-            messages=messages,
-            description="Race condition analysis (fallback mode).",
-        )
-        
-        logger.info("Race condition analysis fallback prompt completed")
-        return result
-    
-    def _create_fallback_memory_leak_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
-        """Tạo fallback prompt cho phân tích rò rỉ bộ nhớ"""
-        fallback_prompt = f"""You are an expert C++ memory management analyst. 
-            There was an error analyzing the codebase for memory leaks automatically: {error_msg}
-
-            Please use the `analyze_leaks` tool first to manually analyze the C++ files in the directory: {dir_path}
-
-            Then provide your expert analysis of potential memory leaks, focusing on:
-            1. Unreleased memory allocations
-            2. Dangling pointers
-            3. Memory corruption issues
-            4. Inefficient memory usage patterns
-
-            Only provide your expert analysis. Do not repeat the Automated Findings section.
-
-            Additionally, propose refactored code for all relevant C++ files.
-
-            Use this format for each issue found:
-
-            ## 🚨 **MEMORY LEAK #[number]**: [Brief Description]
-            **Severity:** [Critical|High|Medium|Low]
-            **Files Involved:** [list of files]
-            **Problem Description:** [explanation]
-            **Fix Recommendation:** [suggested solution]
-            """
-        messages = [
-            types.PromptMessage(
-                role="user", 
-                content=types.TextContent(type="text", text=fallback_prompt),
-            )
-        ]
-        
-        result = types.GetPromptResult(
-            messages=messages,
-            description="Memory leak analysis (fallback mode).",
-        )
-        
-        logger.info("Memory leak analysis fallback prompt completed")
-        return result
-
-    def _create_fallback_resource_leak_prompt(self, dir_path: str, error_msg: str) -> types.GetPromptResult:
-        """Create fallback prompt for resource leak analysis"""
-        fallback_prompt = f"""You are an expert Linux C++ resource management analyst.
-
-There was an error analyzing the codebase for resource leaks automatically: {error_msg}
-
-Please use the `analyze_resources` tool first to manually analyze the C++ files in the directory: {dir_path}
-
-Then provide your expert analysis of potential resource leaks, focusing on:
-
-## 🎯 **Analysis Focus Areas**
-
-1. **File Resources:**
-   - Unmatched open()/close() calls
-   - FILE* streams not properly closed
-   - Missing fclose() for fopen()
-
-2. **Socket Resources:**
-   - Socket descriptors not closed
-   - Network connections left open
-   - Unmatched socket()/close() pairs
-
-3. **Memory Mapping:**
-   - mmap() without corresponding munmap()
-   - Shared memory segments not cleaned up
-
-4. **IPC Resources:**
-   - Message queues not destroyed
-   - Semaphores not cleaned up
-   - Shared memory not detached
-
-5. **Directory Handles:**
-   - opendir() without closedir()
-   - Directory streams left open
-
-Only provide your expert analysis. Do not repeat the Automated Findings section.
-
-Additionally, propose refactored code for all relevant C++ files.
-
-## 📋 **Report Format**
-For each resource leak found, use this format:
-
-### 🚨 **RESOURCE LEAK #[number]**: [Resource Type]
-- **Severity:** [Critical|High|Medium|Low]
-- **File:** [filename]
-- **Line:** [line number]
-- **Resource:** [specific resource name/variable]
-- **Description:** [what resource is leaking and why]
-- **Fix:** [specific remediation steps]
-
-Focus on Linux-specific resources and provide actionable recommendations for each finding.
-"""
-        
-        messages = [
-            types.PromptMessage(
-                role="user", 
-                content=types.TextContent(type="text", text=fallback_prompt),
-            )
-        ]
-        
-        result = types.GetPromptResult(
-            messages=messages,
-            description="Resource leak analysis (fallback mode).",
-        )
-        
-        logger.info("Resource leak analysis fallback prompt completed")
-        return result
     
     def _create_race_analysis_prompt_section(self, race_result: dict) -> str:
         """Create analysis prompt section with detailed race condition information (no grouping, no limit)"""
@@ -601,7 +546,29 @@ Focus on Linux-specific resources and provide actionable recommendations for eac
 
     async def _handle_code_context(self) -> types.GetPromptResult:
         """Handle code context prompt (load and summarize all files in src_dir)"""
-        prompt = self.templates.get_context_prompt()
+        import os
+        prompt_lang = os.environ.get("prompt_lang", "en")
+        if prompt_lang == "vi":
+            prompt = (
+                "Bạn là trợ lý ngữ cảnh mã nguồn. Nhiệm vụ của bạn là đọc và ghi nhớ toàn bộ nội dung, cấu trúc của tất cả các file mã nguồn (C++, Python, ...) trong thư mục dự án hiện tại.\n"
+                "Nếu nội dung file chưa được tải, hãy gọi tool 'get_src_context' từ MCP server để lấy tất cả file mã nguồn trong thư mục SRC_DIR.\n"
+                "Với mỗi file, hãy tóm tắt:\n"
+                "- Tên file và đường dẫn tương đối\n"
+                "- Tất cả class, struct, enum, function (C++, Python, ...)\n"
+                "- Quan hệ kế thừa, sử dụng, thành phần\n"
+                "- Biến toàn cục, hằng số, macro, cấu hình\n"
+                "- Các chú thích hoặc tài liệu quan trọng\n"
+                "Không thực hiện phân tích tĩnh hoặc kiểm tra rule ở bước này.\n"
+                "Lưu ngữ cảnh này để dùng cho các truy vấn tiếp theo.\n\n"
+                "**ĐỊNH DẠNG KẾT QUẢ:**\n"
+                "Với mỗi file:\n"
+                "### [Tên file]\n"
+                "```[ngôn ngữ]\n[Tóm tắt cấu trúc, định nghĩa, điểm chính]\n```\n"
+                "Lặp lại cho tất cả file.\n"
+                "Xác nhận khi đã nạp đủ ngữ cảnh."
+            )
+        else:
+            prompt = self.templates.get_context_prompt()
         messages = [
             types.PromptMessage(
                 role="user",
