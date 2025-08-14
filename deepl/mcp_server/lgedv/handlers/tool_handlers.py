@@ -21,6 +21,15 @@ import pprint
 
 logger = setup_logging()
 
+import platform
+import os
+
+def get_lgedv_cache_dir():
+    if platform.system().lower().startswith("win"):
+        return r"C:\Program Files\MCP Server CodeGuard\tmp\lgedv"
+    else:
+        return "/tmp/lgedv"
+    
 class ToolHandler:
     """Handler cho các MCP tools"""
 
@@ -1202,9 +1211,9 @@ class ToolHandler:
         """Reset analysis cache for fresh start"""
         import shutil
         try:
-            cache_dir = "/tmp/lgedv"
+            cache_dir = get_lgedv_cache_dir()
             shutil.rmtree(cache_dir, ignore_errors=True)
-            message = "All analysis cache in /tmp/lgedv has been reset (directory deleted)."
+            message = f"All analysis cache in {cache_dir} has been reset (directory deleted)."
             return [types.TextContent(type="text", text=message)]
         except Exception as e:
             return [types.TextContent(type="text", text=f"Error resetting analysis cache: {e}")]
@@ -1214,7 +1223,7 @@ class ToolHandler:
         Reset memory leak analysis cache (xóa file /tmp/lgedv/memory_analysis_checked.json).
         """
         import os
-        file_path = "/tmp/lgedv/memory_analysis_checked.json"
+        file_path = os.path.join(get_lgedv_cache_dir(), "memory_analysis_checked.json")
         try:
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -1231,7 +1240,7 @@ class ToolHandler:
         Reset resource leak analysis cache (xóa file /tmp/lgedv/resource_analysis_checked.json).
         """
         import os
-        file_path = "/tmp/lgedv/resource_analysis_checked.json"
+        file_path = os.path.join(get_lgedv_cache_dir(), "resource_analysis_checked.json")
         try:
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -1248,7 +1257,7 @@ class ToolHandler:
         Reset race analysis cache (xóa file /tmp/lgedv/race_analysis_checked.json).
         """
         import os
-        file_path = "/tmp/lgedv/race_analysis_checked.json"
+        file_path = os.path.join(get_lgedv_cache_dir(), "race_analysis_checked.json")
         try:
             if os.path.exists(file_path):
                 os.remove(file_path)

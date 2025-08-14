@@ -13,13 +13,17 @@ logger = setup_logging()
 class PersistentTracker:
     """Track analyzed files across chat sessions"""
     
-    def __init__(self, analysis_type: str = "memory_analysis", base_dir: str = "/tmp/lgedv"):
+    def __init__(self, analysis_type: str = "memory_analysis", base_dir: str = None):
+        import platform
         self.analysis_type = analysis_type
+        if base_dir is None:
+            if platform.system().lower().startswith("win"):
+                base_dir = r"C:\\Program Files\\MCP Server CodeGuard\\tmp\\lgedv"
+            else:
+                base_dir = "/tmp/lgedv"
         self.base_dir = base_dir
-        
         # Use simple, consistent filename based on analysis type only
         self.storage_file = os.path.join(base_dir, f"{analysis_type}_checked.json")
-        
         # Ensure directory exists
         os.makedirs(base_dir, exist_ok=True)
         
@@ -84,8 +88,17 @@ class PersistentTracker:
         }
 
 # standalone functions for utility operations
-def reset_all_analysis(base_dir: str = "/tmp/lgedv") -> None:
+def _get_default_base_dir():
+    import platform
+    if platform.system().lower().startswith("win"):
+        return r"C:\\Program Files\\MCP Server CodeGuard\\tmp\\lgedv"
+    else:
+        return "/tmp/lgedv"
+
+def reset_all_analysis(base_dir: str = None) -> None:
     """Reset all analysis data - utility function"""
+    if base_dir is None:
+        base_dir = _get_default_base_dir()
     try:
         import glob
         pattern = os.path.join(base_dir, "*_checked.json")
@@ -97,14 +110,15 @@ def reset_all_analysis(base_dir: str = "/tmp/lgedv") -> None:
     except Exception as e:
         logger.error(f"Error resetting analysis data: {e}")
 
-def get_all_sessions(base_dir: str = "/tmp/lgedv") -> List[Dict]:
+def get_all_sessions(base_dir: str = None) -> List[Dict]:
     """Get all active analysis sessions"""
+    if base_dir is None:
+        base_dir = _get_default_base_dir()
     try:
         import glob
         pattern = os.path.join(base_dir, "*_checked.json")
         files = glob.glob(pattern)
         sessions = []
-        
         for file_path in files:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
@@ -118,7 +132,6 @@ def get_all_sessions(base_dir: str = "/tmp/lgedv") -> List[Dict]:
                     })
             except Exception as e:
                 logger.error(f"Error reading {file_path}: {e}")
-                
         return sessions
     except Exception as e:
         logger.error(f"Error listing sessions: {e}")
