@@ -20,6 +20,7 @@ MCP server CodeGuard supports following features using AI:
 - The extension will install MCP server in `C:\Program Files\MCP Server CodeGuard` (default).
 - After installation, a sample configuration file `.vscode/mcp.json` is created in your project folder.
 
+![MCP server installation](https://raw.githubusercontent.com/taikt/codefun/main/deepl/cguard/src/images/mcp_usage.gif)
 
 ### Linux
 - Install Python using your package manager (e.g., `sudo apt install python3 python3-venv python3-pip`).
