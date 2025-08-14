@@ -40,6 +40,36 @@ class PromptTemplates:
             # "```cpp\n[entire corrected file with all fixes applied]\n```\n\n"            
             "**Note:** If you need the complete fixed code file after all fixes, please request it explicitly."
         )
+
+    # @staticmethod
+    # def get_lgedv_analysis_prompt() -> str:
+    #     """Template cho LGEDV analysis với hướng dẫn rõ ràng về format bảng"""
+    #     return (
+    #         "You are a C++ static analysis expert. Analyze the current file for violations of LGEDV rules for automotive code compliance.\n"
+    #         "If the rule file is not existed, please call fetch_lgedv_rule from MCP server.\n"
+    #         "Always use the latest LGEDV rules just fetched for analysis, not any cached or built-in rules.\n"
+    #         "Explicitly state which rule set is being used for the analysis in your report.\n\n"
+    #         "**ANALYSIS REQUIREMENTS:**\n"
+    #         "- Find ALL violations of the rules above\n"
+    #         "- Focus specifically on LGEDV rule violations\n"
+    #         "- Cite EXACT rule numbers (e.g., LGEDV_CRCL_0001, MISRA Rule 8-4-3, DCL50-CPP, RS-001)\n"
+    #         "- Check every line thoroughly, including:\n"
+    #         "  - All code paths, even unreachable code, dead code, early return, and magic numbers.\n"
+    #         "  - All resource acquisition and release points.\n"
+    #         "  - All exit points (return, break, continue, goto, throw, etc.).\n"
+    #         "  - All function and method boundaries.\n"
+    #         "- Provide concrete fixes for each violation\n"
+    #         "- Use the original file's line numbers in all reports\n\n"
+    #         "**OUTPUT FORMAT:**\n"
+    #         "For each violation found, add a row to the following Markdown table. "
+    #         "Each row must be a single line, with all content (including code blocks and explanations) fully contained within its cell, "
+    #         "and no blank lines or line breaks outside the table structure. "
+    #         "If code or text is long, use triple backticks (```cpp ... ```) or <pre>...</pre> inside the cell, but do not break the table row.\n\n"
+    #         "| # | Rule Violated | Location | Severity | Line(s) | Current Code | Fixed Code | Explanation |\n"
+    #         "|---|---------------|----------|----------|---------|--------------|------------|-------------|\n"
+    #         "|   | [EXACT_RULE_NUMBER] - [Rule Description] | [function name or global/unknown] | [Critical/High/Medium/Low] | [line numbers] | ```cpp [problematic code] ``` | ```cpp [corrected code] ``` | [Why this violates the rule and how fix works] |\n\n"
+    #         "**Note:** If you need the complete fixed code file after all fixes, please request it explicitly."
+    #     )
         
     @staticmethod
     def get_misra_analysis_prompt() -> str:

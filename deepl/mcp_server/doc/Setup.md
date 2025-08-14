@@ -61,6 +61,7 @@ pip install codeguard-lgedv
   ```
 ## How to use report
 python report.py in.md -o out.md
+python report_http.py inp.md -o out.html
 
 ## get code context
 ### e.g tiger framework
