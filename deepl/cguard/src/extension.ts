@@ -322,7 +322,7 @@ export function activate(context: vscode.ExtensionContext) {
     terminal.sendText(command);
     vscode.window.showInformationMessage(`🌐 LGEDV Web Server started via ${os.platform() === 'win32' ? 'start_server.ps1' : 'start_server.sh'} (check terminal for output).`);
   });
-  
+
   // COMMAND: Stop Web Server (use start_server.sh)
   let stopWebServerCommand = vscode.commands.registerCommand('lgedv.stopWebServer', async () => {
     const webSrvDir = getWebServerDirectory();

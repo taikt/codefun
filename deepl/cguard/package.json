@@ -126,6 +126,21 @@
     ],
     "commands": [
       {
+        "command": "lgedv.startWebServer",
+        "title": "🌐 Start Web Server",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.stopWebServer",
+        "title": "🛑 Stop Web Server",
+        "category": "LGEDV CodeGuard"
+      },
+      {
+        "command": "lgedv.restartWebServer",
+        "title": "🔄 Restart Web Server",
+        "category": "LGEDV CodeGuard"
+      },
+      {
       "command": "lgedv.installMCPServer",
       "title": "🚀 Install MCP Server",
       "category": "LGEDV CodeGuard"

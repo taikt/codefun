@@ -69,7 +69,9 @@ $mcpJsonContent = @'
       "env": {
         "src_dir": "\\path\\to\\source_dir",
         "custom_path": "\\path\\to\\CustomRule.md",
-        "reset_cache": "true"
+        "reset_cache": "true",
+        "prompt_lang": "vi", // en: english, vi: vietnamese
+        "report_dir": "D:\\src\\codefun\\deepl\\mcp_server\\report"
       }
     }
   }

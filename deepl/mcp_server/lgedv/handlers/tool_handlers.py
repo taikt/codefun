@@ -5,6 +5,8 @@ Xử lý các MCP tools (fetch rules, analyze files, etc.)
 import os
 from typing import List, Union, Dict
 from mcp import types
+from mcp.types import TextContent
+
 from lgedv.modules.rule_fetcher import (
     fetch_misra_rule, fetch_lgedv_rule, fetch_certcpp_rule,
     fetch_custom_rule
@@ -22,14 +24,17 @@ import pprint
 logger = setup_logging()
 
 import platform
-import os
+import sys
+import subprocess
+from lgedv.modules import report_http
 
 def get_lgedv_cache_dir():
     if platform.system().lower().startswith("win"):
         return r"C:\Program Files\MCP Server CodeGuard\tmp\lgedv"
     else:
         return "/tmp/lgedv"
-    
+
+  
 class ToolHandler:
     """Handler cho các MCP tools"""
 
@@ -79,6 +84,8 @@ class ToolHandler:
                 return await self._handle_resource_analysis(arguments)
             elif name == "reset_analysis":
                 return await self._handle_reset_analysis(arguments)
+            elif name == "generate_http_report":
+                return await self._handle_generate_http_report(arguments)
             else:
                 raise ValueError(f"Unknown tool: {name}")
                 
@@ -1267,3 +1274,25 @@ class ToolHandler:
             return [types.TextContent(type="text", text=message)]
         except Exception as e:
             return [types.TextContent(type="text", text=f"Error resetting race analysis cache: {e}")]
+        
+
+    async def _handle_generate_http_report(self, arguments: dict):
+        """
+        Quét report_dir, chuyển tất cả file .md thành .http bằng cách gọi trực tiếp hàm trong report_http.py
+        """
+
+        report_dir = os.environ.get("report_dir", "./report")
+        count = 0
+        for fname in os.listdir(report_dir):
+            if fname.endswith(".md"):
+                input_path = os.path.join(report_dir, fname)
+                output_path = os.path.splitext(input_path)[0] + ".html"
+                with open(input_path, 'r', encoding='utf-8') as f:
+                    md_text = f.read()
+                logger.info("Reading file: %s", input_path)
+                # logger.info("File exists: %s", os.path.exists(input_path))
+                # logger.info("File content: %s", md_text[:500])
+                violations = report_http.extract_violations(md_text)
+                report_http.write_html_table(violations, output_path)
+                count += 1
+        return [TextContent(type="text", text=f"Generated {count} .html reports in {report_dir}")]

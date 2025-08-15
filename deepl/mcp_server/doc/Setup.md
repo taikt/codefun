@@ -12,6 +12,13 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -e .
 
+## build server (window)
+cd C:\path\to\codefun\deepl\mcp_server
+python -m venv venv
+venv\Scripts\activate
+pip install -e .
+
+
 ## package (linux)
 rm -rf dist
 pip install build twine

@@ -21,12 +21,6 @@ function Ensure-Venv {
     if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
         Write-Info "Creating virtual environment..."
         python -m venv $VenvDir
-        # Chờ cho đến khi file Activate.ps1 xuất hiện (timeout 10s)
-        # $count = 0
-        # while (!(Test-Path "$VenvDir\Scripts\Activate.ps1") -and $count -lt 5) {
-        #     Start-Sleep -Seconds 1
-        #     $count++
-        # }
         if (!(Test-Path "$VenvDir\Scripts\Activate.ps1")) {
             Write-ErrorMsg "Failed to create virtual environment! Please check Python installation."
             exit 1
@@ -103,7 +97,6 @@ function Start-Server {
     } else {
         $PythonExe = [string](Ensure-Venv)
     }
-    # Đảm bảo đường dẫn tuyệt đối
     $PythonExe = (Resolve-Path $PythonExe).Path
     $ServerScript = (Resolve-Path $ServerScript).Path
     Write-Info "PythonExe: $PythonExe"
@@ -138,9 +131,7 @@ function Start-Server {
         Write-Info "Starting server in FOREGROUND mode..."
         & $PythonExe $ServerScript *> $LogFile
     }
-    # Sau khi chạy, kiểm tra trạng thái
     Status-Server
-    # Hiển thị thông tin thư mục report từ log
     if (Test-Path $LogFile) {
         $reportLine = Get-Content $LogFile | Select-String "Web server will serve HTML reports from:" | Select-Object -Last 1
         if ($reportLine) {

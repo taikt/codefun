@@ -5,6 +5,18 @@ import json
 import os
 import glob
 import sys
+import signal
+import asyncio
+
+# Signal handler for graceful shutdown
+def signal_handler(sig, frame):
+    print(f"\n[INFO] Received signal {sig}, shutting down gracefully...")
+    sys.stdout.flush()
+    sys.exit(0)
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 async def get_report_directory():
     # Always use defect_report directory relative to this script if no user config
@@ -30,7 +42,6 @@ async def get_report_directory():
                     for line in content.split('\n'):
                         if '//' in line:
                             comment_pos = line.find('//')
-                            in_string = False
                             quote_count = 0
                             for i, char in enumerate(line[:comment_pos]):
                                 if char == '"' and (i == 0 or line[i-1] != '\\'):
@@ -122,9 +133,19 @@ async def create_app():
     return app
 
 if __name__ == '__main__':
-    import asyncio
-    app = asyncio.run(create_app())
-    aiohttp.web.run_app(app, port=8888)
-    print("[INFO] Server startup completed.")
-    print(f"[INFO] Report directory in use: {app['report_dir']}")
+    print("[INFO] Starting aiohttp web server...")
+    print(f"[INFO] Process ID: {os.getpid()}")
     sys.stdout.flush()
+    try:
+        app = asyncio.run(create_app())
+        print("[INFO] Server starting on port 8888...")
+        print("[INFO] Press Ctrl+C to stop the server")
+        sys.stdout.flush()
+        aiohttp.web.run_app(app, port=8888, access_log=None)
+    except KeyboardInterrupt:
+        print("\n[INFO] Server stopped by user")
+    except Exception as e:
+        print(f"[ERROR] Server error: {e}")
+    finally:
+        print("[INFO] Server shutdown completed.")
+        sys.stdout.flush()

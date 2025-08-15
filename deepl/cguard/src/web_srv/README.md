@@ -66,6 +66,10 @@ sudo apt-get install lsof
 lsof -i :8888
 kill -9 557752
 
+# kiem tra va stop tren window
+netstat -ano | findstr :8888
+Stop-Process -Id <PID> -Force
+
 # set directory report
 worker@tai2-tran-tsu-my26-taikt:~/.vscode$ cat settings.json 
 {

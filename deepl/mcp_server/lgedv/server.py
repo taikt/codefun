@@ -184,6 +184,11 @@ def main(port: int, transport: str):
                         },
                         "required": []
                     },
+                ),
+                types.Tool(
+                    name="generate_http_report",
+                    description="Generate .http (HTML) report from all .md files in report_dir.",
+                    inputSchema={"type": "object", "properties": {}}
                 )
             ]
 
