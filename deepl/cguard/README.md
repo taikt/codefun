@@ -85,6 +85,22 @@ For rule-based checks, you must download the rule set before running the check p
   - `/reset_mem_check`: Clear analysis cache for memory leak
   - `/reset_resouce_check`: Clear analysis cache for resource leak 
 
+### View HTTP report
+- **Create report file**
+  - Select report path in mcp.json
+    "report_path": "path\\to\\report"
+  - After Copilot analyzed, create empty report file in .md format, example file1.md
+  - Then copy the content(answer) in Copilot chat to file1.md
+  - Use tool call `#generate_http_report` in Copilot chat to convert file1.md to file1.html
+  - Open file1.html to view report in web browser
+
+- **Setup web server to view HTTP report (Optional)**
+  - Configure web server directory (same with http report directory)
+    - From VSCode, open File -> Preferences -> Settings: type lgedv in search box.
+    - Configure report directory in Lgedv Code Guard: Report Directory  
+  - Open Command Palette (Ctrl+Shift+P), type `LGEDV CodeGuard: Start Web Server` and select the command to start server.
+  - On web browser, open http://localhost:8888/ to view HTTP reports
+
 
 ## Uninstall MCP Server
 - Delete the MCP server installation folder (e.g., `C:\\Program Files\\MCP Server CodeGuard`) to completely remove it.
