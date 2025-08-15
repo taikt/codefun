@@ -1,4 +1,4 @@
-# CodeGuard - tool for detecting C++ vulnerability
+# CodeGuard - Detect C++ vulnerability using AI
 ## ✨ Features
 MCP server CodeGuard supports following features using AI:
 - Detect standard Misra C++ violation
