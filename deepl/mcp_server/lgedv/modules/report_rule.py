@@ -20,12 +20,12 @@ def extract_violations(md_text):
         r'\*\*Mức độ:\*\*\s*([^\n]*)'  # Vietnamese
     ]
     current_code_patterns = [
-        r'\*\*Current Code:\*\*\s*```cpp(.*?)```',  # English
-        r'\*\*Code hiện tại:\*\*\s*```cpp(.*?)```'  # Vietnamese
+        r'\*\*Current Code:\*\*[\s\r\n]*```cpp(.*?)```',  # English
+        r'\*\*Code hiện tại:\*\*[\s\r\n]*```cpp(.*?)```'  # Vietnamese
     ]
     fixed_code_patterns = [
-        r'\*\*Fixed Code:\*\*\s*```cpp(.*?)```',  # English
-        r'\*\*Code đã sửa:\*\*\s*```cpp(.*?)```'  # Vietnamese
+        r'\*\*Fixed Code:\*\*[\s\r\n]*```cpp(.*?)```',  # English
+        r'\*\*Code đã sửa:\*\*[\s\r\n]*```cpp(.*?)```'  # Vietnamese
     ]
     explanation_patterns = [
         r'\*\*Explanation:\*\*\s*([^\n]*)',  # English
@@ -104,11 +104,11 @@ def write_html_table(violations, output_path):
         table{border-collapse:collapse;}
         th,td{border:1px solid #888;padding:6px;vertical-align:top;}
         pre{margin:0;}
-        .code-col { max-width: 480px; min-width: 180px; }
-        .code-col > div { max-width: 480px; overflow-x: auto; }
+        .code-col { max-width: 700px; min-width: 240px; }  /* tăng size */
+        .code-col > div { max-width: 700px; overflow-x: auto; }
         .rule-col { max-width: 260px; min-width: 120px; overflow-x: auto; word-break: break-word; }
         .issue-col { max-width: 180px; min-width: 80px; overflow-x: auto; word-break: break-word; }
-        .location-col { max-width: 340px; min-width: 140px; overflow-x: auto; word-break: break-word; }
+        .location-col { max-width: 80px; min-width: 40px; overflow-x: auto; word-break: break-word; } /* giảm size */
         .explanation-col { max-width: 220px; min-width: 80px; overflow-x: auto; word-break: break-word; }
         </style>
         ''')
@@ -132,8 +132,57 @@ def write_html_table(violations, output_path):
         f.write('</table>\n')
         f.write('</body></html>\n')
 
+def write_consolidated_html_table(all_violations, output_path, source_files):
+    """Viết HTML table tổng hợp từ nhiều file .md"""
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write('<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>Consolidated Rule Violations Report</title>\n')
+        f.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">\n')
+        f.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>\n')
+        f.write('<script>hljs.highlightAll();</script>\n')
+        f.write('''<style>
+        table{border-collapse:collapse; width: 100%;}
+        th,td{border:1px solid #888;padding:6px;vertical-align:top;}
+        .source-file-header{background-color:#f0f8ff; font-weight:bold; text-align:center;}
+        .code-col { max-width: 560px; min-width: 240px; }
+        .location-col { max-width: 140px; min-width: 60px; overflow-x: auto; word-break: break-all; white-space: normal; }
+        .explanation-col { max-width: 120px; min-width: 60px; overflow-x: auto; word-break: break-word; }
+        </style>\n''')
+        f.write('</head><body>\n')
+        f.write(f'<h1>Consolidated Rule Violations Report</h1>\n')
+        f.write(f'<p>Processed {len(source_files)} files: {", ".join(source_files)}</p>\n')
+        f.write(f'<p>Total violations: {len(all_violations)}</p>\n')
+        f.write('<table>\n')
+        f.write('<tr><th>Source File</th><th>Issue</th><th>Rule Violated</th><th>Location</th><th>Current Code</th><th>Fixed Code</th><th>Explanation</th></tr>\n')
+        
+        # Group by source file
+        violations_by_file = {}
+        for v in all_violations:
+            source = v.get('source_file', 'unknown')
+            if source not in violations_by_file:
+                violations_by_file[source] = []
+            violations_by_file[source].append(v)
+        
+        idx = 1
+        for source_file, violations in violations_by_file.items():
+            # Header row for each file
+            f.write(f'<tr class="source-file-header"><td colspan="7">File: {source_file} ({len(violations)} violations)</td></tr>\n')
+            for v in violations:
+                if is_placeholder(v):
+                    continue
+                f.write('<tr>')
+                f.write(f'<td>{source_file}</td>')
+                f.write(f'<td>{idx}. {v["Issue"]}</td>')
+                f.write(f'<td>{v["Rule"]}</td>')
+                f.write(f'<td class="location-col">{v["Location"]}</td>')
+                f.write(f'<td class="code-col">{render_code_with_lines(v["Current Code"])}</td>')
+                f.write(f'<td class="code-col">{render_code_with_lines(v["Fixed Code"])}</td>')
+                f.write(f'<td class="explanation-col">{v["Explanation"]}</td>')  # Thêm class cho explanation
+                f.write('</tr>\n')
+                idx += 1
+        f.write('</table>\n</body></html>\n')
+        
 def print_usage():
-    print("Usage: python report_http.py <input.md> [-o <output_file>]")
+    print("Usage: python report_rule.py <input.md> [-o <output_file>]")
     sys.exit(1)
 
 if __name__ == "__main__":

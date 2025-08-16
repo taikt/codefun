@@ -20,13 +20,15 @@ from lgedv.modules.config import setup_logging, get_src_dir
 from lgedv.modules.persistent_storage import PersistentTracker
 
 import pprint
+from datetime import datetime
 
 logger = setup_logging()
 
 import platform
 import sys
 import subprocess
-from lgedv.modules import report_http
+from lgedv.modules import report_rule,report_race, report_resource,report_leak
+
 
 def get_lgedv_cache_dir():
     if platform.system().lower().startswith("win"):
@@ -84,10 +86,20 @@ class ToolHandler:
                 return await self._handle_resource_analysis(arguments)
             elif name == "reset_analysis":
                 return await self._handle_reset_analysis(arguments)
-            elif name == "generate_http_report":
-                return await self._handle_generate_http_report(arguments)
+            elif name == "report_rule_violation":
+                return await self._handle_report_rule_violation(arguments)
+            elif name == "report_mem_leak":
+                return await self._handle_report_mem_leak(arguments)
+            elif name == "report_race_condition":
+                return await self._handle_report_race_condition(arguments)
+            elif name == "report_resource_leak":
+                return await self._handle_report_resource_leak(arguments)
+            elif name == "report_leak":
+                return await self._handle_report_leak(arguments)
             else:
+                logger.error(f"Unknown tool: {name}")
                 raise ValueError(f"Unknown tool: {name}")
+            
                 
         except Exception as e:
             logger.exception(f"Error in tool handler for {name}: {e}")
@@ -352,6 +364,7 @@ class ToolHandler:
             f"**Files Involved:** [list of files]\n"
             f"**Function Name:** [function name or global scope/unknown]\n"
             f"**Problem Description:** [explanation]\n"
+            f"**Current Code:** [show the problematic code]\n"
             f"**Fix Recommendation:** [suggested solution]\n"
             f"\nFocus on actionable recommendations that can be immediately implemented.\n"
         )
@@ -1274,25 +1287,284 @@ class ToolHandler:
             return [types.TextContent(type="text", text=message)]
         except Exception as e:
             return [types.TextContent(type="text", text=f"Error resetting race analysis cache: {e}")]
-        
 
-    async def _handle_generate_http_report(self, arguments: dict):
-        """
-        Quét report_dir, chuyển tất cả file .md thành .http bằng cách gọi trực tiếp hàm trong report_http.py
-        """
 
+    async def _handle_report_rule_violation(self, arguments: dict):
+        """
+        Quét tất cả file .md trong report_dir, tổng hợp tất cả rule violations vào 1 file rule_violation.html
+        Luôn luôn xóa file báo cáo cũ và tạo mới để đảm bảo tính cập nhật
+        """
         report_dir = os.environ.get("report_dir", "./report")
-        count = 0
+        
+        # 🔥 BƯỚC 1: Xóa file HTML báo cáo cũ nếu tồn tại
+        output_path = os.path.join(report_dir, "rule_violation.html")  # Đổi thành số nhiều để nhất quán
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+                logger.info("🗑️  Deleted existing rule violations report: %s", output_path)
+            except Exception as e:
+                logger.warning("Failed to delete existing rule violations report: %s", e)
+        
+        # 🔥 BƯỚC 2: Quét và phân tích lại TẤT CẢ file .md từ đầu
+        all_violations = []
+        processed_files = []
+        
+        logger.info("🔍 Re-analyzing ALL .md files for rule violations...")
+        
         for fname in os.listdir(report_dir):
             if fname.endswith(".md"):
                 input_path = os.path.join(report_dir, fname)
-                output_path = os.path.splitext(input_path)[0] + ".html"
-                with open(input_path, 'r', encoding='utf-8') as f:
-                    md_text = f.read()
-                logger.info("Reading file: %s", input_path)
-                # logger.info("File exists: %s", os.path.exists(input_path))
-                # logger.info("File content: %s", md_text[:500])
-                violations = report_http.extract_violations(md_text)
-                report_http.write_html_table(violations, output_path)
-                count += 1
-        return [TextContent(type="text", text=f"Generated {count} .html reports in {report_dir}")]
+                try:
+                    with open(input_path, 'r', encoding='utf-8') as f:
+                        md_text = f.read()
+                    logger.info("Processing rule violations from: %s", input_path)
+                    violations = report_rule.extract_violations(md_text)
+                    if violations:
+                        # Thêm thông tin file nguồn vào mỗi violation
+                        for violation in violations:
+                            violation['source_file'] = fname
+                        all_violations.extend(violations)
+                        processed_files.append(fname)
+                        logger.info("✅ Found %d rule violations in %s", len(violations), fname)
+                    else:
+                        logger.info("ℹ️  No rule violations found in %s", fname)
+                except Exception as e:
+                    logger.error("❌ Error processing %s: %s", fname, e)
+                    continue
+        
+        # 🔥 BƯỚC 3: Tạo báo cáo HTML mới hoàn toàn
+        if all_violations:
+            report_rule.write_consolidated_html_table(all_violations, output_path, processed_files)
+            return [types.TextContent(
+                type="text", 
+                text=f"🔄 Re-generated fresh rule violations report with {len(all_violations)} violations from {len(processed_files)} files: {output_path}\n"
+                    f"📊 Processed files: {', '.join(processed_files)}\n"
+                    f"🗑️  Previous report deleted and regenerated from scratch"
+            )]
+        else:
+            # Tạo file HTML trống để báo hiệu không có rule violation
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write("""<!DOCTYPE html>
+    <html><head><meta charset="utf-8"><title>Rule Violations Report - No Issues Found</title></head>
+    <body>
+    <h1>Rule Violations Analysis Report</h1>
+    <p><strong>Status:</strong> ✅ No rule violations detected</p>
+    <p><strong>Files analyzed:</strong> {}</p>
+    <p><strong>Generated on:</strong> {}</p>
+    </body></html>""".format(len(processed_files), 
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            
+            return [types.TextContent(
+                type="text", 
+                text=f"✅ No rule violations found in {len(processed_files)} processed files. Clean report generated: {output_path}"
+            )]
+
+    
+    async def _handle_report_mem_leak(self, arguments: dict):
+        """
+        Quét tất cả file .md trong report_dir, tổng hợp tất cả memory leaks vào 1 file memory_leak.html
+        Luôn luôn xóa file báo cáo cũ và tạo mới để đảm bảo tính cập nhật
+        """
+        report_dir = os.environ.get("report_dir", "./report")
+        
+        # 🔥 BƯỚC 1: Xóa file HTML báo cáo cũ nếu tồn tại
+        output_path = os.path.join(report_dir, "memory_leak.html")  # KHÔNG CÓ 'S'
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+                logger.info("🗑️  Deleted existing memory leak report: %s", output_path)
+            except Exception as e:
+                logger.warning("Failed to delete existing memory leak report: %s", e)
+        
+        # 🔥 BƯỚC 2: Quét và phân tích lại TẤT CẢ file .md từ đầu
+        all_leaks = []
+        processed_files = []
+        
+        logger.info("🔍 Re-analyzing ALL .md files for memory leaks...")
+        
+        for fname in os.listdir(report_dir):
+            if fname.endswith(".md"):
+                input_path = os.path.join(report_dir, fname)
+                try:
+                    with open(input_path, 'r', encoding='utf-8') as f:
+                        md_text = f.read()
+                    logger.info("Processing memory leaks from: %s", input_path)
+                    leaks = report_leak.extract_violations(md_text)  # DÙNG report_leak
+                    if leaks:
+                        for leak in leaks:
+                            leak['source_file'] = fname
+                        all_leaks.extend(leaks)
+                        processed_files.append(fname)
+                        logger.info("✅ Found %d memory leaks in %s", len(leaks), fname)
+                    else:
+                        logger.info("ℹ️  No memory leaks found in %s", fname)
+                except Exception as e:
+                    logger.error("❌ Error processing %s: %s", fname, e)
+                    continue
+        
+        # 🔥 BƯỚC 3: Tạo báo cáo HTML mới hoàn toàn
+        if all_leaks:
+            report_leak.write_consolidated_html_table(all_leaks, output_path, processed_files)
+            return [types.TextContent(
+                type="text", 
+                text=f"🔄 Re-generated fresh memory leak report with {len(all_leaks)} leaks from {len(processed_files)} files: {output_path}\n"
+                    f"📊 Processed files: {', '.join(processed_files)}\n"
+                    f"🗑️  Previous report deleted and regenerated from scratch"
+            )]
+        else:
+            # Tạo file HTML trống để báo hiệu không có memory leak
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write("""<!DOCTYPE html>
+    <html><head><meta charset="utf-8"><title>Memory Leak Report - No Issues Found</title></head>
+    <body>
+    <h1>Memory Leak Analysis Report</h1>
+    <p><strong>Status:</strong> ✅ No memory leaks detected</p>
+    <p><strong>Files analyzed:</strong> {}</p>
+    <p><strong>Generated on:</strong> {}</p>
+    </body></html>""".format(len(processed_files), 
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            
+            return [types.TextContent(
+                type="text", 
+                text=f"✅ No memory leaks found in {len(processed_files)} processed files. Clean report generated: {output_path}"
+            )]
+
+
+    async def _handle_report_race_condition(self, arguments: dict):
+        """
+        Quét tất cả file .md trong report_dir, tổng hợp tất cả race conditions vào 1 file race_condition.html
+        Luôn luôn xóa file báo cáo cũ và tạo mới để đảm bảo tính cập nhật
+        """
+        report_dir = os.environ.get("report_dir", "./report")
+        
+        # 🔥 BƯỚC 1: Xóa file HTML báo cáo cũ nếu tồn tại
+        output_path = os.path.join(report_dir, "race_condition.html")  # Đảm bảo tên file nhất quán
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+                logger.info("🗑️  Deleted existing race condition report: %s", output_path)
+            except Exception as e:
+                logger.warning("Failed to delete existing race condition report: %s", e)
+        
+        # 🔥 BƯỚC 2: Quét và phân tích lại TẤT CẢ file .md từ đầu
+        all_races = []
+        processed_files = []
+        
+        logger.info("🔍 Re-analyzing ALL .md files for race conditions...")
+        
+        for fname in os.listdir(report_dir):
+            if fname.endswith(".md"):
+                input_path = os.path.join(report_dir, fname)
+                try:
+                    with open(input_path, 'r', encoding='utf-8') as f:
+                        md_text = f.read()
+                    logger.info("Processing race conditions from: %s", input_path)
+                    races = report_race.extract_races(md_text)
+                    if races:
+                        for race in races:
+                            race['source_file'] = fname
+                        all_races.extend(races)
+                        processed_files.append(fname)
+                        logger.info("✅ Found %d race conditions in %s", len(races), fname)
+                    else:
+                        logger.info("ℹ️  No race conditions found in %s", fname)
+                except Exception as e:
+                    logger.error("❌ Error processing %s: %s", fname, e)
+                    continue
+        
+        # 🔥 BƯỚC 3: Tạo báo cáo HTML mới hoàn toàn
+        if all_races:
+            report_race.write_consolidated_html_table(all_races, output_path, processed_files)
+            return [types.TextContent(
+                type="text", 
+                text=f"🔄 Re-generated fresh race condition report with {len(all_races)} races from {len(processed_files)} files: {output_path}\n"
+                    f"📊 Processed files: {', '.join(processed_files)}\n"
+                    f"🗑️  Previous report deleted and regenerated from scratch"
+            )]
+        else:
+            # Tạo file HTML trống để báo hiệu không có race condition
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write("""<!DOCTYPE html>
+    <html><head><meta charset="utf-8"><title>Race Condition Report - No Issues Found</title></head>
+    <body>
+    <h1>Race Condition Analysis Report</h1>
+    <p><strong>Status:</strong> ✅ No race conditions detected</p>
+    <p><strong>Files analyzed:</strong> {}</p>
+    <p><strong>Generated on:</strong> {}</p>
+    </body></html>""".format(len(processed_files), 
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            
+            return [types.TextContent(
+                type="text", 
+                text=f"✅ No race conditions found in {len(processed_files)} processed files. Clean report generated: {output_path}"
+            )]
+
+
+    async def _handle_report_resource_leak(self, arguments: dict):
+        """
+        Quét tất cả file .md trong report_dir, tổng hợp tất cả resource leaks vào 1 file resource_leaks.html
+        Luôn luôn xóa file báo cáo cũ và tạo mới để đảm bảo tính cập nhật
+        """
+        report_dir = os.environ.get("report_dir", "./report")
+        
+        # 🔥 BƯỚC 1: Xóa file HTML báo cáo cũ nếu tồn tại
+        output_path = os.path.join(report_dir, "resource_leak.html")  # Số nhiều cho nhất quán
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+                logger.info("🗑️  Deleted existing resource leak report: %s", output_path)
+            except Exception as e:
+                logger.warning("Failed to delete existing resource leak report: %s", e)
+        
+        # 🔥 BƯỚC 2: Quét và phân tích lại TẤT CẢ file .md từ đầu
+        all_leaks = []
+        processed_files = []
+        
+        logger.info("🔍 Re-analyzing ALL .md files for resource leaks...")
+        
+        for fname in os.listdir(report_dir):
+            if fname.endswith(".md"):
+                input_path = os.path.join(report_dir, fname)
+                try:
+                    with open(input_path, 'r', encoding='utf-8') as f:
+                        md_text = f.read()
+                    logger.info("Processing resource leaks from: %s", input_path)
+                    leaks = report_resource.extract_violations(md_text)
+                    if leaks:
+                        for leak in leaks:
+                            leak['source_file'] = fname
+                        all_leaks.extend(leaks)
+                        processed_files.append(fname)
+                        logger.info("✅ Found %d resource leaks in %s", len(leaks), fname)
+                    else:
+                        logger.info("ℹ️  No resource leaks found in %s", fname)
+                except Exception as e:
+                    logger.error("❌ Error processing %s: %s", fname, e)
+                    continue
+        
+        # 🔥 BƯỚC 3: Tạo báo cáo HTML mới hoàn toàn
+        if all_leaks:
+            report_resource.write_consolidated_html_table(all_leaks, output_path, processed_files)
+            return [types.TextContent(
+                type="text", 
+                text=f"🔄 Re-generated fresh resource leak report with {len(all_leaks)} leaks from {len(processed_files)} files: {output_path}\n"
+                    f"📊 Processed files: {', '.join(processed_files)}\n"
+                    f"🗑️  Previous report deleted and regenerated from scratch"
+            )]
+        else:
+            # Tạo file HTML trống để báo hiệu không có resource leak
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write("""<!DOCTYPE html>
+    <html><head><meta charset="utf-8"><title>Resource Leak Report - No Issues Found</title></head>
+    <body>
+    <h1>Resource Leak Analysis Report</h1>
+    <p><strong>Status:</strong> ✅ No resource leaks detected</p>
+    <p><strong>Files analyzed:</strong> {}</p>
+    <p><strong>Generated on:</strong> {}</p>
+    </body></html>""".format(len(processed_files), 
+                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            
+            return [types.TextContent(
+                type="text", 
+                text=f"✅ No resource leaks found in {len(processed_files)} processed files. Clean report generated: {output_path}"
+            )]

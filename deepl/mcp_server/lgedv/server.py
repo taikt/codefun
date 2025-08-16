@@ -186,8 +186,23 @@ def main(port: int, transport: str):
                     },
                 ),
                 types.Tool(
-                    name="generate_http_report",
-                    description="Generate .http (HTML) report from all .md files in report_dir.",
+                    name="report_rule_violation",
+                    description="Generate .http (HTML) report for rule violations from all .md files in report_dir.",
+                    inputSchema={"type": "object", "properties": {}}
+                ),
+                types.Tool(
+                    name="report_mem_leak",
+                    description="Generate .html report for memory leak analysis from .md files in report_dir.",
+                    inputSchema={"type": "object", "properties": {}}
+                ),
+                types.Tool(
+                    name="report_race_condition",
+                    description="Generate .html report for race condition analysis from .md files in report_dir.",
+                    inputSchema={"type": "object", "properties": {}}
+                ),
+                types.Tool(
+                    name="report_resource_leak", 
+                    description="Generate .html report for resource leak analysis from .md files in report_dir.",
                     inputSchema={"type": "object", "properties": {}}
                 )
             ]
